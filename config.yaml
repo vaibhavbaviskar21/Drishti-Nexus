@@ -1,0 +1,42 @@
+rules:
+  - name: "Authentication Brute Force"
+    enabled: true
+    severity: "high"
+    description: "Detects failed → success authentication patterns"
+    threshold: 3
+    time_window: "5m"
+    
+  - name: "Excessive Authentication Failures"
+    enabled: true
+    severity: "medium"
+    description: "Excessive authentication failures from a single source"
+    threshold: 5
+    time_window: "10m"
+    
+  - name: "Privilege Escalation"
+    enabled: true
+    severity: "medium"
+    description: "Detects sudo, UAC, and other privilege escalation indicators"
+    
+  - name: "Suspicious Command Execution"
+    enabled: true
+    severity: "high"
+    description: "Shell spawning, encoded commands, and suspicious tools"
+    
+  - name: "Injection Patterns"
+    enabled: true
+    severity: "critical"
+    description: "SQL and command injection patterns in logs"
+    
+  - name: "Time-based Anomaly"
+    enabled: true
+    severity: "low"
+    description: "Activity outside configured normal hours"
+
+# Normal business hours (24-hour format)
+normal_hours:
+  start: 9   # 09:00
+  end: 17    # 17:00
+
+# Maximum log entries to keep in memory
+max_log_entries: 100000

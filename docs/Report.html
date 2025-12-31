@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Report.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="drishti-nexus">Drishti Nexus</h1>
+<h2 id="portable-offline-first-security-log-analysis-tool-for-air-gapped-networks"><strong>Portable, Offline-First Security Log Analysis Tool for Air-Gapped Networks</strong></h2>
+<h2 id="1-introduction">1. Introduction</h2>
+<p>Many critical infrastructure systems, military networks, and high-security environments operate in complete isolation from the internet, commonly known as <strong>air-gapped networks</strong>. While air-gapping enhances security, it also makes log analysis and security monitoring significantly more difficult.</p>
+<p>Most enterprise SIEM solutions rely on centralized infrastructure, frequent updates, and complex deployment models, which are impractical in isolated environments. As a result, security teams often lack a <strong>simple, portable, and offline-capable tool</strong> for log analysis and incident response.</p>
+<p><strong>Drishti Nexus</strong> is designed to address this gap.</p>
+<hr>
+<h2 id="2-solution-overview">2. Solution Overview</h2>
+<p>Drishti Nexus is a <strong>single-binary, offline-first security log analysis tool</strong> developed in <strong>Go (Golang)</strong>. It runs without installation, external services, or internet connectivity, making it suitable for deployment in air-gapped and restricted environments.</p>
+<p>The tool is packaged as a lightweight executable that can be deployed via removable media (such as USB drives) and executed instantly on isolated systems, providing <strong>SOC-style visibility</strong> without cloud dependency.</p>
+<h3 id="key-characteristics">Key Characteristics</h3>
+<ul>
+<li>Fully offline operation</li>
+<li>Single executable (no dependencies)</li>
+<li>Portable deployment via removable media</li>
+<li>Explainable, rule-based detection logic</li>
+<li>Command-line and web-based interfaces</li>
+</ul>
+<hr>
+<h2 id="3-system-architecture">3. System Architecture</h2>
+<p>Drishti Nexus follows a lightweight and modular architecture focused on portability and performance.</p>
+<h3 id="core-components">Core Components</h3>
+<ul>
+<li>
+<p><strong>Log Parser Engine</strong>Automatically detects and normalizes multiple log formats, including Syslog, JSON, Apache/Nginx, and generic logs.</p>
+</li>
+<li>
+<p><strong>In-Memory Storage</strong>Stores parsed logs with time-based and source-based indexing. Implements LRU eviction to manage memory usage efficiently.</p>
+</li>
+<li>
+<p><strong>Detection Engine</strong>Applies deterministic, rule-based security detections designed for explainability and offline reliability.</p>
+</li>
+<li>
+<p><strong>User Interfaces</strong></p>
+<ul>
+<li>CLI for real-time monitoring and batch analysis</li>
+<li>Local web dashboard for interactive visualization and analysis</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="%F0%9F%93%8C-architecture-diagram">📌 Architecture Diagram</h3>
+<pre class="hljs"><code><div>┌─────────────────────────────────────────────┐
+│               Log Sources                   │
+│      (Syslog, JSON, Apache, Generic)        │
+└──────────────────┬──────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────┐
+│              Parser Engine                  │
+│  • Auto-detection                           │
+│  • Format normalization                     │
+└──────────────────┬──────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────┐
+│        In-Memory Storage &amp; Indexing          │
+│  • Time-based buckets                       │
+│  • Source indexing                          │
+│  • LRU eviction (100k default)              │
+└──────────────────┬──────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────┐
+│             Detection Engine                │
+│  • 6 rule-based detectors                   │
+│  • Pattern matching                         │
+│  • Stateful tracking                        │
+└──────────────────┬──────────────────────────┘
+                   │
+          ┌────────┴────────┐
+          │                 │
+┌─────────▼────────┐ ┌──────▼─────────┐
+│    CLI Output     │ │  Web Dashboard  │
+│                  │ │   (WebSocket)   │
+└──────────────────┘ └─────────────────┘
+</div></code></pre>
+<h2 id="4-detection-capabilities">4. Detection Capabilities</h2>
+<p>Drishti Nexus implements <strong>six high-impact security detection rules</strong>:</p>
+<ol>
+<li>Authentication brute-force attempts</li>
+<li>Excessive authentication failures</li>
+<li>Privilege escalation indicators</li>
+<li>Suspicious command execution</li>
+<li>SQL and command injection patterns</li>
+<li>Time-based activity anomalies</li>
+</ol>
+<p>All detection logic is <strong>deterministic and explainable</strong>, avoiding machine-learning dependencies that require internet access or training data.</p>
+<p>Detection thresholds and rules are configurable and can be updated <strong>offline via removable media</strong>.</p>
+<hr>
+<h2 id="5-functional-interface">5. Functional Interface</h2>
+<p>Drishti Nexus provides four core operational modes:</p>
+<ul>
+<li><strong>tail</strong> – Live log monitoring with color-coded severity output</li>
+<li><strong>analyze</strong> – Quick historical log analysis with statistics</li>
+<li><strong>scan</strong> – Batch processing with JSON/CSV report export</li>
+<li><strong>serve</strong> – Local web dashboard with real-time updates</li>
+</ul>
+<p>These modes support both <strong>incident response</strong> and <strong>post-incident investigation</strong> workflows.</p>
+<hr>
+<h2 id="6-cli-demonstration-screenshots">6. CLI Demonstration Screenshots</h2>
+<h3 id="tail-command">Tail Command</h3>
+<p><img src="images/tail.png" alt="Tail Command Output"></p>
+<p><em>Figure 1: Live log monitoring with color-coded output</em></p>
+<hr>
+<h3 id="analyze-command">Analyze Command</h3>
+<p><img src="images/analyze.png" alt="Analyze Command Output"></p>
+<p><em>Figure 2: Historical log analysis with statistics</em></p>
+<hr>
+<h3 id="scan-command">Scan Command</h3>
+<p><img src="images/scan1.png" alt="Scan Command Output – Report Generation"></p>
+<p><em>Figure 3: Batch scanning and report generation</em></p>
+<p><img src="images/scan2.png" alt="Scan Command Output – JSON Export"></p>
+<p><em>Figure 4: JSON report export</em></p>
+<p><img src="images/scan3.png" alt="Scan Command Output – CSV Export"></p>
+<p><em>Figure 5: CSV report export</em></p>
+<p><img src="images/web.png" alt="Serve Command Output –Web Dashboard "></p>
+<p>_Figure 5: Web Dashboard _</p>
+<h2 id="7-performance-and-limitations">7. Performance and Limitations</h2>
+<h3 id="performance">Performance</h3>
+<ul>
+<li>Processes tens of thousands of log entries per second</li>
+<li>Binary size: ~7 MB</li>
+<li>Memory usage: 100–500 MB depending on workload</li>
+</ul>
+<h3 id="limitations">Limitations</h3>
+<ul>
+<li>Not a full SIEM replacement</li>
+<li>No network packet capture or PCAP analysis</li>
+<li>No external threat intelligence feeds</li>
+<li>Designed for portable, time-bounded analysis rather than continuous monitoring</li>
+</ul>
+<p>These limitations are intentional to preserve simplicity, portability, and offline reliability.</p>
+<hr>
+<h2 id="8-applications-and-impact">8. Applications and Impact</h2>
+<p>Drishti Nexus is well suited for:</p>
+<ul>
+<li>Security monitoring in air-gapped environments</li>
+<li>Incident response in restricted networks</li>
+<li>Security audits and forensic analysis</li>
+<li>Training and educational use</li>
+<li>Rapid log triage without infrastructure setup</li>
+</ul>
+<p>By enabling <strong>portable and offline security analysis</strong>, the tool improves situational awareness in environments where traditional SIEM solutions cannot operate.</p>
+<hr>
+<h2 id="9-conclusion">9. Conclusion</h2>
+<p>Drishti Nexus demonstrates that effective security log analysis can be achieved without cloud services or heavy infrastructure. By prioritizing <strong>offline operation, portability, and explainable detection</strong>, it provides a practical solution for security teams working in isolated environments.</p>
+<p>The project combines systems engineering principles with real-world cybersecurity needs, making it both a functional tool and a strong technical showcase.</p>
+<hr>
+
+</body>
+</html>

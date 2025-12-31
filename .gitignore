@@ -1,0 +1,32 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+drishti
+drishti-nexus
+
+# Test files (allow test.log)
+!test.log
+*.test
+*.out
+
+# Go workspace
+go.work
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+dist/
+build/
+bin/
+
+# OS
+.DS_Store
+Thumbs.db

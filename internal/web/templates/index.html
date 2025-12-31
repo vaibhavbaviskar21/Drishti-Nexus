@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drishti Nexus - SOC Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Drishti Nexus</h1>
+            <p class="subtitle">Portable SOC Log Analysis</p>
+            <div class="status-indicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Loading...</span>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Logs</div>
+                <div class="stat-value" id="totalLogs">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Security Alerts</div>
+                <div class="stat-value alert-count" id="totalAlerts">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Critical</div>
+                <div class="stat-value critical-count" id="criticalAlerts">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">High Priority</div>
+                <div class="stat-value high-count" id="highAlerts">0</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <section class="panel full-width">
+                <div class="section-header">
+                    <h2>Recent Security Alerts</h2>
+                    <button class="btn btn-success" onclick="generateReport()">Generate Report</button>
+                </div>
+                <div class="alert-filters">
+                    <div class="filter-group">
+                        <input type="text" id="alertSearch" placeholder="Search alerts..." onkeyup="filterAlerts()" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <select id="alertSeverityFilter" onchange="filterAlerts()">
+                            <option value="all">All Severities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <select id="alertTypeFilter" onchange="filterAlerts()">
+                            <option value="all">All Types</option>
+                            <option value="rule">By Rule</option>
+                            <option value="pattern">By Pattern</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-sm" onclick="refreshAlerts()">🔄 Refresh</button>
+                </div>
+                <div class="alert-list" id="alertList">
+                    <p class="empty-state">No alerts detected</p>
+                </div>
+            </section>
+
+            <section class="panel full-width">
+                <div class="section-header">
+                    <h2>Recent Log Entries</h2>
+                    <button class="btn btn-sm" onclick="exportLogs()">⬇️ Export Logs</button>
+                </div>
+                <div class="log-filters">
+                    <div class="filter-group">
+                        <input type="text" id="logSearch" placeholder="Search logs..." onkeyup="filterLogs()" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <select id="severityFilter" onchange="filterLogs()">
+                            <option value="all">All Severities</option>
+                            <option value="EMERGENCY">Emergency</option>
+                            <option value="ALERT">Alert</option>
+                            <option value="CRITICAL">Critical</option>
+                            <option value="ERROR">Error</option>
+                            <option value="WARNING">Warning</option>
+                            <option value="NOTICE">Notice</option>
+                            <option value="INFO">Info</option>
+                            <option value="DEBUG">Debug</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <select id="sourceFilter" onchange="filterLogs()">
+                            <option value="all">All Sources</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <input type="text" id="dateFilter" placeholder="Filter by date (YYYY-MM-DD)" onkeyup="filterLogs()" class="search-input">
+                    </div>
+                </div>
+                <div class="log-list" id="logList">
+                    <p class="empty-state">Loading logs...</p>
+                </div>
+            </section>
+
+            <section class="panel severity-panel">
+                <h2>Severity Distribution</h2>
+                <div class="severity-chart" id="severityChart">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>Drishti Nexus v1.0 | Offline-capable SOC Analysis Tool</p>
+            <p class="timestamp">Last updated: <span id="lastUpdate">--</span></p>
+        </footer>
+    </div>
+
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Generate Security Report</h2>
+                <span class="close" onclick="closeReportModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="report-options">
+                    <label><input type="checkbox" id="reportAlerts" checked> Include Security Alerts</label>
+                    <label><input type="checkbox" id="reportStats" checked> Include Statistics</label>
+                    <label><input type="checkbox" id="reportLogs" checked> Include Log Entries</label>
+                    <label><input type="checkbox" id="reportSeverity" checked> Include Severity Distribution</label>
+                </div>
+                <div class="report-format">
+                    <label>Report Format:</label>
+                    <select id="reportFormat">
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                        <option value="html">HTML</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeReportModal()">Cancel</button>
+                <button class="btn btn-success" onclick="generateReportFile()">Generate & Download</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
