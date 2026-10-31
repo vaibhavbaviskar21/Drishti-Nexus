@@ -3,15 +3,22 @@ package parser
 import (
 	"drishti-nexus/internal/models"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 )
 
-// JSONParser handles JSON-formatted logs
-type JSONParser struct{}
+// JSONParser handles JSON-formatted logs (one object per record; pretty-printed
+// objects are reassembled by the registry before they reach this parser).
+type JSONParser struct {
+	ctx *Context
+}
 
-func NewJSONParser() *JSONParser {
-	return &JSONParser{}
+func NewJSONParser(ctx *Context) *JSONParser {
+	if ctx == nil {
+		ctx = &Context{}
+	}
+	return &JSONParser{ctx: ctx}
 }
 
 func (p *JSONParser) Name() string {
@@ -30,57 +37,90 @@ func (p *JSONParser) Parse(line string) (*models.LogEntry, error) {
 	}
 
 	entry := &models.LogEntry{
-		ID:     generateID(),
 		RawLog: line,
 		Fields: data,
 		Tags:   []string{},
 	}
 
-	// Extract common fields with various field name conventions
 	entry.Timestamp = p.extractTimestamp(data)
 	entry.Message = p.extractString(data, "message", "msg", "text", "log")
-	entry.Source = p.extractString(data, "hostname", "host", "source", "server")
+	entry.Source = p.extractSource(data)
 	entry.Severity = p.extractSeverity(data)
-	entry.Facility = p.extractString(data, "facility", "logger", "category", "service")
+	entry.Facility = p.extractString(data, "facility", "logger", "category", "service", "channel")
 
 	return entry, nil
 }
 
+// lookup finds a key case-insensitively ("Hostname", "hostname", "HostName").
+func lookup(data map[string]interface{}, key string) (interface{}, bool) {
+	if v, ok := data[key]; ok {
+		return v, true
+	}
+	for k, v := range data {
+		if strings.EqualFold(k, key) {
+			return v, true
+		}
+	}
+	return nil, false
+}
+
 func (p *JSONParser) extractTimestamp(data map[string]interface{}) time.Time {
-	fields := []string{"timestamp", "time", "@timestamp", "datetime", "date"}
+	// Prefer fields that carry an explicit zone (ECS @timestamp) over local-time fields.
+	fields := []string{"@timestamp", "timestamp", "time", "UtcTime", "datetime", "EventTime", "date"}
 
 	for _, field := range fields {
-		if val, ok := data[field]; ok {
-			switch v := val.(type) {
-			case string:
-				// Try multiple timestamp formats
-				formats := []string{
-					time.RFC3339,
-					time.RFC3339Nano,
-					"2006-01-02T15:04:05",
-					"2006-01-02 15:04:05",
-					time.RFC1123,
-				}
-				for _, format := range formats {
-					if t, err := time.Parse(format, v); err == nil {
-						return t
-					}
-				}
-			case float64:
-				// Unix timestamp
-				return time.Unix(int64(v), 0)
+		val, ok := lookup(data, field)
+		if !ok {
+			continue
+		}
+		switch v := val.(type) {
+		case string:
+			if ts, ok := parseWithZoneFallback(p.ctx, v, data); ok {
+				return ts
 			}
+		case float64:
+			// Unix epoch in seconds, or milliseconds when implausibly large for seconds.
+			var t time.Time
+			if v > 1e12 {
+				t = time.UnixMilli(int64(v))
+			} else {
+				sec := int64(v)
+				t = time.Unix(sec, int64((v-float64(sec))*1e9))
+			}
+			data["timestamp_raw"] = fmt.Sprintf("%v", v)
+			data["tz_offset"] = "+00:00"
+			return t.UTC()
 		}
 	}
 
-	return time.Now()
+	return time.Time{}
 }
 
 func (p *JSONParser) extractString(data map[string]interface{}, fields ...string) string {
 	for _, field := range fields {
-		if val, ok := data[field]; ok {
+		if val, ok := lookup(data, field); ok {
 			if str, ok := val.(string); ok {
 				return str
+			}
+		}
+	}
+	return ""
+}
+
+func (p *JSONParser) extractSource(data map[string]interface{}) string {
+	for _, field := range []string{"hostname", "host", "computer_name", "computer", "source", "server"} {
+		val, ok := lookup(data, field)
+		if !ok {
+			continue
+		}
+		switch v := val.(type) {
+		case string:
+			if v != "" {
+				return v
+			}
+		case map[string]interface{}: // ECS: "host": {"name": "..."}
+			if name := p.extractString(v, "name", "hostname"); name != "" {
+				return name
 			}
 		}
 	}
@@ -91,12 +131,12 @@ func (p *JSONParser) extractSeverity(data map[string]interface{}) models.Severit
 	fields := []string{"severity", "level", "loglevel", "priority"}
 
 	for _, field := range fields {
-		if val, ok := data[field]; ok {
+		if val, ok := lookup(data, field); ok {
 			if str, ok := val.(string); ok {
 				return p.severityFromString(str)
 			}
-			if num, ok := val.(float64); ok {
-				return models.Severity(int(num))
+			if num, ok := val.(float64); ok && num >= 0 && num <= float64(models.SeverityEmergency) {
+				return fromSyslogSeverity(int(num))
 			}
 		}
 	}

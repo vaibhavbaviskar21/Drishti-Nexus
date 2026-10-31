@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        if: runner.os == 'Linux'
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - name: Build
+        run: go build ./...
+      - name: Generate benign dataset
+        run: go run ./cmd/genbenign
+      - name: Cache public datasets
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: testdata/datasets/.cache
+          key: datasets-${{ hashFiles('scripts/fetch-datasets.sh') }}
+      - name: Fetch public datasets
+        if: runner.os == 'Linux'
+        run: bash scripts/fetch-datasets.sh
+      - name: Unit + integration tests
+        if: runner.os == 'Linux'
+        run: go test -race -count=1 ./...
+      - name: Unit tests (fixtures only)
+        if: runner.os != 'Linux'
+        run: go test -short -count=1 ./...
+
+  lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.5.0
+
+  gosec:
+    name: gosec
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Run gosec
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.22.8
+          gosec -conf .gosec.json ./...

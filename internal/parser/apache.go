@@ -3,21 +3,28 @@ package parser
 import (
 	"drishti-nexus/internal/models"
 	"regexp"
+	"strings"
 	"time"
 )
 
-// ApacheParser handles Apache/Nginx common and combined log formats
+// ApacheParser handles Apache/Nginx common and combined log formats.
+//
+// The request line is captured as a whole quoted string and split afterwards,
+// because attack traffic often contains raw spaces or quotes in the URL
+// ("GET /x?id=1' OR '1'='1 HTTP/1.1") that a token-per-field regex rejects.
 type ApacheParser struct {
-	combinedPattern *regexp.Regexp
-	commonPattern   *regexp.Regexp
+	ctx     *Context
+	pattern *regexp.Regexp
 }
 
-func NewApacheParser() *ApacheParser {
+func NewApacheParser(ctx *Context) *ApacheParser {
+	if ctx == nil {
+		ctx = &Context{}
+	}
 	return &ApacheParser{
-		// Combined: IP - - [timestamp] "METHOD /path HTTP/1.1" status size "referer" "user-agent"
-		combinedPattern: regexp.MustCompile(`^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"(\S+)\s+(\S+)\s+(\S+)"\s+(\d+)\s+(\S+)\s+"([^"]*)"\s+"([^"]*)"`),
-		// Common: IP - - [timestamp] "METHOD /path HTTP/1.1" status size
-		commonPattern: regexp.MustCompile(`^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"(\S+)\s+(\S+)\s+(\S+)"\s+(\d+)\s+(\S+)`),
+		ctx: ctx,
+		// IP IDENT USER [TIME] "REQUEST" STATUS SIZE ["REFERER" "USER-AGENT"]
+		pattern: regexp.MustCompile(`^(\S+) (\S+) (\S+) \[([^\]]+)\] "((?:[^"\\]|\\.)*)" (\d{3}) (\S+)(?: "((?:[^"\\]|\\.)*)" "((?:[^"\\]|\\.)*)")?`),
 	}
 }
 
@@ -26,94 +33,70 @@ func (p *ApacheParser) Name() string {
 }
 
 func (p *ApacheParser) CanParse(line string) bool {
-	return p.combinedPattern.MatchString(line) || p.commonPattern.MatchString(line)
+	return strings.Contains(line, " [") && strings.Contains(line, `] "`)
 }
 
 func (p *ApacheParser) Parse(line string) (*models.LogEntry, error) {
-	// Try combined format first
-	if matches := p.combinedPattern.FindStringSubmatch(line); matches != nil {
-		return p.parseCombined(line, matches)
+	m := p.pattern.FindStringSubmatch(line)
+	if m == nil {
+		return nil, nil
+	}
+	fields := map[string]interface{}{}
+	timestamp := p.parseApacheTime(m[4], fields)
+	if timestamp.IsZero() {
+		return nil, nil
 	}
 
-	// Try common format
-	if matches := p.commonPattern.FindStringSubmatch(line); matches != nil {
-		return p.parseCommon(line, matches)
+	ip, status := m[1], m[6]
+	method, path, protocol := splitRequest(m[5])
+	fields["src_ip"] = ip
+	if m[3] != "-" {
+		fields["user"] = m[3]
+	}
+	fields["request"] = m[5]
+	fields["method"], fields["path"], fields["protocol"] = method, path, protocol
+	fields["status"], fields["size"] = status, m[7]
+	if m[9] != "" || m[8] != "" {
+		fields["referer"], fields["user_agent"] = m[8], m[9]
 	}
 
-	return nil, nil
-}
-
-func (p *ApacheParser) parseCombined(rawLog string, matches []string) (*models.LogEntry, error) {
-	ip := matches[1]
-	timestamp := p.parseApacheTime(matches[2])
-	method := matches[3]
-	path := matches[4]
-	protocol := matches[5]
-	status := matches[6]
-	size := matches[7]
-	referer := matches[8]
-	userAgent := matches[9]
-
-	entry := &models.LogEntry{
-		ID:        generateID(),
+	return &models.LogEntry{
 		Timestamp: timestamp,
 		Source:    ip,
 		Facility:  "web",
 		Severity:  p.severityFromStatus(status),
-		Message:   method + " " + path + " " + status,
-		RawLog:    rawLog,
-		Fields: map[string]interface{}{
-			"method":     method,
-			"path":       path,
-			"protocol":   protocol,
-			"status":     status,
-			"size":       size,
-			"referer":    referer,
-			"user_agent": userAgent,
-		},
-		Tags: []string{"web", "http"},
-	}
-
-	return entry, nil
+		Message:   strings.TrimSpace(m[5] + " " + status),
+		RawLog:    line,
+		Fields:    fields,
+		Tags:      []string{"web", "http"},
+	}, nil
 }
 
-func (p *ApacheParser) parseCommon(rawLog string, matches []string) (*models.LogEntry, error) {
-	ip := matches[1]
-	timestamp := p.parseApacheTime(matches[2])
-	method := matches[3]
-	path := matches[4]
-	protocol := matches[5]
-	status := matches[6]
-	size := matches[7]
-
-	entry := &models.LogEntry{
-		ID:        generateID(),
-		Timestamp: timestamp,
-		Source:    ip,
-		Facility:  "web",
-		Severity:  p.severityFromStatus(status),
-		Message:   method + " " + path + " " + status,
-		RawLog:    rawLog,
-		Fields: map[string]interface{}{
-			"method":   method,
-			"path":     path,
-			"protocol": protocol,
-			"status":   status,
-			"size":     size,
-		},
-		Tags: []string{"web", "http"},
+// splitRequest splits "METHOD PATH PROTOCOL", where PATH may contain spaces.
+func splitRequest(req string) (method, path, protocol string) {
+	parts := strings.Fields(req)
+	switch {
+	case len(parts) == 0:
+		return "", "", ""
+	case len(parts) == 1:
+		return parts[0], "", ""
 	}
-
-	return entry, nil
+	method = parts[0]
+	rest := strings.TrimSpace(req[len(method):])
+	if last := parts[len(parts)-1]; len(parts) > 2 && strings.HasPrefix(last, "HTTP/") {
+		protocol = last
+		rest = strings.TrimSpace(strings.TrimSuffix(rest, last))
+	}
+	return method, rest, protocol
 }
 
-func (p *ApacheParser) parseApacheTime(timeStr string) time.Time {
+func (p *ApacheParser) parseApacheTime(timeStr string, fields map[string]interface{}) time.Time {
 	// Format: "02/Jan/2006:15:04:05 -0700"
 	t, err := time.Parse("02/Jan/2006:15:04:05 -0700", timeStr)
 	if err != nil {
-		return time.Now()
+		return time.Time{}
 	}
-	return t
+	return stampTime(fields, timeStr, t, false)
 }
 
 func (p *ApacheParser) severityFromStatus(status string) models.Severity {

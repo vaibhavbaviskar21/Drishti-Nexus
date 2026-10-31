@@ -1,0 +1,188 @@
+{
+  "generated_at": "2026-10-04T09:58:02.457387Z",
+  "drishti_version": "1.1.0-dev",
+  "go_version": "go1.25.5",
+  "platform": "windows/amd64",
+  "config_path": "configs\\config.yaml",
+  "assumed_timezone": "UTC",
+  "datasets": [
+    {
+      "name": "loghub-ssh",
+      "files": [
+        "testdata/datasets/loghub-ssh/SSH.log"
+      ],
+      "benign": false,
+      "note": "Real sshd log, lab server under sustained internet brute force (LogHub)",
+      "lines": 655147,
+      "entries": 655147,
+      "parse_quality": {
+        "Clean": 655147
+      },
+      "structured_pct": 100,
+      "clean_pct": 100,
+      "by_parser": {
+        "syslog": 655147
+      },
+      "repairs": {},
+      "alerts": 1711,
+      "incidents": 1101,
+      "alerts_by_rule": {
+        "Authentication Brute Force": 1,
+        "Excessive Authentication Failures": 1680,
+        "Time-based Anomaly": 30
+      },
+      "alerts_per_1k_lines": 2.6116276194502914,
+      "duration_ms": 9530,
+      "lines_per_sec": 68745,
+      "alloc_mb": 2918.226119995117
+    },
+    {
+      "name": "loghub-linux",
+      "files": [
+        "testdata/datasets/loghub-linux/Linux.log"
+      ],
+      "benign": false,
+      "note": "Real /var/log/messages from one Linux host (LogHub); contains real brute-force bursts",
+      "lines": 25567,
+      "entries": 25567,
+      "parse_quality": {
+        "Clean": 25547,
+        "Partial": 20
+      },
+      "structured_pct": 100,
+      "clean_pct": 99.9217741620057,
+      "by_parser": {
+        "syslog": 25567
+      },
+      "repairs": {
+        "encoding_repaired": 20
+      },
+      "alerts": 775,
+      "incidents": 592,
+      "alerts_by_rule": {
+        "Excessive Authentication Failures": 344,
+        "Time-based Anomaly": 431
+      },
+      "alerts_per_1k_lines": 30.312512222787188,
+      "duration_ms": 233,
+      "lines_per_sec": 109729,
+      "alloc_mb": 47.3470458984375
+    },
+    {
+      "name": "mordor-mimikatz",
+      "files": [
+        "testdata/datasets/mordor/empire_mimikatz_logonpasswords_2020-08-07103224.json"
+      ],
+      "benign": false,
+      "note": "Windows Security/Sysmon/PowerShell JSON events, Empire Mimikatz (OTRF)",
+      "lines": 6026,
+      "entries": 6026,
+      "parse_quality": {
+        "Clean": 6026
+      },
+      "structured_pct": 100,
+      "clean_pct": 100,
+      "by_parser": {
+        "json": 6026
+      },
+      "repairs": {},
+      "alerts": 2,
+      "incidents": 1,
+      "alerts_by_rule": {
+        "Injection Pattern Detected": 1,
+        "Suspicious Command Execution": 1
+      },
+      "alerts_per_1k_lines": 0.3318951211417192,
+      "duration_ms": 1408,
+      "lines_per_sec": 4279,
+      "alloc_mb": 388.26012420654297
+    },
+    {
+      "name": "mordor-psexec",
+      "files": [
+        "testdata/datasets/mordor/empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json"
+      ],
+      "benign": false,
+      "note": "Windows events, Empire PsExec lateral movement (OTRF)",
+      "lines": 4348,
+      "entries": 4348,
+      "parse_quality": {
+        "Clean": 4348
+      },
+      "structured_pct": 100,
+      "clean_pct": 100,
+      "by_parser": {
+        "json": 4348
+      },
+      "repairs": {},
+      "alerts": 6,
+      "incidents": 3,
+      "alerts_by_rule": {
+        "Injection Pattern Detected": 2,
+        "Suspicious Command Execution": 4
+      },
+      "alerts_per_1k_lines": 1.3799448022079117,
+      "duration_ms": 394,
+      "lines_per_sec": 11035,
+      "alloc_mb": 116.20763397216797
+    },
+    {
+      "name": "synthetic-benign",
+      "files": [
+        "testdata/benign/auth_benign.log"
+      ],
+      "benign": true,
+      "note": "Generated benign auth/syslog week (cmd/genbenign, seed 42)",
+      "lines": 50000,
+      "entries": 50000,
+      "parse_quality": {
+        "Clean": 50000
+      },
+      "structured_pct": 100,
+      "clean_pct": 100,
+      "by_parser": {
+        "syslog": 50000
+      },
+      "repairs": {},
+      "alerts": 87,
+      "incidents": 84,
+      "alerts_by_rule": {
+        "Excessive Authentication Failures": 8,
+        "Time-based Anomaly": 79
+      },
+      "alerts_per_1k_lines": 1.74,
+      "duration_ms": 494,
+      "lines_per_sec": 101214,
+      "alloc_mb": 80.9643783569336
+    },
+    {
+      "name": "fixture-openssh-2k",
+      "files": [
+        "testdata/fixtures/loghub_openssh_2k.log"
+      ],
+      "benign": false,
+      "note": "First 2,000 lines of LogHub OpenSSH (committed fixture)",
+      "lines": 2000,
+      "entries": 2000,
+      "parse_quality": {
+        "Clean": 2000
+      },
+      "structured_pct": 100,
+      "clean_pct": 100,
+      "by_parser": {
+        "syslog": 2000
+      },
+      "repairs": {},
+      "alerts": 16,
+      "incidents": 14,
+      "alerts_by_rule": {
+        "Excessive Authentication Failures": 15,
+        "Time-based Anomaly": 1
+      },
+      "alerts_per_1k_lines": 8,
+      "duration_ms": 26,
+      "lines_per_sec": 76923,
+      "alloc_mb": 7.9908294677734375
+    }
+  ]
+}

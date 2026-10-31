@@ -1,5 +1,15 @@
 # Drishti Nexus - Technical Architecture
 
+> **Phase 1 changes (2026-10).** Every command now runs the shared pipeline in `internal/pipeline`:
+> 1. Hash the evidence (`internal/audit`).
+> 2. Open it read-only.
+> 3. Run `LineReader` → `ParserRegistry`, which assembles multi-line records and normalises time to UTC.
+> 4. Run the detection `Engine` (event-time windows, aggregation, incidents).
+> 5. Write to storage: in-memory, or SQLite with `-db`.
+> 6. Re-verify hashes and append to the audit log.
+>
+> The binary lives in `cmd/drishti`. See [CHAIN_OF_CUSTODY.md](CHAIN_OF_CUSTODY.md) for the custody design, [RULES.md](RULES.md) for current rule behaviour, and [../BASELINE.md](../BASELINE.md) for measured performance. Sections below that describe the original design still apply except where these documents say otherwise.
+
 ---
 
 ## System Overview

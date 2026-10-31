@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-10-03T18:45:42.7245689Z",
+  "drishti_version": "1.0.0",
+  "go_version": "go1.25.5",
+  "files": [
+    {
+      "file": "SSH.log",
+      "parse_only": true,
+      "sampled": false,
+      "total_lines": 648415,
+      "parsed_ok": 648415,
+      "parse_errors": 0,
+      "empty_lines": 0,
+      "parse_success_pct": 100,
+      "alerts_by_rule": {},
+      "total_alerts": 0,
+      "duration_ms": 2156,
+      "lines_per_sec": 300749,
+      "alloc_mb": 289.9996566772461
+    }
+  ],
+  "totals": {
+    "total_files": 1,
+    "total_lines": 648415,
+    "total_parsed_ok": 648415,
+    "total_errors": 0,
+    "parse_success_pct": 100,
+    "total_alerts": 0,
+    "alerts_by_rule": {},
+    "total_duration_ms": 2156
+  },
+  "false_positive_note": "Alerts on benign datasets should be manually reviewed; count here is raw — not yet scored for FP rate."
+}

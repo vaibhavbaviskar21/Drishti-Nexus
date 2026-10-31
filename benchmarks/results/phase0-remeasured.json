@@ -1,0 +1,149 @@
+{
+  "generated_by": "scratch measure tool (same datasets, same detection config defaults) run on 2026-10-04",
+  "builds": {
+    "head": "commit f5f55a9 (Phase 0 code as committed)",
+    "working_tree": "uncommitted pre-Phase-1 changes found in the tree on 2026-10-04 (multi-line buffering)"
+  },
+  "fields": {
+    "generic_fallback": "entries produced by the generic fallback parser (no structured fields, source=unknown, timestamp=time.Now())"
+  },
+  "results": {
+    "head": {
+      "synthetic-benign": {
+        "lines": 50000,
+        "entries": 50000,
+        "generic_fallback": 50000,
+        "source_unknown": 50000,
+        "alerts": 28494,
+        "alerts_by_rule": {
+          "Authentication Brute Force": 6860,
+          "Excessive Authentication Failures": 4024,
+          "Privilege Escalation Indicator": 17610
+        },
+        "duration_ms": 2201
+      },
+      "mordor-mimikatz": {
+        "lines": 6026,
+        "entries": 6026,
+        "generic_fallback": 0,
+        "source_unknown": 0,
+        "alerts": 0,
+        "alerts_by_rule": {},
+        "duration_ms": 1042
+      },
+      "mordor-psexec": {
+        "lines": 4348,
+        "entries": 4348,
+        "generic_fallback": 0,
+        "source_unknown": 0,
+        "alerts": 0,
+        "alerts_by_rule": {},
+        "duration_ms": 516
+      },
+      "loghub-linux": {
+        "lines": 25567,
+        "entries": 25567,
+        "generic_fallback": 25567,
+        "source_unknown": 25567,
+        "alerts": 6953,
+        "alerts_by_rule": {
+          "Authentication Brute Force": 563,
+          "Excessive Authentication Failures": 3996,
+          "Injection Pattern Detected": 8,
+          "Privilege Escalation Indicator": 2348,
+          "Suspicious Command Execution": 38
+        },
+        "duration_ms": 1124
+      },
+      "loghub-ssh": {
+        "status": "did not finish within 900 s"
+      },
+      "loghub-ssh-first-50k": {
+        "lines": 50000,
+        "entries": 50000,
+        "generic_fallback": 50000,
+        "source_unknown": 50000,
+        "alerts": 61175,
+        "alerts_by_rule": {
+          "Authentication Brute Force": 24,
+          "Excessive Authentication Failures": 33060,
+          "Privilege Escalation Indicator": 28073,
+          "Suspicious Command Execution": 18
+        },
+        "duration_ms": 158763
+      }
+    },
+    "working_tree": {
+      "synthetic-benign": {
+        "lines": 50000,
+        "entries": 9,
+        "generic_fallback": 9,
+        "source_unknown": 9,
+        "alerts": 14,
+        "alerts_by_rule": {
+          "Excessive Authentication Failures": 5,
+          "Privilege Escalation Indicator": 9
+        },
+        "duration_ms": 383
+      },
+      "mordor-mimikatz": {
+        "lines": 6026,
+        "entries": 6026,
+        "generic_fallback": 0,
+        "source_unknown": 0,
+        "alerts": 0,
+        "alerts_by_rule": {},
+        "duration_ms": 1447
+      },
+      "mordor-psexec": {
+        "lines": 4348,
+        "entries": 4348,
+        "generic_fallback": 0,
+        "source_unknown": 0,
+        "alerts": 0,
+        "alerts_by_rule": {},
+        "duration_ms": 750
+      },
+      "loghub-linux": {
+        "lines": 25567,
+        "entries": 5,
+        "generic_fallback": 5,
+        "source_unknown": 5,
+        "alerts": 14,
+        "alerts_by_rule": {
+          "Excessive Authentication Failures": 1,
+          "Injection Pattern Detected": 4,
+          "Privilege Escalation Indicator": 5,
+          "Suspicious Command Execution": 4
+        },
+        "duration_ms": 327
+      },
+      "loghub-ssh": {
+        "lines": 655147,
+        "entries": 139,
+        "generic_fallback": 139,
+        "source_unknown": 139,
+        "alerts": 297,
+        "alerts_by_rule": {
+          "Excessive Authentication Failures": 135,
+          "Privilege Escalation Indicator": 139,
+          "Suspicious Command Execution": 23
+        },
+        "duration_ms": 5681
+      },
+      "loghub-ssh-first-50k": {
+        "lines": 50000,
+        "entries": 11,
+        "generic_fallback": 11,
+        "source_unknown": 11,
+        "alerts": 20,
+        "alerts_by_rule": {
+          "Excessive Authentication Failures": 7,
+          "Privilege Escalation Indicator": 11,
+          "Suspicious Command Execution": 2
+        },
+        "duration_ms": 336
+      }
+    }
+  }
+}

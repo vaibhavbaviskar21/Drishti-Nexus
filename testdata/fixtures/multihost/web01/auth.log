@@ -1,0 +1,11 @@
+2025-03-10T10:00:05+00:00 web01 sshd[2001]: Accepted publickey for alice from 10.0.0.5 port 50100 ssh2
+2025-03-10T10:00:05+00:00 web01 sshd[2001]: pam_unix(sshd:session): session opened for user alice(uid=1001) by (uid=0)
+2025-03-10T10:14:01+00:00 web01 sshd[2101]: Failed password for deploy from 203.0.113.50 port 51120 ssh2
+2025-03-10T10:14:03+00:00 web01 sshd[2102]: Failed password for deploy from 203.0.113.50 port 51122 ssh2
+2025-03-10T10:14:05+00:00 web01 sshd[2103]: Failed password for deploy from 203.0.113.50 port 51124 ssh2
+2025-03-10T10:14:07+00:00 web01 sshd[2104]: Failed password for deploy from 203.0.113.50 port 51126 ssh2
+2025-03-10T10:14:09+00:00 web01 sshd[2105]: Failed password for deploy from 203.0.113.50 port 51128 ssh2
+2025-03-10T10:14:11+00:00 web01 sshd[2106]: Failed password for deploy from 203.0.113.50 port 51130 ssh2
+2025-03-10T10:14:14+00:00 web01 sshd[2107]: Accepted password for deploy from 203.0.113.50 port 51132 ssh2
+2025-03-10T10:14:14+00:00 web01 sshd[2107]: pam_unix(sshd:session): session opened for user deploy(uid=1002) by (uid=0)
+2025-03-10T10:31:40+00:00 web01 sshd[2001]: pam_unix(sshd:session): session closed for user alice

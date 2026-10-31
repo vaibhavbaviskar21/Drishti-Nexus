@@ -56,6 +56,9 @@ func (s *MemoryStorage) AddAlert(alert *models.Alert) {
 	s.alerts = append(s.alerts, alert)
 }
 
+// UpdateAlert is a no-op: the engine mutates the stored alert pointer in place.
+func (s *MemoryStorage) UpdateAlert(alert *models.Alert) {}
+
 // GetLogs returns all logs
 func (s *MemoryStorage) GetLogs() []*models.LogEntry {
 	s.mu.RLock()
