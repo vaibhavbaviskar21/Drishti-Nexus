@@ -1,99 +1,109 @@
 package cli
 
 import (
-	"bufio"
-	"drishti-nexus/internal/detection"
-	"drishti-nexus/internal/models"
-	"drishti-nexus/internal/parser"
+	"drishti-nexus/internal/audit"
+	"drishti-nexus/internal/pipeline"
 	"drishti-nexus/internal/storage"
+	"flag"
 	"fmt"
-	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
-// ScanCommand scans log files and generates a report
-func ScanCommand(filename, outputFile string, config *models.Config) error {
-	file, err := os.Open(filename)
+// ScanCommand scans log files and exports findings to JSON and CSV.
+func ScanCommand(args []string) error {
+	fs := flag.NewFlagSet("scan", flag.ContinueOnError)
+	var common Common
+	common.Register(fs)
+	output := fs.String("output", "", "JSON report path (default: drishti-scan-<time>.json); alerts CSV is written alongside")
+	db := fs.String("db", "", "optional SQLite database for persistent storage")
+	noLogs := fs.Bool("alerts-only", false, "omit parsed log entries from the JSON report")
+	files, err := ParseInterleaved(fs, args)
 	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
+		return err
 	}
-	defer file.Close()
+	if len(files) == 0 {
+		return fmt.Errorf("usage: drishti scan [flags] <logfile|dir> [...]")
+	}
+	if err := common.Load(); err != nil {
+		return err
+	}
 
-	// Initialize components
-	parserRegistry := parser.NewParserRegistry()
-	store := storage.NewMemoryStorage(config.MaxLogEntries)
-	detectionEngine := detection.NewEngine(store, config)
-
-	fmt.Printf("Scanning: %s\n", filename)
-	fmt.Println("Processing...")
-
-	scanner := bufio.NewScanner(file)
-	lineCount := 0
-	lastProgress := 0
-
-	startTime := time.Now()
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		lineCount++
-
-		// Progress indicator every 10k lines
-		if lineCount%10000 == 0 {
-			fmt.Printf("\rProcessed %d lines...", lineCount)
-			lastProgress = lineCount
+	opts := common.PipelineOptions("scan", args)
+	opts.KeepLogs = !*noLogs || *db != ""
+	if *db != "" {
+		store, err := storage.OpenSQLite(*db)
+		if err != nil {
+			return err
 		}
-
-		entry, err := parserRegistry.Parse(line)
-		if err != nil || entry == nil {
-			continue
-		}
-
-		store.AddLog(entry)
-		detectionEngine.AnalyzeLog(entry)
+		defer closeStore(store)
+		opts.Store, opts.StorageDesc = store, "sqlite:"+*db
 	}
 
-	if lineCount > lastProgress {
-		fmt.Printf("\rProcessed %d lines...\n", lineCount)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("error reading file: %w", err)
-	}
-
-	processingTime := time.Since(startTime)
-
-	// Generate report
-	logs := store.GetLogs()
-	alerts := store.GetAlerts()
-
-	fmt.Printf("\nProcessing complete in %v\n", processingTime)
-	fmt.Printf("Logs: %d | Alerts: %d\n\n", len(logs), len(alerts))
-
-	// Export results
+	outputFile := *output
 	if outputFile == "" {
 		outputFile = fmt.Sprintf("drishti-scan-%s.json", time.Now().Format("20060102-150405"))
 	}
-
-	// Ensure .json extension
 	if filepath.Ext(outputFile) != ".json" {
 		outputFile += ".json"
 	}
+	alertsCSV := strings.TrimSuffix(outputFile, ".json") + "-alerts.csv"
 
-	fmt.Printf("Exporting results to: %s\n", outputFile)
-	if err := storage.ExportJSON(logs, alerts, outputFile); err != nil {
-		return fmt.Errorf("failed to export results: %w", err)
+	fmt.Println("Scanning...")
+	res, err := pipeline.Run(files, opts)
+	if err != nil {
+		return err
+	}
+	printEvidence(res.Session)
+	for _, out := range []string{outputFile, alertsCSV} {
+		if err := audit.CheckOutputPath(out, res.Session.Evidence); err != nil {
+			_ = res.Finish(&opts, "error: "+err.Error())
+			return err
+		}
 	}
 
-	// Also export alerts to CSV for easy review
-	alertsCSV := outputFile[:len(outputFile)-5] + "-alerts.csv"
-	if err := storage.ExportAlertsCSV(alerts, alertsCSV); err != nil {
+	st := res.Stats
+	fmt.Printf("\nProcessing complete in %v\n", st.Duration.Round(time.Millisecond))
+	fmt.Printf("Lines: %d | Entries: %d | Alerts: %d | Incidents: %d\n", st.Lines, st.Entries, st.Alerts, st.Incidents)
+	fmt.Printf("Parse quality: %s\n\n", formatCounts(st.ParseQuality))
+
+	var logs = res.Store.GetLogs()
+	if *noLogs {
+		logs = nil
+	}
+	alerts := res.Alerts()
+
+	fmt.Printf("Exporting results to: %s\n", outputFile)
+	if err := storage.ExportJSON(logs, alerts, res.Session, opts.AuditLogPath, outputFile); err != nil {
+		_ = res.Finish(&opts, "error: "+err.Error())
+		return fmt.Errorf("failed to export results: %w", err)
+	}
+	res.Session.AddOutput(outputFile)
+
+	if err := storage.ExportAlertsCSV(alerts, res.Session, alertsCSV); err != nil {
 		fmt.Printf("Warning: failed to export alerts CSV: %v\n", err)
 	} else {
+		res.Session.AddOutput(alertsCSV)
 		fmt.Printf("Alert summary: %s\n", alertsCSV)
 	}
 
+	ferr := res.Finish(&opts, "ok")
+	printCustody(res.Session, opts.AuditLogPath)
+	if ferr != nil {
+		return ferr
+	}
 	fmt.Println("\n✓ Scan complete")
-
 	return nil
+}
+
+func formatCounts(m map[string]int) string {
+	parts := make([]string, 0, len(m))
+	for _, k := range pipeline.SortedKeys(m) {
+		parts = append(parts, fmt.Sprintf("%s=%d", k, m[k]))
+	}
+	if len(parts) == 0 {
+		return "-"
+	}
+	return strings.Join(parts, " ")
 }

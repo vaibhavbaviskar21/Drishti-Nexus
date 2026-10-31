@@ -1,0 +1,6 @@
+2025-03-10T09:58:00+00:00 db01 sshd[3001]: Accepted publickey for alice from 10.0.0.5 port 50090 ssh2
+2025-03-10T09:58:00+00:00 db01 sshd[3001]: pam_unix(sshd:session): session opened for user alice(uid=1001) by (uid=0)
+2025-03-10T10:21:40+00:00 db01 sshd[3107]: Accepted password for deploy from 10.0.0.11 port 40222 ssh2
+2025-03-10T10:21:40+00:00 db01 sshd[3107]: pam_unix(sshd:session): session opened for user deploy(uid=1002) by (uid=0)
+2025-03-10T10:22:03+00:00 db01 sudo:   deploy : TTY=pts/0 ; PWD=/home/deploy ; USER=root ; COMMAND=/usr/bin/pg_dumpall
+2025-03-10T10:40:12+00:00 db01 sshd[3001]: pam_unix(sshd:session): session closed for user alice

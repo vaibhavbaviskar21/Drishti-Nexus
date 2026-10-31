@@ -1,0 +1,26 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - bodyclose
+    - misspell
+    - unconvert
+  settings:
+    errcheck:
+      exclude-functions:
+        - (*os.File).Close
+        - fmt.Fprintln
+        - fmt.Fprintf
+        - (*github.com/fatih/color.Color).Printf
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters: [errcheck]
+
+formatters:
+  enable:
+    - gofmt

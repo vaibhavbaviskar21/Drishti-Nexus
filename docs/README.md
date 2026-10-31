@@ -1,45 +1,16 @@
 # Drishti Nexus Documentation
 
-This folder contains detailed technical documentation and development resources.
+| Document | What it covers |
+|---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Components, data model, parser and storage design |
+| [RULES.md](RULES.md) | Detection rules and their configuration |
+| [CHAIN_OF_CUSTODY.md](CHAIN_OF_CUSTODY.md) | Read-only evidence access, hashing, hash-chained audit log, report custody fields |
+| [LIMITATIONS.md](LIMITATIONS.md) | What the tool deliberately does not do, and known gaps |
+| [PRODUCT_STRATEGY.md](PRODUCT_STRATEGY.md) | Positioning and product direction |
+| [report/](report/) | Project report (HTML/Markdown/PDF), screenshots and speaker notes |
 
-## For Presentation
-
-**Primary Documents** (in root folder):
-- `README.md` - Main user guide and quick start
-- `ARCHITECTURE.md` - Technical architecture overview
-- `RULES.md` - Detection rule documentation
-- `ABSTRACT.md` - Project abstract (500 words)
-- `DEMO_SCRIPT.md` - Video demo script
-- `PRESENTATION_SLIDES.md` - PowerPoint content
-
-## Development Documentation
-
-**Internal Resources** (this folder):
-- `GUIDE.md` - Educational walkthrough for students
-- `SCOPE_VERIFICATION.md` - Implementation verification
-- `CHANGES.md` - Development change log
-- `WALKTHROUGH.md` - Complete project walkthrough
-
-## Recommended Reading Order
-
-**For Evaluators/Reviewers:**
-1. Start with `ABSTRACT.md` (5 min)
-2. Read `README.md` (10 min)
-3. Review `ARCHITECTURE.md` (15 min)
-
-**For Users:**
-1. `README.md` - Installation and usage
-2. `RULES.md` - Understanding detection rules
-3. `DEMO_SCRIPT.md` - How to demo the tool
-
-**For Developers:**
-1. `ARCHITECTURE.md` - System design
-2. `GUIDE.md` - Deep dive with examples
-3. Source code in `internal/`
-
----
-
-**Quick Links:**
-- Main README: `../README.md`
-- Live Demo: `../DEMO_SCRIPT.md`
-- Abstract: `../ABSTRACT.md`
+Also see, in the repository root:
+- [`../README.md`](../README.md): installation and usage.
+- [`../BASELINE.md`](../BASELINE.md): measured results per phase.
+- [`../Drishti_Nexus_Implementation_Plan.md`](../Drishti_Nexus_Implementation_Plan.md): the roadmap.
+- [`../testdata/DATASETS.md`](../testdata/DATASETS.md): benchmark datasets.

@@ -1,17 +1,17 @@
 package web
 
 import (
-	"bufio"
 	"drishti-nexus/internal/detection"
 	"drishti-nexus/internal/models"
-	"drishti-nexus/internal/parser"
+	"drishti-nexus/internal/pipeline"
 	"drishti-nexus/internal/storage"
 	"embed"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
-	"os"
+	"net/url"
 	"sync"
 	"time"
 
@@ -22,8 +22,15 @@ import (
 //go:embed templates/* static/*
 var embeddedFS embed.FS
 
+// Options configure the dashboard.
+type Options struct {
+	Addr     string // listen address; default 127.0.0.1:8080 (localhost only)
+	LogFiles []string
+	Pipeline pipeline.Options // config, timezone, audit trail for loaded files
+}
+
 type Server struct {
-	storage   *storage.MemoryStorage
+	storage   storage.Storage
 	detection *detection.Engine
 	config    *models.Config
 
@@ -43,18 +50,40 @@ func NewServer(config *models.Config) *Server {
 		config:    config,
 		clients:   make(map[*websocket.Conn]bool),
 		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true // Allow all origins for localhost
-			},
+			CheckOrigin: sameOrigin,
 		},
 	}
 }
 
-func (s *Server) Start(port int, logFile string) error {
-	// Load logs if file provided
-	if logFile != "" {
-		if err := s.loadLogFile(logFile); err != nil {
+// sameOrigin only accepts WebSocket upgrades from pages served by this dashboard,
+// preventing other local web pages from reading log data (CSWSH).
+func sameOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		return true
+	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	return u.Host == r.Host
+}
+
+func (s *Server) Start(opts Options) error {
+	if len(opts.LogFiles) > 0 {
+		popts := opts.Pipeline
+		popts.Store = s.storage
+		popts.KeepLogs = true
+		res, err := pipeline.Run(opts.LogFiles, popts)
+		if err != nil {
 			log.Printf("Warning: failed to load log file: %v", err)
+		}
+		if res != nil {
+			s.detection = res.Engine
+			if ferr := res.Finish(&popts, "ok"); ferr != nil {
+				log.Printf("Warning: %v", ferr)
+			}
+			fmt.Printf("Loaded %d entries, %d alerts\n\n", res.Stats.Entries, res.Stats.Alerts)
 		}
 	}
 
@@ -70,47 +99,35 @@ func (s *Server) Start(port int, logFile string) error {
 	router.PathPrefix("/static/").Handler(http.FileServer(http.FS(embeddedFS)))
 	router.HandleFunc("/", s.handleIndex).Methods("GET")
 
-	addr := fmt.Sprintf(":%d", port)
-	fmt.Printf("\n╔═══════════════════════════════════════════╗\n")
-	fmt.Printf("║   Drishti Nexus - Web Dashboard          ║\n")
-	fmt.Printf("╚═══════════════════════════════════════════╝\n\n")
-	fmt.Printf("Server running at: http://localhost%s\n", addr)
-	fmt.Printf("Press Ctrl+C to stop\n\n")
-
-	return http.ListenAndServe(addr, router)
-}
-
-func (s *Server) loadLogFile(filename string) error {
-	file, err := os.Open(filename)
+	addr := opts.Addr
+	if addr == "" {
+		addr = "127.0.0.1:8080"
+	}
+	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid listen address %q: %w", addr, err)
 	}
-	defer file.Close()
-
-	parserRegistry := parser.NewParserRegistry()
-	scanner := bufio.NewScanner(file)
-	count := 0
-
-	fmt.Printf("Loading logs from: %s\n", filename)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		entry, err := parserRegistry.Parse(line)
-		if err != nil || entry == nil {
-			continue
-		}
-
-		s.storage.AddLog(entry)
-		s.detection.AnalyzeLog(entry)
-		count++
-
-		if count%10000 == 0 {
-			fmt.Printf("\rLoaded %d logs...", count)
-		}
+	if host == "" {
+		host = "localhost"
 	}
+	fmt.Println()
+	fmt.Println("╔═══════════════════════════════════════════╗")
+	fmt.Println("║   Drishti Nexus - Web Dashboard           ║")
+	fmt.Println("╚═══════════════════════════════════════════╝")
+	fmt.Println()
+	fmt.Printf("Server running at: http://%s\n", net.JoinHostPort(host, port))
+	fmt.Println("Press Ctrl+C to stop")
+	fmt.Println()
 
-	fmt.Printf("\rLoaded %d logs total\n\n", count)
-	return scanner.Err()
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           router,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+	return srv.ListenAndServe()
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +138,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html")
-	w.Write(data)
+	_, _ = w.Write(data)
 }
 
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +168,7 @@ func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(stats)
+	_ = json.NewEncoder(w).Encode(stats)
 }
 
 func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +176,7 @@ func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
 	logs := s.storage.GetRecentLogs(limit)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(logs)
+	_ = json.NewEncoder(w).Encode(logs)
 }
 
 func (s *Server) handleAlerts(w http.ResponseWriter, r *http.Request) {
@@ -172,7 +189,7 @@ func (s *Server) handleAlerts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(reversed)
+	_ = json.NewEncoder(w).Encode(reversed)
 }
 
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +207,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		s.clientsMu.Lock()
 		delete(s.clients, conn)
 		s.clientsMu.Unlock()
-		conn.Close()
+		_ = conn.Close()
 	}()
 
 	// Keep connection alive

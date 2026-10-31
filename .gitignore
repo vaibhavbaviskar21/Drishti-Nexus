@@ -1,31 +1,42 @@
-# Binaries
+# Build output
+bin/
+dist/
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-drishti
-drishti-nexus
-
-# Test files (allow test.log)
-!test.log
 *.test
 *.out
+*.prof
+
+# Runtime artefacts (written to the working directory by the CLI)
+drishti_audit.log
+drishti-scan-*.json
+drishti-scan-*.csv
+*.db
+*.db-wal
+*.db-shm
+
+# Test data: fetched public datasets and the generated benign set are reproducible
+# (scripts/fetch-datasets.sh, make genbenign) and too large for git.
+testdata/datasets/
+testdata/benign/*.log
+
+# Scratch benchmark output (committed results live in benchmarks/results/phase*.json)
+benchmarks/results/latest.json
 
 # Go workspace
 go.work
+go.work.sum
 
-# IDE
+# Tooling / IDE
+.venv/
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# Build artifacts
-dist/
-build/
-bin/
 
 # OS
 .DS_Store

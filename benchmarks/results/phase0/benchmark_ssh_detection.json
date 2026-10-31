@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-10-03T18:49:07.2932477Z",
+  "drishti_version": "1.0.0",
+  "go_version": "go1.25.5",
+  "files": [
+    {
+      "file": "SSH.log",
+      "parse_only": false,
+      "sampled": true,
+      "sample_lines": 10000,
+      "total_lines": 10001,
+      "parsed_ok": 10000,
+      "parse_errors": 0,
+      "empty_lines": 0,
+      "parse_success_pct": 99.9900009999,
+      "alerts_by_rule": {
+        "Authentication Brute Force": 4,
+        "Excessive Authentication Failures": 6570,
+        "Privilege Escalation Indicator": 4272,
+        "Suspicious Command Execution": 6,
+        "Time-based Anomaly": 6740
+      },
+      "total_alerts": 17592,
+      "duration_ms": 1294,
+      "lines_per_sec": 7728,
+      "alloc_mb": 1812.0200729370117
+    }
+  ],
+  "totals": {
+    "total_files": 1,
+    "total_lines": 10001,
+    "total_parsed_ok": 10000,
+    "total_errors": 0,
+    "parse_success_pct": 99.9900009999,
+    "total_alerts": 17592,
+    "alerts_by_rule": {
+      "Authentication Brute Force": 4,
+      "Excessive Authentication Failures": 6570,
+      "Privilege Escalation Indicator": 4272,
+      "Suspicious Command Execution": 6,
+      "Time-based Anomaly": 6740
+    },
+    "total_duration_ms": 1294
+  },
+  "false_positive_note": "Alerts on benign datasets should be manually reviewed; count here is raw — not yet scored for FP rate."
+}

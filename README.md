@@ -2,15 +2,16 @@
 
 **Portable Security Log Analysis Tool for Air-Gapped Networks**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/drishti-nexus)
-[![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://golang.org/)
+[![CI](https://github.com/vaibhavbaviskar21/Drishti-Nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/vaibhavbaviskar21/Drishti-Nexus/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-1.1.0--dev-blue.svg)](https://github.com/vaibhavbaviskar21/Drishti-Nexus)
+[![Go](https://img.shields.io/badge/go-1.23+-00ADD8.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 A self-contained, offline-first log analysis tool designed for isolated networks and incident response.
 
 ---
 
-## Quick Start
+# Quick Start
 
 ### Installation
 
@@ -23,25 +24,28 @@ A self-contained, offline-first log analysis tool designed for isolated networks
 
 **From Source:**
 ```bash
-git clone <repository-url>
-cd DrishtiNexus
-go build -ldflags="-s -w" -o drishti.exe .
+git clone https://github.com/vaibhavbaviskar21/Drishti-Nexus.git
+cd Drishti-Nexus
+make build            # → bin/drishti (or: go build -o bin/drishti ./cmd/drishti)
 ```
 
 ### Basic Usage
 
 ```powershell
-# Live monitoring
-.\drishti.exe tail auth.log
+# Live monitoring (with -db, an interrupted session resumes where it stopped)
+.\drishti.exe tail -db case.db auth.log
 
-# Historical analysis
-.\drishti.exe analyze syslog
+# Historical analysis (state the source host's timezone for logs without offsets)
+.\drishti.exe analyze -tz Asia/Kolkata syslog
 
-# Batch export
+# Batch export: JSON + CSV, each carrying evidence hashes and the audit session
 .\drishti.exe scan access.log -output report.json
 
-# Web dashboard
-.\drishti.exe serve -port 8080 -log test.log
+# Web dashboard (localhost only by default)
+.\drishti.exe serve -port 8080 -log testdata\fixtures\sample_auth.log
+
+# Verify the tamper-evident audit trail
+.\drishti.exe audit verify
 ```
 
 ---
@@ -53,7 +57,9 @@ go build -ldflags="-s -w" -o drishti.exe .
 ✅ **Multi-Format** - Auto-detects Syslog, JSON, Apache, Generic  
 ✅ **6 Detection Rules** - Focused, high-impact security detection  
 ✅ **Dual Interface** - CLI and web dashboard  
-✅ **Configurable** - USB-updatable rules via `config.yaml`  
+✅ **Configurable** - USB-updatable rules via `configs/config.yaml` (or `config.yaml` next to the binary)  
+✅ **Evidence-safe** - Read-only access, SHA-256 before/after, hash-chained audit log ([details](docs/CHAIN_OF_CUSTODY.md))  
+✅ **Measured** - Benchmarked on public IR datasets every phase ([BASELINE.md](BASELINE.md))  
 
 ### Detection Rules
 
@@ -69,14 +75,16 @@ go build -ldflags="-s -w" -o drishti.exe .
 ## Documentation
 
 ### Essential Reading
-- 📖 **[ABSTRACT.md](ABSTRACT.md)** - Project overview (500 words)
-- 🏗️ **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical architecture
-- 🔍 **[RULES.md](RULES.md)** - Detection rule details
-- 🎥 **[DEMO_SCRIPT.md](DEMO_SCRIPT.md)** - Video demo guide
+- 📊 **[BASELINE.md](BASELINE.md)** - Measured parse rates, false positives and performance per phase
+- 🔐 **[docs/CHAIN_OF_CUSTODY.md](docs/CHAIN_OF_CUSTODY.md)** - Evidence hashing and audit-trail design
+- 🏗️ **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture
+- 🔍 **[docs/RULES.md](docs/RULES.md)** - Detection rule details
+- ⚠️ **[docs/LIMITATIONS.md](docs/LIMITATIONS.md)** - What the tool does not do
 
 ### Additional Resources
-- 📚 [docs/GUIDE.md](docs/GUIDE.md) - Educational walkthrough
-- 📋 [docs/](docs/) - Development documentation
+- 🗺️ [Drishti_Nexus_Implementation_Plan.md](Drishti_Nexus_Implementation_Plan.md) - Phase-wise roadmap
+- 🧪 [testdata/DATASETS.md](testdata/DATASETS.md) - Benchmark datasets
+- 📋 [docs/](docs/) - Product strategy and project report
 
 ---
 
@@ -84,7 +92,7 @@ go build -ldflags="-s -w" -o drishti.exe .
 
 | Aspect | Details |
 |--------|---------|
-| **Language** | Go 1.21+ |
+| **Language** | Go 1.23+ (pure Go, no cgo) |
 | **Binary Size** | 6.81 MB |
 | **Memory** | 100-500 MB (100k log capacity) |
 | **Performance** | Tens of thousands of logs/sec |
@@ -107,7 +115,7 @@ go build -ldflags="-s -w" -o drishti.exe .
 ❌ **NOT an EDR** - No endpoint agents  
 ❌ **NOT cloud-based** - Completely offline  
 
-**See [LIMITATIONS.md](LIMITATIONS.md) for comprehensive details.**
+**See [LIMITATIONS.md](docs/LIMITATIONS.md) for comprehensive details.**
 
 ---
 
@@ -118,7 +126,7 @@ Drishti Nexus deliberately prioritizes **simplicity, explainability, and offline
 **Key Design Decisions:**
 
 1. **Deterministic Rules Over ML** - Explainable, no training data needed
-2. **In-Memory Over Database** - Zero setup, excellent performance
+2. **In-Memory By Default** - Zero setup; optional SQLite (`-db`) for persistence and crash recovery
 3. **Single Binary Over Microservices** - True portability
 4. **Manual Updates Over Auto-Update** - Works in isolated networks
 5. **Offline-First Over Cloud** - Security in air-gapped environments
@@ -129,7 +137,7 @@ Drishti Nexus deliberately prioritizes **simplicity, explainability, and offline
 
 ## Configuration
 
-Edit `config.yaml` to customize:
+Edit `configs/config.yaml` to customize (pass another file with `-config`):
 
 ```yaml
 # Normal working hours (24-hour format)
@@ -149,7 +157,7 @@ rules:
     time_window: "5m"
 ```
 
-**Updates**: Copy `config.yaml` to target system via USB, restart tool.
+**Updates**: Copy `config.yaml` to the target system next to the binary via USB, restart the tool. The config file's SHA-256 and every effective threshold are recorded in the audit trail of each session.
 
 ---
 
@@ -199,21 +207,27 @@ SECURITY ALERTS
 ## Building from Source
 
 ### Requirements
-- Go 1.21 or higher
+- Go 1.23 or higher
 - Windows/Linux/macOS
 
 ### Build Commands
 
 **Windows:**
 ```powershell
-go build -ldflags="-s -w" -o drishti.exe .
+.\scripts\build.ps1          # → bin\drishti.exe
 ```
 
 **Linux/macOS:**
 ```bash
-make build
-# or
-go build -ldflags="-s -w" -o drishti .
+make build                  # → bin/drishti
+```
+
+**Tests, lint and benchmarks:**
+```bash
+make test                   # unit + integration (fetch datasets first for the full suite)
+make datasets               # public datasets → testdata/datasets/ (checksum-pinned)
+make benchmark              # → benchmarks/results/latest.json
+make ci                     # gofmt + tests + golangci-lint + gosec (same as GitHub Actions)
 ```
 
 **Cross-platform:**
@@ -227,21 +241,31 @@ make build-all
 
 ```
 DrishtiNexus/
-├── drishti.exe        # Single executable
-├── config.yaml        # Detection rules
-├── test.log           # Sample data
-├── README.md          # This file
-├── ARCHITECTURE.md    # Technical docs
-├── RULES.md           # Rule details
-├── ABSTRACT.md        # Project abstract
-├── internal/          # Source code
-│   ├── models/        # Data structures
-│   ├── parser/        # Log parsers
-│   ├── storage/       # In-memory storage
-│   ├── detection/     # Detection engine
-│   ├── cli/           # CLI commands
-│   └── web/           # Web dashboard
-└── docs/              # Additional documentation
+├── cmd/
+│   ├── drishti/           # The CLI binary (main package)
+│   ├── benchmark/         # Benchmark harness → benchmarks/results/
+│   └── genbenign/         # Deterministic benign dataset generator
+├── internal/
+│   ├── audit/             # Evidence hashing, read-only access, hash-chained audit log
+│   ├── cli/               # scan / analyze / tail / audit commands
+│   ├── config/            # Config loading
+│   ├── detection/         # Rules, aggregation, incident correlation, state snapshots
+│   ├── models/            # LogEntry, Alert, Config
+│   ├── parser/            # Syslog (BSD/3164/5424), JSON, Apache, generic; time/DST handling
+│   ├── pipeline/          # Shared ingest pipeline; tail follow + checkpoint/resume
+│   ├── storage/           # In-memory and SQLite backends, JSON/CSV export
+│   ├── version/           # Build version
+│   └── web/               # Web dashboard (embedded assets)
+├── configs/config.yaml    # Detection rules and settings
+├── testdata/
+│   ├── fixtures/          # Small committed logs used by tests
+│   ├── benign/            # Generated benign set (make genbenign)
+│   └── datasets/          # Fetched public datasets (make datasets, gitignored)
+├── benchmarks/results/    # Committed benchmark results per phase
+├── scripts/               # build.ps1, fetch-datasets.sh
+├── docs/                  # Architecture, rules, custody design, limitations, report
+├── BASELINE.md            # Phase-by-phase report card
+└── Drishti_Nexus_Implementation_Plan.md
 ```
 
 ---

@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-10-03T18:49:09.7993409Z",
+  "drishti_version": "1.0.0",
+  "go_version": "go1.25.5",
+  "files": [
+    {
+      "file": "testdata\\benign\\auth_benign.log",
+      "parse_only": false,
+      "sampled": false,
+      "total_lines": 50000,
+      "parsed_ok": 50000,
+      "parse_errors": 0,
+      "empty_lines": 0,
+      "parse_success_pct": 100,
+      "alerts_by_rule": {
+        "Authentication Brute Force": 6732,
+        "Excessive Authentication Failures": 4010,
+        "Privilege Escalation Indicator": 17461,
+        "Suspicious Command Execution": 2,
+        "Time-based Anomaly": 10771
+      },
+      "total_alerts": 38976,
+      "duration_ms": 1711,
+      "lines_per_sec": 29222,
+      "alloc_mb": 718.7558212280273
+    }
+  ],
+  "totals": {
+    "total_files": 1,
+    "total_lines": 50000,
+    "total_parsed_ok": 50000,
+    "total_errors": 0,
+    "parse_success_pct": 100,
+    "total_alerts": 38976,
+    "alerts_by_rule": {
+      "Authentication Brute Force": 6732,
+      "Excessive Authentication Failures": 4010,
+      "Privilege Escalation Indicator": 17461,
+      "Suspicious Command Execution": 2,
+      "Time-based Anomaly": 10771
+    },
+    "total_duration_ms": 1711
+  },
+  "false_positive_note": "Alerts on benign datasets should be manually reviewed; count here is raw — not yet scored for FP rate."
+}

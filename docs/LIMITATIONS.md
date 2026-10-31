@@ -260,14 +260,22 @@ This document explicitly states what Drishti Nexus **does not do** and **is not 
 
 ### Processing Limitations
 
-**Performance:**
-- Parsing speed: ~50,000 logs/second (tested)
-- Detection speed: ~50,000 logs/second (simple rules)
+**Performance** (measured, see [BASELINE.md](../BASELINE.md)):
+- Full pipeline on syslog: ~70,000–100,000 lines/second, single core (655k-line SSH log in ~9.5 s)
+- JSON (Windows events, ~5 KB each): ~4,000–11,000 events/second
 - Web dashboard: Real-time for <100k logs, may lag with larger datasets
 
 **Not suitable for:**
 - Real-time analysis of high-volume log streams (>100k logs/second)
-- Continuous processing of growing log files (use `tail -f` with pipe instead)
+
+**Growing files:** `drishti tail` follows a file as it grows. With `-db` it checkpoints, so an interrupted session resumes. A truncated, rotated or replaced file is refused rather than silently re-analysed; start a new session for the new file.
+
+### Timestamp Assumptions
+
+- Timestamps without a UTC offset (BSD syslog, `2006-01-02 15:04:05`) are interpreted in the `-tz` zone (default UTC). Pass the **source host's** zone; the assumption is recorded in every report.
+- Year-less syslog timestamps take their year from the file's modification time: the latest year that is not more than 48h after it. Copying evidence without preserving mtime can shift the year. Each entry records `year_inferred`.
+- Wall-clock times that don't exist or occur twice at DST transitions are resolved deterministically and flagged (`dst`, parse quality `Partial`).
+- Lines with no timestamp inherit the previous entry's time (`timestamp_inherited`). Drishti Nexus never substitutes the current time.
 
 **Suitable for:**
 - Batch processing of log files (5k to 500k entries)

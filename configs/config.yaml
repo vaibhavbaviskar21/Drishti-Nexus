@@ -1,0 +1,62 @@
+# Drishti Nexus detection configuration.
+# Rule names must match the built-in rules exactly; unknown names are reported
+# as warnings and recorded in the audit trail. Every value here is recorded
+# (with this file's SHA-256) in the audit log of each analysis session.
+
+rules:
+  - name: "Authentication Brute Force"
+    enabled: true
+    severity: "high"
+    description: "≥ threshold failed attempts then a success, same host + source IP, within the window"
+    threshold: 3
+    time_window: "5m"
+
+  - name: "Excessive Authentication Failures"
+    enabled: true
+    severity: "medium"
+    description: "≥ threshold failed attempts from the same host + source IP within the window"
+    threshold: 5
+    time_window: "10m"
+
+  - name: "Privilege Escalation Indicator"
+    enabled: true
+    severity: "medium"
+    description: "Failed or denied sudo / su / runas / UAC attempts"
+    time_window: "10m"   # repeats within this window aggregate into one alert
+
+  - name: "Suspicious Command Execution"
+    enabled: true
+    severity: "high"
+    description: "Interactive shells, encoded commands, download tools, known attack tooling"
+    time_window: "10m"
+
+  - name: "Injection Pattern Detected"
+    enabled: true
+    severity: "critical"
+    description: "SQL injection, command injection and path traversal patterns"
+    time_window: "10m"
+
+  - name: "Time-based Anomaly"
+    enabled: true
+    severity: "low"
+    description: "Authentication activity or errors outside normal hours"
+    time_window: "1h"
+
+  - name: "Lateral Movement Candidate"
+    enabled: true
+    severity: "critical"
+    description: "Account brute-forced on one host, then logged in on a different host within the window"
+    time_window: "30m"
+
+# Normal business hours (24-hour clock) in the given IANA timezone.
+normal_hours:
+  start: 9   # 09:00
+  end: 17    # 17:00
+  timezone: "UTC"
+
+# Alerts for the same host/source IP are grouped into one incident while they
+# are no more than this far apart in event time.
+incident_gap: "30m"
+
+# Maximum log entries to keep in memory (in-memory backend only)
+max_log_entries: 100000
