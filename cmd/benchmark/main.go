@@ -1,13 +1,14 @@
 // Command benchmark measures parsing quality, detection output and throughput
 // of the full pipeline on the benchmark datasets. Results feed BASELINE.md.
 //
-//	go run ./cmd/benchmark -suite -out benchmarks/results/phase1.json
+//	go run ./cmd/benchmark -suite -sigma rules/sigma -out benchmarks/results/phase2.json
 //	go run ./cmd/benchmark -file some.log
 package main
 
 import (
 	"drishti-nexus/internal/config"
 	"drishti-nexus/internal/pipeline"
+	"drishti-nexus/internal/sigma"
 	"drishti-nexus/internal/version"
 	"encoding/json"
 	"flag"
@@ -69,6 +70,7 @@ type Report struct {
 	GoVersion      string           `json:"go_version"`
 	Platform       string           `json:"platform"`
 	ConfigPath     string           `json:"config_path"`
+	SigmaRules     int              `json:"sigma_rules,omitempty"`
 	Timezone       string           `json:"assumed_timezone"`
 	Datasets       []*DatasetResult `json:"datasets"`
 }
@@ -81,6 +83,7 @@ func main() {
 	cfgPath := flag.String("config", "", "detection config (default: configs/config.yaml)")
 	tz := flag.String("tz", "UTC", "timezone assumed for timestamps without an offset")
 	cpuProfile := flag.String("cpuprofile", "", "write a CPU profile to this file")
+	sigmaDir := flag.String("sigma", "", "also run the Sigma rules in this folder")
 	flag.Parse()
 
 	if *cpuProfile != "" {
@@ -131,8 +134,17 @@ func main() {
 		Timezone:       loc.String(),
 	}
 
+	var rules []*sigma.Rule
+	if *sigmaDir != "" {
+		var skipped []string
+		if rules, skipped, err = sigma.Load(*sigmaDir); err != nil || len(skipped) > 0 {
+			fail(fmt.Errorf("sigma rules: %v (skipped: %v)", err, skipped))
+		}
+		report.SigmaRules = len(rules)
+	}
+
 	for _, ds := range datasets {
-		r := run(ds, pipeline.Options{Config: cfg, ConfigPath: used, Location: loc, Command: "benchmark", ToolVersion: version.Version})
+		r := run(ds, pipeline.Options{Config: cfg, ConfigPath: used, Location: loc, Command: "benchmark", ToolVersion: version.Version, Sigma: rules})
 		report.Datasets = append(report.Datasets, r)
 		print(r)
 	}

@@ -223,11 +223,43 @@ func valueMatcher(v string, mods []string) (func(string) bool, error) {
 		}
 		return func(s string) bool { ip := net.ParseIP(s); return ip != nil && n.Contains(ip) }, nil
 	}
+	// Fast path: no wildcard or escape means a plain case-insensitive string test;
+	// a (?is)^.*x.*$ regex per value per entry was a third of scan time.
+	if !strings.ContainsAny(v, `*?\`) {
+		lv := strings.ToLower(v)
+		before, after := has("contains") || has("endswith"), has("contains") || has("startswith")
+		switch {
+		case before && after:
+			return func(s string) bool { return containsFold(s, lv) }, nil
+		case after:
+			return func(s string) bool { return len(s) >= len(lv) && strings.EqualFold(s[:len(lv)], lv) }, nil
+		case before:
+			return func(s string) bool { return len(s) >= len(lv) && strings.EqualFold(s[len(s)-len(lv):], lv) }, nil
+		}
+		return func(s string) bool { return strings.EqualFold(s, lv) }, nil
+	}
 	re, err := regexp.Compile(globRegex(v, has("contains") || has("endswith"), has("contains") || has("startswith")))
 	if err != nil {
 		return nil, err
 	}
 	return re.MatchString, nil
+}
+
+// containsFold reports whether s contains the lower-case needle, ignoring case.
+func containsFold(s, needle string) bool {
+	if isASCIILower(s) {
+		return strings.Contains(s, needle)
+	}
+	return strings.Contains(strings.ToLower(s), needle)
+}
+
+func isASCIILower(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if c := s[i]; c >= 'A' && c <= 'Z' || c >= 0x80 {
+			return false
+		}
+	}
+	return true
 }
 
 // globRegex turns a Sigma value into an anchored, case-insensitive regex: * and ?
