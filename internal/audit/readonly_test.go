@@ -25,6 +25,7 @@ func TestEvidenceOpenedReadOnly(t *testing.T) {
 		"internal/audit/audit.go:os.Open":        "reading the audit log tail / verify",
 		"internal/audit/audit.go:os.ReadFile":    "hashing the config file",
 		"internal/storage/export.go:os.OpenFile": "report outputs, guarded by CheckOutputPath",
+		"internal/cli/summarize.go:os.ReadFile":  "scan report input (not evidence)",
 		"internal/config/config.go:os.ReadFile":  "config file",
 		"cmd/genbenign/main.go:os.Create":        "generates synthetic test data",
 		"cmd/benchmark/main.go:os.Create":        "CPU profile output",
