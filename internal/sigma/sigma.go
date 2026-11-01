@@ -169,7 +169,9 @@ func Parse(data []byte) (*Rule, error) {
 
 // ---- log sources ----
 
-func isWindows(e *models.LogEntry) bool { _, ok := value(e, "EventID"); return ok }
+// isWindows uses the exact key: the Windows JSON, XML and CSV paths all write "EventID",
+// and a case-insensitive scan of every syslog entry's fields was most of Sigma's cost.
+func isWindows(e *models.LogEntry) bool { return e.Fields["EventID"] != nil }
 
 func eventID(e *models.LogEntry, ids ...string) bool {
 	v, _ := value(e, "EventID")
