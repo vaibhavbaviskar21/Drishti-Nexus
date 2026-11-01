@@ -8,6 +8,7 @@ import (
 	"drishti-nexus/internal/detection"
 	"drishti-nexus/internal/models"
 	"drishti-nexus/internal/parser"
+	"drishti-nexus/internal/sigma"
 	"drishti-nexus/internal/storage"
 	"errors"
 	"fmt"
@@ -32,6 +33,10 @@ type Options struct {
 
 	// Formats are custom YAML parser definitions (-parsers); hashed into the audit trail.
 	Formats []*parser.CustomFormat
+	// Sigma rules (-sigma) run after the built-in rules; hashed into the audit trail.
+	Sigma []*sigma.Rule
+	// Warnings from loading (e.g. skipped Sigma rules) are recorded in the audit trail.
+	Warnings []string
 
 	// KeepLogs=false skips storing entries (benchmarks on large corpora); alerts are always stored.
 	KeepLogs bool
@@ -119,6 +124,7 @@ func Prepare(paths []string, opts *Options) (*Result, error) {
 	}
 
 	engine := detection.NewEngine(opts.Store, opts.Config)
+	engine.AddSigma(opts.Sigma)
 	session.Config.Rules = RuleConfigs(engine)
 	session.Config.NormalHours = describeHours(opts.Config.NormalHours)
 	session.Config.IncidentGap = engine.IncidentGap().String()
@@ -129,6 +135,10 @@ func Prepare(paths []string, opts *Options) (*Result, error) {
 	session.Config.AssumedTimezone = opts.Location.String()
 	session.Config.Storage = opts.StorageDesc
 	session.Config.Warnings = append(session.Config.Warnings, engine.Warnings()...)
+	session.Config.Warnings = append(session.Config.Warnings, opts.Warnings...)
+	for _, r := range opts.Sigma {
+		session.Config.Definitions = append(session.Config.Definitions, audit.OutputFile{Path: r.File, SHA256: r.SHA256})
+	}
 	for _, f := range opts.Formats {
 		session.Config.Definitions = append(session.Config.Definitions, audit.OutputFile{Path: f.File, SHA256: f.SHA256})
 	}

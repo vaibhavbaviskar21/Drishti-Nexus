@@ -2,6 +2,7 @@ package detection
 
 import (
 	"drishti-nexus/internal/models"
+	"drishti-nexus/internal/sigma"
 	"drishti-nexus/internal/storage"
 	"fmt"
 	"sort"
@@ -90,6 +91,7 @@ type Engine struct {
 	hoursLoc    *time.Location
 
 	adaptive AdaptiveSettings
+	sigmaTag map[string]ATTACKTechnique // ATT&CK tags of loaded Sigma rules
 
 	mu     sync.Mutex
 	state  *State
@@ -150,6 +152,50 @@ func (e *Engine) loadAdaptive() {
 	}
 	if c.MinSamples > 0 {
 		e.adaptive.MinSamples = c.MinSamples
+	}
+}
+
+// AddSigma registers Sigma rules after the built-in ones, as "Sigma: <title>",
+// with the rule's level as severity and its attack.* tags as ATT&CK mapping.
+func (e *Engine) AddSigma(rules []*sigma.Rule) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.sigmaTag == nil {
+		e.sigmaTag = map[string]ATTACKTechnique{}
+	}
+	for _, r := range rules {
+		name := "Sigma: " + r.Title
+		if _, dup := e.settings[name]; dup {
+			name += " [" + r.ID + "]"
+		}
+		e.settings[name] = RuleSettings{Name: name, Enabled: true, Severity: r.Severity(), Window: 10 * time.Minute, WindowStr: "10m0s"}
+		e.rules = append(e.rules, &sigmaDetector{name: name, rule: r})
+		id, tactic := r.ATTACK()
+		e.sigmaTag[name] = ATTACKTechnique{ID: id, Tactic: tactic}
+	}
+}
+
+// sigmaDetector adapts a Sigma rule to the engine: one alert per host per window.
+type sigmaDetector struct {
+	name string
+	rule *sigma.Rule
+}
+
+func (d *sigmaDetector) Name() string { return d.name }
+
+func (d *sigmaDetector) Analyze(ev *Event) *Finding {
+	if !d.rule.Match(ev.Entry) {
+		return nil
+	}
+	details := map[string]interface{}{"source": ev.Host, "sigma_id": d.rule.ID, "sigma_file": d.rule.File, "sigma_level": d.rule.Level}
+	if d.rule.Description != "" {
+		details["sigma_description"] = d.rule.Description
+	}
+	return &Finding{
+		AggKey:      ev.Host,
+		CorrKey:     ev.Key,
+		Description: fmt.Sprintf("Sigma rule %q matched on %s", d.rule.Title, ev.Host),
+		Details:     details,
 	}
 }
 
@@ -406,7 +452,10 @@ func (e *Engine) emit(rule string, s RuleSettings, f *Finding, entry *models.Log
 		Details:        f.Details,
 		Count:          f.Count,
 	}
-	tech := ATTACKForRule(rule)
+	tech, ok := e.sigmaTag[rule]
+	if !ok {
+		tech = ATTACKForRule(rule)
+	}
 	alert.MITRETechniqueID, alert.MITRETechniqueName, alert.MITRETactic = tech.ID, tech.Name, tech.Tactic
 	if !f.FirstSeen.IsZero() && f.FirstSeen.Before(alert.Timestamp) {
 		alert.Timestamp = f.FirstSeen

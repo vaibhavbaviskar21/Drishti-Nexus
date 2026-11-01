@@ -6,6 +6,7 @@ import (
 	"drishti-nexus/internal/models"
 	"drishti-nexus/internal/parser"
 	"drishti-nexus/internal/pipeline"
+	"drishti-nexus/internal/sigma"
 	"drishti-nexus/internal/storage"
 	"drishti-nexus/internal/version"
 	"flag"
@@ -20,11 +21,14 @@ type Common struct {
 	TZ         string
 	AuditLog   string
 	ParserDir  string
+	SigmaDir   string
 
 	Config   *models.Config
 	usedPath string
 	Location *time.Location
 	Formats  []*parser.CustomFormat
+	Sigma    []*sigma.Rule
+	Warnings []string
 }
 
 // Register adds the shared flags to fs.
@@ -33,6 +37,7 @@ func (c *Common) Register(fs *flag.FlagSet) {
 	fs.StringVar(&c.TZ, "tz", "UTC", "IANA timezone assumed for timestamps without an offset (e.g. Asia/Kolkata)")
 	fs.StringVar(&c.AuditLog, "audit-log", audit.DefaultLogPath, "append-only audit log path")
 	fs.StringVar(&c.ParserDir, "parsers", "", "folder of custom YAML parser definitions (see docs/CUSTOM_PARSERS.md)")
+	fs.StringVar(&c.SigmaDir, "sigma", "", "folder of Sigma rules, searched recursively (see docs/SIGMA.md)")
 }
 
 // Load resolves the config and timezone after flags are parsed.
@@ -55,6 +60,17 @@ func (c *Common) Load() error {
 			return fmt.Errorf("load parsers: %w", err)
 		}
 	}
+	if c.SigmaDir != "" {
+		rules, skipped, err := sigma.Load(c.SigmaDir)
+		for _, s := range skipped {
+			c.Warnings = append(c.Warnings, "sigma rule skipped: "+s)
+		}
+		if err != nil {
+			return fmt.Errorf("load sigma rules: %w", err)
+		}
+		c.Sigma = rules
+		fmt.Fprintf(os.Stderr, "Sigma: %d rules loaded, %d skipped (reasons in the audit log)\n", len(rules), len(skipped))
+	}
 	return nil
 }
 
@@ -69,6 +85,8 @@ func (c *Common) PipelineOptions(command string, args []string) pipeline.Options
 		AuditLogPath: c.AuditLog,
 		ToolVersion:  version.Version,
 		Formats:      c.Formats,
+		Sigma:        c.Sigma,
+		Warnings:     c.Warnings,
 	}
 }
 
