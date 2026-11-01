@@ -1,562 +1,385 @@
-// Dashboard state
-let stats = {};
-let logs = [];
-let alerts = [];
-let allLogs = [];
-let allAlerts = [];
-let ws = null;
+'use strict';
+// Drishti Nexus dashboard. Log and alert content is attacker-controlled:
+// every value reaches the DOM through textContent / createElement (see h()),
+// never innerHTML.
 
-// Initialize dashboard
-document.addEventListener('DOMContentLoaded', () => {
-    initWebSocket();
-    loadStats();
-    loadLogs();
-    loadAlerts();
-    populateSourceFilter();
-    
-    // Refresh data every 30 seconds
-    setInterval(loadStats, 30000);
-    setInterval(loadLogs, 30000);
-    setInterval(loadAlerts, 30000);
-});
+const state = {
+    stats: null, alerts: [], incidents: [], session: null, logs: [],
+    paused: false, view: 'overview', drawerReturn: null,
+};
+const SEV_ORDER = ['critical', 'high', 'medium', 'low'];
+const $ = (id) => document.getElementById(id);
 
-// WebSocket connection for real-time updates
-function initWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/api/ws`;
-    
-    ws = new WebSocket(wsUrl);
-    
-    ws.onopen = () => {
-        console.log('WebSocket connected');
-        updateStatus('Connected', true);
-    };
-    
-    ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        updateStatus('Disconnected', false);
-        // Attempt to reconnect after 5 seconds
-        setTimeout(initWebSocket, 5000);
-    };
-    
-    ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        updateStatus('Error', false);
-    };
-    
-    ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        handleRealtimeUpdate(data);
-    };
+// h builds an element; children may be strings (as text), nodes, or null.
+function h(tag, attrs, ...children) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+        if (v === null || v === undefined || v === false) continue;
+        if (k === 'class') el.className = v;
+        else if (k === 'onclick') el.addEventListener('click', v);
+        else el.setAttribute(k, v === true ? '' : String(v));
+    }
+    append(el, children);
+    return el;
 }
-
-function updateStatus(text, isConnected) {
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
-    
-    statusText.textContent = text;
-    statusDot.style.background = isConnected ? 'var(--accent-green)' : 'var(--accent-red)';
-}
-
-function handleRealtimeUpdate(data) {
-    // Refresh displays when new data arrives
-    loadStats();
-    loadLogs();
-    loadAlerts();
-}
-
-// Load statistics
-async function loadStats() {
-    try {
-        const response = await fetch('/api/stats');
-        stats = await response.json();
-        
-        document.getElementById('totalLogs').textContent = formatNumber(stats.log_count);
-        document.getElementById('totalAlerts').textContent = formatNumber(stats.alert_count);
-        document.getElementById('criticalAlerts').textContent = formatNumber(stats.alerts_by_severity?.critical || 0);
-        document.getElementById('highAlerts').textContent = formatNumber(stats.alerts_by_severity?.high || 0);
-        
-        renderSeverityChart(stats.severity_breakdown);
-        updateTimestamp();
-    } catch (error) {
-        console.error('Failed to load stats:', error);
+function append(el, children) {
+    for (const c of children.flat(Infinity)) {
+        if (c === null || c === undefined || c === false) continue;
+        el.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
     }
 }
+function fill(el, ...children) { el.replaceChildren(); append(el, children); }
 
-// Load logs
+function fmtTime(t) {
+    if (!t || t.startsWith('0001-')) return '—';
+    return t.replace('T', ' ').replace(/\.\d+/, '').replace('Z', ' UTC');
+}
+function fmtNum(n) { return (n || 0).toLocaleString(); }
+function sevBadge(sev) {
+    const s = String(sev || 'unknown').toLowerCase();
+    return h('span', { class: 'sev sev-' + (SEV_ORDER.includes(s) ? s : 'unknown') }, s);
+}
+// Plain link to the public ATT&CK page; the ID is validated so it cannot inject a URL.
+function attackLink(id, name) {
+    if (!/^T\d{4}(\.\d{3})?$/.test(id || '')) return null;
+    const href = 'https://attack.mitre.org/techniques/' + id.replace('.', '/') + '/';
+    return h('a', { href, target: '_blank', rel: 'noopener noreferrer', class: 'tech' }, id + (name ? ' · ' + name : ''));
+}
+function hostOf(a) {
+    if (a.details && typeof a.details.source === 'string') return a.details.source;
+    const m = /(?:^|\|)host=([^|]+)/.exec(a.correlation_key || '');
+    return m ? m[1] : '';
+}
+function empty(text) { return h('p', { class: 'empty' }, text); }
+
+async function getJSON(url) {
+    const r = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!r.ok) throw new Error(url + ': HTTP ' + r.status);
+    return r.json();
+}
+
+// ---------- data loading ----------
+async function loadAll() {
+    try {
+        const [stats, alerts, incidents, session] = await Promise.all([
+            getJSON('/api/stats'), getJSON('/api/alerts'), getJSON('/api/incidents'), getJSON('/api/session'),
+        ]);
+        Object.assign(state, { stats, alerts: alerts || [], incidents: incidents || [], session });
+        renderOverview(); renderIncidents(); populateAlertFilters(); renderAlerts(); renderCustody();
+        $('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    } catch (e) {
+        setStatus('Error loading data', false);
+        console.error(e);
+    }
+    loadLogs();
+}
 async function loadLogs() {
+    if (state.paused) return;
     try {
-        const response = await fetch('/api/logs');
-        allLogs = await response.json();
-        logs = allLogs;
-        renderLogs();
-    } catch (error) {
-        console.error('Failed to load logs:', error);
-    }
+        state.logs = (await getJSON('/api/logs')) || [];
+        renderStream();
+    } catch (e) { console.error(e); }
 }
 
-// Load alerts
-async function loadAlerts() {
-    try {
-        const response = await fetch('/api/alerts');
-        allAlerts = await response.json();
-        alerts = allAlerts;
-        renderAlerts();
-    } catch (error) {
-        console.error('Failed to load alerts:', error);
-    }
+// ---------- overview ----------
+function bars(el, rows, opts) {
+    if (!rows.length) return fill(el, empty('No data'));
+    const max = Math.max(...rows.map((r) => r.count), 1);
+    fill(el, rows.map((r) => {
+        const bar = h('span', { class: 'bar-fill' + (opts && opts.sev ? ' bg-' + r.name : '') });
+        bar.style.width = Math.max(2, (r.count / max) * 100) + '%';
+        return h('div', { class: 'bar-row' },
+            h('span', { class: 'bar-label', title: r.name }, r.name),
+            h('span', { class: 'bar-track', 'aria-hidden': 'true' }, bar),
+            h('span', { class: 'bar-value' }, fmtNum(r.count)));
+    }));
+}
+function renderOverview() {
+    const s = state.stats || {};
+    $('kpiLines').textContent = fmtNum(s.lines);
+    $('kpiEntries').textContent = fmtNum(s.entries);
+    $('kpiAlerts').textContent = fmtNum(s.alert_count);
+    $('kpiIncidents').textContent = fmtNum(s.incident_count);
+    $('kpiQuality').textContent = s.entries ? (s.clean_parse_pct || 0).toFixed(1) + '%' : '–';
+    const q = s.parse_quality || {};
+    $('kpiQualityNote').textContent = s.entries ? `${fmtNum(q.Partial)} partial · ${fmtNum(q.BestEffort)} best-effort` : '';
+    $('incidentTabCount').textContent = s.incident_count ? String(s.incident_count) : '';
+    $('alertTabCount').textContent = s.alert_count ? String(s.alert_count) : '';
+
+    const bySev = s.alerts_by_severity || {};
+    bars($('chartSeverity'), SEV_ORDER.filter((k) => bySev[k]).map((k) => ({ name: k, count: bySev[k] })), { sev: true });
+    bars($('chartRules'), s.alerts_by_rule || []);
+    bars($('chartSources'), s.top_sources || []);
+
+    const top = state.incidents.slice(0, 5);
+    fill($('overviewIncidents'), top.length ? h('ul', { class: 'mini-list' }, top.map((inc) =>
+        h('li', null, h('button', { type: 'button', class: 'row-btn', onclick: () => openIncident(inc.id) },
+            sevBadge(inc.max_severity), h('strong', null, inc.id),
+            h('span', { class: 'muted' }, inc.alert_count + ' alert' + (inc.alert_count === 1 ? '' : 's')),
+            h('span', { class: 'chips' }, inc.hosts.map((x) => h('span', { class: 'chip' }, x))),
+            h('span', { class: 'muted push' }, fmtTime(inc.last_seen)))))) : empty('No incidents. Load evidence with: drishti serve -log <file|dir>'));
 }
 
-// Render alerts
+// ---------- incidents ----------
+function renderIncidents() {
+    const list = $('incidentList');
+    if (!state.incidents.length) return fill(list, empty('No incidents detected.'));
+    const open = new Set([...list.querySelectorAll('details[open]')].map((d) => d.dataset.id));
+    fill(list, state.incidents.map((inc) => {
+        const d = h('details', { class: 'incident sevline-' + inc.max_severity, 'data-id': inc.id, open: open.has(inc.id) },
+            h('summary', null,
+                sevBadge(inc.max_severity),
+                h('span', { class: 'inc-id' }, inc.id),
+                h('span', { class: 'inc-range' }, fmtTime(inc.first_seen) + ' → ' + fmtTime(inc.last_seen)),
+                h('span', { class: 'chips' }, inc.hosts.map((x) => h('span', { class: 'chip' }, x))),
+                h('span', { class: 'chips' }, inc.techniques.map((x) => h('span', { class: 'chip chip-tech' }, x))),
+                h('span', { class: 'muted push' }, inc.alert_count + ' alert' + (inc.alert_count === 1 ? '' : 's'))),
+            h('ol', { class: 'timeline' }, inc.alerts.map((a) => h('li', { class: 'tl-item' },
+                h('span', { class: 'tl-dot bg-' + a.severity, 'aria-hidden': 'true' }),
+                h('div', { class: 'tl-body' },
+                    h('div', { class: 'tl-head' },
+                        sevBadge(a.severity),
+                        h('button', { type: 'button', class: 'link-btn strong', onclick: (e) => openAlert(a.id, e.currentTarget) }, a.rule_name),
+                        h('span', { class: 'muted small' }, a.id),
+                        a.count > 1 ? h('span', { class: 'chip' }, '×' + a.count) : null),
+                    h('div', { class: 'muted small' }, fmtTime(a.timestamp) + (a.last_seen !== a.timestamp ? ' → ' + fmtTime(a.last_seen) : '')),
+                    h('p', { class: 'tl-desc' }, a.description),
+                    relatedButtons(a.related_alerts))))));
+        return d;
+    }));
+}
+function relatedButtons(ids) {
+    if (!ids || !ids.length) return null;
+    return h('div', { class: 'related' }, h('span', { class: 'muted small' }, 'Linked:'),
+        ids.map((id) => h('button', { type: 'button', class: 'chip chip-btn', onclick: (e) => openAlert(id, e.currentTarget) }, id)));
+}
+function openIncident(id) {
+    selectTab('incidents');
+    const d = [...$('incidentList').querySelectorAll('details')].find((x) => x.dataset.id === id);
+    if (d) { d.open = true; d.scrollIntoView({ block: 'start' }); d.querySelector('summary').focus(); }
+}
+
+// ---------- alerts ----------
+function setOptions(sel, values) {
+    const cur = sel.value;
+    fill(sel, h('option', { value: '' }, 'All'), values.map((v) => h('option', { value: v }, v)));
+    sel.value = values.includes(cur) ? cur : '';
+}
+function populateAlertFilters() {
+    const uniq = (f) => [...new Set(state.alerts.map(f).filter(Boolean))].sort();
+    setOptions($('alertRule'), uniq((a) => a.rule_name));
+    setOptions($('alertHost'), uniq(hostOf));
+}
+function filteredAlerts() {
+    const q = $('alertSearch').value.trim().toLowerCase();
+    const sev = $('alertSeverity').value, rule = $('alertRule').value, host = $('alertHost').value;
+    return state.alerts.filter((a) => (!sev || a.severity === sev) && (!rule || a.rule_name === rule) && (!host || hostOf(a) === host) &&
+        (!q || [a.id, a.incident_id, a.rule_name, a.description, a.correlation_key, a.mitre_technique_id].join(' ').toLowerCase().includes(q)));
+}
 function renderAlerts() {
-    const alertList = document.getElementById('alertList');
-    
-    if (!alerts || alerts.length === 0) {
-        alertList.innerHTML = '<p class="empty-state">No alerts detected</p>';
-        return;
-    }
-    
-    // Show most recent 20 alerts
-    const recentAlerts = alerts.slice(0, 20);
-    
-    alertList.innerHTML = recentAlerts.map(alert => {
-        const time = new Date(alert.timestamp).toLocaleString();
-        const severity = (alert.severity || 'medium').toLowerCase();
-        return `
-            <div class="alert-item ${severity}">
-                <div class="alert-header">
-                    <span class="alert-rule">${escapeHtml(alert.rule_name)}</span>
-                    <span class="alert-severity ${severity}">${alert.severity || 'Medium'}</span>
-                </div>
-                <div class="alert-description">${escapeHtml(alert.description)}</div>
-                <div class="alert-time">${time}</div>
-            </div>
-        `;
-    }).join('');
+    const rows = filteredAlerts();
+    $('alertCountLabel').textContent = `${rows.length} of ${state.alerts.length}`;
+    if (!rows.length) return fill($('alertRows'), h('tr', null, h('td', { colspan: 7 }, empty(state.alerts.length ? 'No alerts match the filters.' : 'No alerts detected.'))));
+    fill($('alertRows'), rows.map((a) => {
+        const tr = h('tr', { tabindex: 0, class: 'clickable', 'aria-label': `${a.severity} ${a.rule_name} ${a.id}, open details` },
+            h('td', null, sevBadge(a.severity)),
+            h('td', { class: 'nowrap' }, fmtTime(a.timestamp)),
+            h('td', null, a.rule_name),
+            h('td', { class: 'nowrap' }, hostOf(a)),
+            h('td', { class: 'nowrap' }, a.mitre_technique_id || ''),
+            h('td', { class: 'num' }, fmtNum(a.count)),
+            h('td', { class: 'desc' }, a.description));
+        tr.addEventListener('click', () => openAlert(a.id, tr));
+        tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAlert(a.id, tr); } });
+        return tr;
+    }));
 }
 
-// Render logs
-function renderLogs() {
-    const logList = document.getElementById('logList');
-    
-    if (!logs || logs.length === 0) {
-        logList.innerHTML = '<p class="empty-state">No logs available</p>';
-        return;
-    }
-    
-    // Apply filter
-    const filter = document.getElementById('severityFilter').value;
-    let filteredLogs = logs;
-    
-    if (filter !== 'all') {
-        filteredLogs = logs.filter(log => {
-            const logSeverity = getSeverityName(log.severity);
-            return logSeverity === filter;
-        });
-    }
-    
-    // Reverse to show newest first
-    filteredLogs = [...filteredLogs].reverse();
-    
-    logList.innerHTML = filteredLogs.map(log => {
-        const time = new Date(log.timestamp).toLocaleTimeString();
-        const severity = getSeverityName(log.severity);
-        return `
-            <div class="log-entry">
-                <span class="log-time">${time}</span>
-                <span class="log-severity ${severity}">${severity}</span>
-                <span class="log-source">${escapeHtml(log.source)}</span>
-                <span class="log-message">${escapeHtml(log.message)}</span>
-            </div>
-        `;
-    }).join('');
+function download(name, type, content) {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const a = h('a', { href: url, download: name });
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+}
+// Neutralise spreadsheet formula injection from attacker-controlled text.
+function csvCell(v) {
+    let s = String(v === undefined || v === null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+}
+function exportAlerts(fmt) {
+    const rows = filteredAlerts(), day = new Date().toISOString().slice(0, 10);
+    if (fmt === 'json') return download(`drishti-alerts-${day}.json`, 'application/json', JSON.stringify(rows, null, 2));
+    const cols = ['id', 'incident_id', 'severity', 'timestamp', 'last_seen', 'rule_name', 'mitre_technique_id', 'count', 'correlation_key', 'description'];
+    download(`drishti-alerts-${day}.csv`, 'text/csv', [cols.join(','), ...rows.map((a) => cols.map((c) => csvCell(a[c])).join(','))].join('\n'));
 }
 
-// Render severity chart
-function renderSeverityChart(breakdown) {
-    const chart = document.getElementById('severityChart');
-    
-    if (!breakdown) {
-        chart.innerHTML = '<p class="empty-state">No data</p>';
-        return;
-    }
-    
-    const severities = ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'];
-    
-    chart.innerHTML = severities.map(sev => {
-        const count = breakdown[sev] || 0;
-        if (count === 0) return '';
-        
-        return `
-            <div class="severity-item">
-                <div class="severity-item-label">${sev}</div>
-                <div class="severity-item-count">${formatNumber(count)}</div>
-            </div>
-        `;
-    }).join('');
-}
-
-// Utility functions
-function getSeverityName(level) {
-    const names = ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'];
-    return names[level] || 'UNKNOWN';
-}
-
-function formatNumber(num) {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function updateTimestamp() {
-    const now = new Date().toLocaleString();
-    document.getElementById('lastUpdate').textContent = now;
-}
-
-// Interactive functions
-function refreshLogs() {
-    loadLogs();
-}
-
-function refreshAlerts() {
-    loadAlerts();
-}
-
-function filterLogs() {
-    const search = document.getElementById('logSearch').value.toLowerCase();
-    const severity = document.getElementById('severityFilter').value;
-    const source = document.getElementById('sourceFilter').value;
-    const date = document.getElementById('dateFilter').value;
-    
-    logs = allLogs.filter(log => {
-        // Search filter
-        if (search && !log.message.toLowerCase().includes(search) && 
-            !log.source.toLowerCase().includes(search)) {
-            return false;
-        }
-        
-        // Severity filter
-        if (severity !== 'all') {
-            const logSeverity = getSeverityName(log.severity);
-            if (logSeverity !== severity) return false;
-        }
-        
-        // Source filter
-        if (source !== 'all' && log.source !== source) {
-            return false;
-        }
-        
-        // Date filter
-        if (date) {
-            const logDate = new Date(log.timestamp).toISOString().split('T')[0];
-            if (logDate !== date) return false;
-        }
-        
-        return true;
+// ---------- alert drawer ----------
+async function openAlert(id, opener) {
+    state.drawerReturn = opener || document.activeElement;
+    const body = $('drawerBody');
+    $('drawerTitle').textContent = id;
+    fill(body, empty('Loading…'));
+    $('scrim').hidden = false; $('drawer').hidden = false;
+    $('drawer').focus();
+    let a;
+    try { a = await getJSON('/api/alerts/' + encodeURIComponent(id)); } catch (e) { return fill(body, empty('Could not load ' + id + '.')); }
+    $('drawerTitle').textContent = a.rule_name;
+    const kv = (k, v) => (v === null || v === undefined || v === '' ? null : [h('dt', null, k), h('dd', null, v)]);
+    const details = Object.keys(a.details || {}).sort().map((k) => {
+        const v = a.details[k];
+        return kv(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
     });
-    
-    renderLogs();
+    fill(body,
+        h('div', { class: 'drawer-meta' }, sevBadge(a.severity), h('span', { class: 'muted' }, a.id),
+            a.incident_id ? h('button', { type: 'button', class: 'chip chip-btn', onclick: () => { closeDrawer(); openIncident(a.incident_id); } }, a.incident_id) : null),
+        h('p', { class: 'drawer-desc' }, a.description),
+        h('dl', { class: 'kv' },
+            kv('First seen', fmtTime(a.timestamp)), kv('Last seen', fmtTime(a.last_seen)), kv('Matches', fmtNum(a.count)),
+            kv('Hosts', (a.hosts || []).join(', ')), kv('Correlation key', a.correlation_key),
+            kv('ATT&CK', a.mitre_technique_id ? h('span', null, attackLink(a.mitre_technique_id, a.mitre_technique_name), a.mitre_tactic ? h('span', { class: 'muted' }, ' (' + a.mitre_tactic + ')') : null) : null)),
+        relatedButtons(a.related_alerts),
+        details.length ? [h('h3', null, 'Details'), h('dl', { class: 'kv' }, details)] : null,
+        h('h3', null, `Evidence (${(a.evidence || []).length} cited line${(a.evidence || []).length === 1 ? '' : 's'})`),
+        (a.evidence || []).length ? h('ol', { class: 'evidence' }, a.evidence.map((e) => h('li', null,
+            h('div', { class: 'ev-id' }, e.id),
+            e.found ? h('pre', null, e.raw_log) : h('p', { class: 'muted small' }, 'Entry no longer in memory; see the source file at this line.')))) : empty('No evidence lines cited.'));
+}
+function closeDrawer() {
+    if ($('drawer').hidden) return;
+    $('drawer').hidden = true; $('scrim').hidden = true;
+    if (state.drawerReturn && document.contains(state.drawerReturn)) state.drawerReturn.focus();
+}
+function trapFocus(e) {
+    if (e.key !== 'Tab' || $('drawer').hidden) return;
+    const f = [...$('drawer').querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])')];
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === $('drawer'))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 }
 
-function filterAlerts() {
-    const search = document.getElementById('alertSearch').value.toLowerCase();
-    const severity = document.getElementById('alertSeverityFilter').value;
-    
-    alerts = allAlerts.filter(alert => {
-        // Search filter
-        if (search && !alert.rule_name.toLowerCase().includes(search) && 
-            !alert.description.toLowerCase().includes(search)) {
-            return false;
-        }
-        
-        // Severity filter
-        if (severity !== 'all') {
-            const alertSeverity = (alert.severity || 'medium').toLowerCase();
-            if (alertSeverity !== severity) return false;
-        }
-        
-        return true;
-    });
-    
-    renderAlerts();
+// ---------- live stream ----------
+const LOG_SEV = ['debug', 'info', 'notice', 'warning', 'error', 'critical', 'alert', 'emergency'];
+function renderStream() {
+    const q = $('logSearch').value.trim().toLowerCase();
+    const logs = state.logs.slice().reverse().filter((l) => !q || (l.raw_log || l.message || '').toLowerCase().includes(q) || (l.source || '').toLowerCase().includes(q));
+    $('streamState').textContent = (state.paused ? 'Paused · ' : 'Live · ') + logs.length + ' recent entries';
+    if (!logs.length) return fill($('logStream'), empty(state.logs.length ? 'No lines match.' : 'No log entries loaded.'));
+    fill($('logStream'), logs.map((l) => h('div', { class: 'log-line' },
+        h('span', { class: 'log-time' }, fmtTime(l.timestamp)),
+        h('span', { class: 'log-sev lsev-' + (LOG_SEV[l.severity] || 'info') }, (LOG_SEV[l.severity] || '?').toUpperCase()),
+        h('span', { class: 'log-src' }, l.source || ''),
+        h('span', { class: 'log-msg' }, l.message || l.raw_log || ''))));
+}
+function togglePause() {
+    state.paused = !state.paused;
+    $('pauseBtn').textContent = state.paused ? 'Resume' : 'Pause';
+    $('pauseBtn').setAttribute('aria-pressed', String(state.paused));
+    if (!state.paused) loadLogs(); else renderStream();
+}
+function setStatus(text, ok) {
+    $('statusText').textContent = text;
+    $('statusDot').className = 'status-dot ' + (ok ? 'ok' : 'bad');
+}
+function initWebSocket() {
+    const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/api/ws');
+    ws.onopen = () => setStatus('Live', true);
+    ws.onclose = () => { setStatus('Disconnected, retrying…', false); setTimeout(initWebSocket, 5000); };
+    ws.onmessage = loadAll;
 }
 
-function populateSourceFilter() {
-    const sourceFilter = document.getElementById('sourceFilter');
-    const sources = new Set(allLogs.map(log => log.source));
-    
-    sources.forEach(source => {
-        const option = document.createElement('option');
-        option.value = source;
-        option.textContent = source;
-        sourceFilter.appendChild(option);
-    });
+// ---------- chain of custody ----------
+function table(headers, rows) {
+    return h('div', { class: 'table-wrap' }, h('table', { class: 'data-table' },
+        h('thead', null, h('tr', null, headers.map((x) => h('th', { scope: 'col' }, x)))),
+        h('tbody', null, rows.map((r) => h('tr', null, r.map((c) => h('td', null, c)))))));
 }
-// Report generation functions
-function generateReport() {
-    const modal = document.getElementById('reportModal');
-    modal.classList.add('show');
-}
-
-function closeReportModal() {
-    const modal = document.getElementById('reportModal');
-    modal.classList.remove('show');
-}
-
-function generateReportFile() {
-    const includeAlerts = document.getElementById('reportAlerts').checked;
-    const includeStats = document.getElementById('reportStats').checked;
-    const includeLogs = document.getElementById('reportLogs').checked;
-    const includeSeverity = document.getElementById('reportSeverity').checked;
-    const format = document.getElementById('reportFormat').value;
-    
-    let reportData = {
-        timestamp: new Date().toISOString(),
-        title: 'Drishti Nexus Security Report'
-    };
-    
-    if (includeStats) {
-        reportData.statistics = {
-            totalLogs: stats.log_count || 0,
-            totalAlerts: stats.alert_count || 0,
-            critical: stats.alerts_by_severity?.critical || 0,
-            high: stats.alerts_by_severity?.high || 0
-        };
-    }
-    
-    if (includeAlerts) {
-        reportData.alerts = allAlerts.map(alert => ({
-            timestamp: alert.timestamp,
-            rule: alert.rule_name,
-            severity: alert.severity || 'Medium',
-            description: alert.description
-        }));
-    }
-    
-    if (includeLogs) {
-        reportData.logs = allLogs.map(log => ({
-            timestamp: log.timestamp,
-            severity: getSeverityName(log.severity),
-            source: log.source,
-            message: log.message
-        }));
-    }
-    
-    if (includeSeverity) {
-        reportData.severityDistribution = stats.severity_breakdown || {};
-    }
-    
-    let fileContent, fileName, mimeType;
-    
-    if (format === 'json') {
-        fileContent = JSON.stringify(reportData, null, 2);
-        fileName = `security-report-${new Date().toISOString().split('T')[0]}.json`;
-        mimeType = 'application/json';
-    } else if (format === 'csv') {
-        fileContent = generateCSVReport(reportData);
-        fileName = `security-report-${new Date().toISOString().split('T')[0]}.csv`;
-        mimeType = 'text/csv';
-    } else if (format === 'html') {
-        fileContent = generateHTMLReport(reportData);
-        fileName = `security-report-${new Date().toISOString().split('T')[0]}.html`;
-        mimeType = 'text/html';
-    }
-    
-    downloadFile(fileContent, fileName, mimeType);
-    closeReportModal();
+function renderCustody() {
+    const s = state.session, el = $('custody');
+    if (!s) return fill(el, h('article', { class: 'card' }, h('h2', null, 'Chain of custody'),
+        empty('No evidence loaded in this session. Start the dashboard with: drishti serve -log <file|dir>')));
+    const kv = (k, v) => (v ? [h('dt', null, k), h('dd', null, v)] : null);
+    const c = s.config || {};
+    const hashOk = (e) => (e.unchanged === true ? h('span', { class: 'ok-badge' }, 'verified unchanged') : e.unchanged === false ? h('span', { class: 'bad-badge' }, 'CHANGED') : h('span', { class: 'muted' }, 'pending'));
+    fill(el,
+        h('article', { class: 'card' }, h('h2', null, 'Audit session'),
+            h('dl', { class: 'kv two-col' },
+                kv('Session ID', h('code', null, s.session_id)), kv('Status', s.status), kv('Command', [s.command].concat(s.args || []).join(' ')),
+                kv('Started', fmtTime(s.started_at)), kv('Finished', s.finished_at ? fmtTime(s.finished_at) : ''),
+                kv('Tool version', s.tool_version), kv('Go / platform', s.go_version + ' · ' + s.platform),
+                kv('OS user', s.os_user), kv('Host', s.hostname))),
+        h('article', { class: 'card' }, h('h2', null, `Evidence files (${(s.evidence || []).length})`),
+            h('p', { class: 'muted small' }, 'Each file is SHA-256 hashed before analysis, opened read-only, and re-hashed when the session finishes.'),
+            table(['Label', 'Path', 'Size', 'SHA-256', 'Integrity'], (s.evidence || []).map((e) => [
+                e.label, e.abs_path || e.path, fmtNum(e.size_bytes) + ' B', h('code', { class: 'hash' }, e.sha256), hashOk(e)]))),
+        h('article', { class: 'card' }, h('h2', null, 'Effective configuration'),
+            h('dl', { class: 'kv two-col' },
+                kv('Config file', c.config_path || 'built-in defaults'), kv('Config SHA-256', c.config_sha256 ? h('code', { class: 'hash' }, c.config_sha256) : ''),
+                kv('Normal hours', c.normal_hours), kv('Incident gap', c.incident_gap), kv('Assumed timezone', c.assumed_timezone), kv('Storage', c.storage)),
+            (c.warnings || []).length ? h('ul', { class: 'warnings' }, c.warnings.map((w) => h('li', null, w))) : null,
+            table(['Rule', 'Enabled', 'Severity', 'Threshold', 'Window'], (c.rules || []).map((r) => [
+                r.name, r.enabled ? 'yes' : 'no', sevBadge(r.severity), r.threshold ? String(r.threshold) : '—', r.time_window || '—']))));
 }
 
-function generateCSVReport(data) {
-    let csv = 'Security Report\n';
-    csv += `Generated: ${data.timestamp}\n\n`;
-    
-    if (data.statistics) {
-        csv += 'STATISTICS\n';
-        csv += `Total Logs,${data.statistics.totalLogs}\n`;
-        csv += `Total Alerts,${data.statistics.totalAlerts}\n`;
-        csv += `Critical,${data.statistics.critical}\n`;
-        csv += `High Priority,${data.statistics.high}\n\n`;
+// ---------- tabs, theme ----------
+const TABS = ['overview', 'incidents', 'alerts', 'stream', 'custody'];
+function selectTab(name, focus) {
+    if (!TABS.includes(name)) name = 'overview';
+    state.view = name;
+    for (const t of TABS) {
+        const on = t === name, tab = $('tab-' + t);
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+        $('view-' + t).hidden = !on;
+        if (on && focus) tab.focus();
     }
-    
-    if (data.alerts && data.alerts.length > 0) {
-        csv += 'ALERTS\n';
-        csv += 'Timestamp,Rule,Severity,Description\n';
-        data.alerts.forEach(alert => {
-            const description = alert.description.replace(/"/g, '""');
-            csv += `"${alert.timestamp}","${alert.rule}","${alert.severity}","${description}"\n`;
-        });
-        csv += '\n';
-    }
-    
-    if (data.logs && data.logs.length > 0) {
-        csv += 'LOG ENTRIES\n';
-        csv += 'Timestamp,Severity,Source,Message\n';
-        data.logs.slice(0, 1000).forEach(log => { // Limit to 1000 logs in CSV
-            const message = log.message.replace(/"/g, '""');
-            csv += `"${log.timestamp}","${log.severity}","${log.source}","${message}"\n`;
-        });
-    }
-    
-    return csv;
+    if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
+}
+function tabKeys(e) {
+    const i = TABS.indexOf(state.view);
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    selectTab(TABS[(next + TABS.length) % TABS.length], true);
+}
+function isDark() {
+    const t = document.documentElement.getAttribute('data-theme');
+    return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function toggleTheme() {
+    const t = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem('drishti-theme', t); } catch (e) { /* not persisted */ }
+    syncThemeBtn();
+}
+function syncThemeBtn() {
+    const dark = isDark();
+    $('themeBtn').setAttribute('aria-pressed', String(dark));
+    $('themeBtn').setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    $('themeBtn').title = dark ? 'Switch to light mode' : 'Switch to dark mode';
 }
 
-function generateHTMLReport(data) {
-    let html = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Security Report</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { color: #1a2238; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; }
-        h2 { color: #1a2238; margin-top: 30px; }
-        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; font-weight: bold; color: #1a2238; }
-        tr:hover { background: #f9f9f9; }
-        .stat-box { display: inline-block; margin: 10px 20px 10px 0; padding: 15px; background: #f0f4f8; border-radius: 5px; }
-        .stat-value { font-size: 24px; font-weight: bold; color: #3b82f6; }
-        .stat-label { font-size: 12px; color: #666; }
-        .critical { color: #dc2626; }
-        .high { color: #ea580c; }
-        .warning { color: #f59e0b; }
-        .info { color: #3b82f6; }
-        .timestamp { font-size: 12px; color: #999; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🔒 Drishti Nexus Security Report</h1>
-        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-`;
-    
-    if (data.statistics) {
-        html += `
-        <h2>Statistics</h2>
-        <div class="stat-box">
-            <div class="stat-label">Total Logs</div>
-            <div class="stat-value">${data.statistics.totalLogs.toLocaleString()}</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Total Alerts</div>
-            <div class="stat-value" style="color: #f59e0b;">${data.statistics.totalAlerts.toLocaleString()}</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label critical">Critical</div>
-            <div class="stat-value critical">${data.statistics.critical}</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label high">High Priority</div>
-            <div class="stat-value high">${data.statistics.high}</div>
-        </div>
-`;
-    }
-    
-    if (data.alerts && data.alerts.length > 0) {
-        html += `
-        <h2>Security Alerts</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Rule</th>
-                    <th>Severity</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-`;
-        data.alerts.forEach(alert => {
-            const severityClass = alert.severity.toLowerCase();
-            html += `
-                <tr>
-                    <td>${alert.timestamp}</td>
-                    <td>${escapeHtml(alert.rule)}</td>
-                    <td><span class="${severityClass}">${alert.severity}</span></td>
-                    <td>${escapeHtml(alert.description)}</td>
-                </tr>
-`;
-        });
-        html += `
-            </tbody>
-        </table>
-`;
-    }
-    
-    if (data.logs && data.logs.length > 0) {
-        html += `
-        <h2>Log Entries</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Severity</th>
-                    <th>Source</th>
-                    <th>Message</th>
-                </tr>
-            </thead>
-            <tbody>
-`;
-        data.logs.slice(0, 500).forEach(log => {
-            const severityClass = log.severity.toLowerCase();
-            html += `
-                <tr>
-                    <td>${log.timestamp}</td>
-                    <td><span class="${severityClass}">${log.severity}</span></td>
-                    <td>${escapeHtml(log.source)}</td>
-                    <td>${escapeHtml(log.message)}</td>
-                </tr>
-`;
-        });
-        html += `
-            </tbody>
-        </table>
-`;
-    }
-    
-    html += `
-        <p class="timestamp">This report was automatically generated by Drishti Nexus</p>
-    </div>
-</body>
-</html>
-`;
-    return html;
-}
+document.addEventListener('DOMContentLoaded', () => {
+    for (const t of TABS) $('tab-' + t).addEventListener('click', () => selectTab(t));
+    document.querySelector('.tabs').addEventListener('keydown', tabKeys);
+    document.querySelectorAll('[data-goto]').forEach((b) => b.addEventListener('click', () => selectTab(b.dataset.goto, true)));
+    ['alertSearch', 'alertSeverity', 'alertRule', 'alertHost'].forEach((id) => $(id).addEventListener('input', renderAlerts));
+    $('exportCsv').addEventListener('click', () => exportAlerts('csv'));
+    $('exportJson').addEventListener('click', () => exportAlerts('json'));
+    $('logSearch').addEventListener('input', renderStream);
+    $('pauseBtn').addEventListener('click', togglePause);
+    $('refreshBtn').addEventListener('click', loadAll);
+    $('themeBtn').addEventListener('click', toggleTheme);
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncThemeBtn);
+    $('drawerClose').addEventListener('click', closeDrawer);
+    $('scrim').addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); trapFocus(e); });
 
-function downloadFile(content, fileName, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-}
-
-function exportLogs() {
-    const csv = generateCSVReport({ logs: allLogs.map(log => ({
-        timestamp: log.timestamp,
-        severity: getSeverityName(log.severity),
-        source: log.source,
-        message: log.message
-    })) });
-    
-    downloadFile(csv, `logs-export-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', (event) => {
-    const modal = document.getElementById('reportModal');
-    if (event.target === modal) {
-        closeReportModal();
-    }
+    syncThemeBtn();
+    selectTab(location.hash.slice(1));
+    window.addEventListener('hashchange', () => selectTab(location.hash.slice(1)));
+    initWebSocket();
+    loadAll();
+    setInterval(loadAll, 15000);
 });
