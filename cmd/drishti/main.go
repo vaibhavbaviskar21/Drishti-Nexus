@@ -31,6 +31,8 @@ func main() {
 		err = cli.ScanCommand(args)
 	case "serve":
 		err = serve(args)
+	case "summarize":
+		err = cli.SummarizeCommand(args)
 	case "audit":
 		err = cli.AuditCommand(args)
 	case "version":
@@ -96,6 +98,10 @@ func printUsage() {
 	fmt.Println("  scan <logfile|dir> [...] [-output report.json] [-db case.db] [-alerts-only]")
 	fmt.Println("    Export findings to JSON + CSV with chain-of-custody metadata")
 	fmt.Println("    Example: drishti scan access.log -output report.json")
+	fmt.Println()
+	fmt.Println("  summarize -in report.json [-out summaries.json] [-endpoint URL] [-model NAME]")
+	fmt.Println("    Optional AI narrative per incident from a local model (loopback only),")
+	fmt.Println("    labeled and checked against the alert facts; see docs/AI_SUMMARY.md")
 	fmt.Println()
 	fmt.Println("  serve [-port 8080] [-host 127.0.0.1] [-log <file>] [<file|dir> ...]")
 	fmt.Println("    Web dashboard (localhost only by default)")

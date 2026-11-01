@@ -25,6 +25,7 @@ func TestEvidenceOpenedReadOnly(t *testing.T) {
 		"internal/audit/audit.go:os.Open":        "reading the audit log tail / verify",
 		"internal/audit/audit.go:os.ReadFile":    "hashing the config file",
 		"internal/storage/export.go:os.OpenFile": "report outputs, guarded by CheckOutputPath",
+		"internal/cli/summarize.go:os.ReadFile":  "scan report input (not evidence)",
 		"internal/config/config.go:os.ReadFile":  "config file",
 		"internal/parser/custom.go:os.ReadFile":  "custom parser definitions (not evidence)",
 		"internal/sigma/sigma.go:os.ReadFile":    "Sigma rule files (not evidence)",
