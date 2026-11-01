@@ -17,11 +17,12 @@ type State struct {
 	Processed   int       `json:"processed"`
 	Latest      time.Time `json:"latest"`
 
-	Failures      map[string][]failureMark  `json:"failures"`
-	AttemptGroups map[string]*attemptGroup  `json:"attempt_groups"`
-	Open          map[string]*openAlert     `json:"open_alerts"`
-	Incidents     map[string]*incidentState `json:"incidents"`
-	Compromised   map[string]*compromise    `json:"compromised"` // user → latest brute-force success
+	Failures      map[string][]failureMark   `json:"failures"`
+	AttemptGroups map[string]*attemptGroup   `json:"attempt_groups"`
+	Open          map[string]*openAlert      `json:"open_alerts"`
+	Incidents     map[string]*incidentState  `json:"incidents"`
+	Compromised   map[string]*compromise     `json:"compromised"` // user → latest brute-force success
+	Baselines     map[string]*sourceBaseline `json:"baselines"`   // correlation key → failure-rate baseline
 }
 
 const stateVersion = 1
@@ -63,6 +64,7 @@ func newState() *State {
 		Open:          make(map[string]*openAlert),
 		Incidents:     make(map[string]*incidentState),
 		Compromised:   make(map[string]*compromise),
+		Baselines:     make(map[string]*sourceBaseline),
 	}
 }
 

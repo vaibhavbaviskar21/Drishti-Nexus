@@ -64,6 +64,7 @@ func Follow(path string, opts Options, fo FollowOptions) (*Result, error) {
 		SourceLabel: ev.Label,
 		Location:    opts.Location,
 		Reference:   ev.ModTime,
+		Custom:      opts.Formats,
 	})
 
 	var base int64

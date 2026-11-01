@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"drishti-nexus/internal/models"
+	"drishti-nexus/internal/parser"
 	"fmt"
 	"path/filepath"
 	"sort"
@@ -60,5 +61,28 @@ func TestIntegration_WindowsXMLFixture(t *testing.T) {
 		if e.Fields["auth_result"] != "failure" || e.Fields["user"] != "Auditor" || e.Source != "DC01.contoso.local" || !e.Timestamp.Equal(want) {
 			t.Errorf("%s: source=%q ts=%s fields=%v", e.ID, e.Source, e.Timestamp, e.Fields)
 		}
+	}
+}
+
+// YAML-defined parsers (parsers/*.yaml) turn LogHub HDFS and ZooKeeper logs, which no
+// built-in parser understands, into clean entries; their files are hashed into the audit trail.
+func TestIntegration_CustomYAMLParsers(t *testing.T) {
+	formats, err := parser.LoadCustomFormats(filepath.Join(repoRoot, "parsers"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixtures := filepath.Join(repoRoot, "testdata", "fixtures")
+	res, err := Run([]string{filepath.Join(fixtures, "loghub_hdfs_200.log"), filepath.Join(fixtures, "loghub_zookeeper_200.log")},
+		Options{Config: testConfig(t), Formats: formats})
+	if err != nil {
+		t.Fatal(err)
+	}
+	st := res.Stats
+	if st.ByParser["hdfs"] != 200 || st.ByParser["zookeeper"] != 200 || st.ParseQuality[models.QualityClean] != 400 {
+		t.Errorf("parsers=%v quality=%v", st.ByParser, st.ParseQuality)
+	}
+	defs := res.Session.Config.Definitions
+	if len(defs) != 2 || len(defs[0].SHA256) != 64 {
+		t.Errorf("definitions not recorded in the audit session: %+v", defs)
 	}
 }

@@ -1,0 +1,8 @@
+# Apache ZooKeeper log4j output (LogHub Zookeeper):
+# 2015-07-29 17:41:44,747 - INFO  [QuorumPeer[myid=1]/0:0:0:0:0:0:0:0:2181:FastLeaderElection@774] - Notification time out: 3200
+# The thread name can contain brackets and colons, so the pattern anchors on the final ":Class@line] - ".
+name: zookeeper
+match: " - "
+pattern: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) - (?P<severity>[A-Z]+)\s+\[(?P<thread>.*):(?P<program>[\w$]+)@(?P<source_line>\d+)\] - (?P<message>.*)$'
+time_layout: "2006-01-02 15:04:05,000"
+facility: zookeeper

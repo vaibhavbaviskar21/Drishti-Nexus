@@ -113,6 +113,17 @@ type Config struct {
 	// no more than this far apart in event time (Go duration, default "30m").
 	IncidentGap string `yaml:"incident_gap" json:"incident_gap"`
 
+	// Per-source adaptive thresholds for the auth threshold rules (nil = defaults: on).
+	Adaptive *AdaptiveConfig `yaml:"adaptive_thresholds" json:"adaptive_thresholds,omitempty"`
+
 	// General settings
 	MaxLogEntries int `yaml:"max_log_entries" json:"max_log_entries"`
+}
+
+// AdaptiveConfig tunes adaptive thresholds; zero values keep the defaults.
+type AdaptiveConfig struct {
+	Enabled    bool    `yaml:"enabled" json:"enabled"`
+	Deviation  float64 `yaml:"deviation" json:"deviation,omitempty"`     // k in mean + k*sigma (default 3)
+	Alpha      float64 `yaml:"alpha" json:"alpha,omitempty"`             // EWMA weight of the newest window (default 0.1)
+	MinSamples int     `yaml:"min_samples" json:"min_samples,omitempty"` // windows before the baseline is trusted (default 5)
 }

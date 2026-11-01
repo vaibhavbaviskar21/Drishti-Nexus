@@ -31,15 +31,19 @@ func (d *BruteForceDetector) Analyze(ev *Event) *Finding {
 	s := d.engine.setting(RuleBruteForce)
 	w := d.engine.failuresWithin(ev.Key, ev.Entry.Timestamp, s.Window)
 	failures := w.Attempts
-	if failures < s.Threshold {
+	threshold, why := d.engine.threshold(ev.Key, s.Threshold)
+	if failures < threshold {
 		return nil
 	}
 
 	details := map[string]interface{}{
 		"source":          ev.Host,
 		"failed_attempts": failures,
-		"threshold":       s.Threshold,
+		"threshold":       threshold,
 		"window":          s.Window.String(),
+	}
+	for k, v := range why {
+		details[k] = v
 	}
 	who := ev.Host
 	if ip := fieldString(ev.Entry, "src_ip"); ip != "" {
@@ -78,14 +82,18 @@ func (d *ExcessiveFailuresDetector) Analyze(ev *Event) *Finding {
 	s := d.engine.setting(RuleExcessiveFailures)
 	w := d.engine.failuresWithin(ev.Key, ev.Entry.Timestamp, s.Window)
 	failures := w.Attempts
-	if failures < s.Threshold {
+	threshold, why := d.engine.threshold(ev.Key, s.Threshold)
+	if failures < threshold {
 		return nil
 	}
 
 	details := map[string]interface{}{
 		"source":    ev.Host,
-		"threshold": s.Threshold,
+		"threshold": threshold,
 		"window":    s.Window.String(),
+	}
+	for k, v := range why {
+		details[k] = v
 	}
 	who := ev.Host
 	if ip := fieldString(ev.Entry, "src_ip"); ip != "" {

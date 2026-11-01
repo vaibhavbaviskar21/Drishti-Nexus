@@ -89,8 +89,7 @@ type Engine struct {
 	incidentGap time.Duration
 	hoursLoc    *time.Location
 
-	// Phase 2.1: adaptive thresholds
-	baseline *BaselineTracker
+	adaptive AdaptiveSettings
 
 	mu     sync.Mutex
 	state  *State
@@ -110,9 +109,6 @@ func NewEngine(store storage.Storage, config *models.Config) *Engine {
 		state:       newState(),
 		alerts:      make(map[string]*models.Alert),
 	}
-	// Phase 2.1: adaptive thresholds — uses the excessive-failures window as
-	// the observation window, so the baseline tracks the same time scale.
-	e.baseline = NewBaselineTracker(DefaultBaselineConfig(10 * time.Minute))
 	if config.IncidentGap != "" {
 		if d, err := time.ParseDuration(config.IncidentGap); err == nil && d > 0 {
 			e.incidentGap = d
@@ -128,12 +124,38 @@ func NewEngine(store storage.Storage, config *models.Config) *Engine {
 		}
 	}
 	e.loadSettings()
+	e.loadAdaptive()
 	e.initializeRules()
-	// Phase 2.1: update baseline window to match the effective excessive-failures config.
-	if s, ok := e.settings[RuleExcessiveFailures]; ok && s.Window > 0 {
-		e.baseline = NewBaselineTracker(DefaultBaselineConfig(s.Window))
-	}
 	return e
+}
+
+// loadAdaptive sets adaptive-threshold parameters: defaults (on, 3 sigma, alpha 0.1,
+// 5 windows), overridden by config. The observation window and learning cut-off
+// follow the effective Excessive Failures settings so both measure the same thing.
+func (e *Engine) loadAdaptive() {
+	ef := e.settings[RuleExcessiveFailures]
+	e.adaptive = AdaptiveSettings{Enabled: true, Deviation: 3, Alpha: 0.1, MinSamples: 5, Window: ef.Window, Floor: ef.Threshold}
+	c := e.config.Adaptive
+	if c == nil {
+		return
+	}
+	e.adaptive.Enabled = c.Enabled
+	if c.Deviation > 0 {
+		e.adaptive.Deviation = c.Deviation
+	}
+	if c.Alpha > 0 && c.Alpha <= 1 {
+		e.adaptive.Alpha = c.Alpha
+	} else if c.Alpha != 0 {
+		e.warnings = append(e.warnings, fmt.Sprintf("adaptive_thresholds.alpha %v outside (0,1], using %v", c.Alpha, e.adaptive.Alpha))
+	}
+	if c.MinSamples > 0 {
+		e.adaptive.MinSamples = c.MinSamples
+	}
+}
+
+// Adaptive returns the effective adaptive-threshold settings (for the audit trail).
+func (e *Engine) Adaptive() AdaptiveSettings {
+	return e.adaptive
 }
 
 func (e *Engine) loadSettings() {
@@ -213,9 +235,8 @@ func (e *Engine) AnalyzeLog(entry *models.LogEntry) []*models.Alert {
 	ev := e.prepare(entry)
 	created := make([]*models.Alert, 0)
 
-	// Phase 2.1: feed auth failures to the baseline tracker.
 	if ev.AuthResult == "failure" && ev.Attempts > 0 {
-		e.baseline.RecordFailures(ev.Key, entry.Timestamp, ev.Attempts)
+		e.recordBaseline(ev.Key, entry.Timestamp, ev.Attempts)
 	}
 
 	for _, rule := range e.rules {
@@ -236,7 +257,6 @@ func (e *Engine) AnalyzeLog(entry *models.LogEntry) []*models.Alert {
 	e.state.Processed++
 	if e.state.Processed%sweepEvery == 0 {
 		e.sweep()
-		e.baseline.Sweep(e.state.Latest, e.maxAuthWindow()*10)
 	}
 	return created
 }
@@ -481,6 +501,11 @@ func (e *Engine) sweep() {
 	for k, inc := range e.state.Incidents {
 		if now.Sub(inc.LastSeen) > e.incidentGap {
 			delete(e.state.Incidents, k)
+		}
+	}
+	for k, b := range e.state.Baselines {
+		if now.Sub(b.WindowStart) > e.adaptive.Window*maxEmptyWindows {
+			delete(e.state.Baselines, k) // fully decayed: indistinguishable from a new source
 		}
 	}
 	for user, c := range e.state.Compromised {

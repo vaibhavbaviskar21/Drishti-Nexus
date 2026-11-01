@@ -58,5 +58,15 @@ normal_hours:
 # are no more than this far apart in event time.
 incident_gap: "30m"
 
+# Per-source adaptive thresholds for Brute Force / Excessive Failures (Phase 2.1).
+# Each host+IP learns its normal failures per window; a rule then needs
+# max(static threshold, mean + deviation x stddev). The static threshold is always
+# the floor, and bursts at or above the threshold are never learned (no poisoning).
+adaptive_thresholds:
+  enabled: true
+  deviation: 3      # standard deviations above the source's own mean
+  alpha: 0.1        # weight of the newest window
+  min_samples: 5    # windows before a baseline is trusted
+
 # Maximum log entries to keep in memory (in-memory backend only)
 max_log_entries: 100000

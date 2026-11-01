@@ -38,6 +38,8 @@ type Options struct {
 	// Reference anchors year inference for year-less syslog timestamps (default now;
 	// callers should pass the file's modification time).
 	Reference time.Time
+	// Custom formats (LoadCustomFormats) are tried before the built-in parsers.
+	Custom []*CustomFormat
 }
 
 // ParserRegistry turns a stream of physical lines into normalized entries.
@@ -86,9 +88,13 @@ func NewParserRegistryWithOptions(opts Options) *ParserRegistry {
 		label = "input"
 	}
 	csvp := NewCSVParser(ctx)
+	var custom []Parser
+	for _, f := range opts.Custom {
+		custom = append(custom, &customParser{f: f, ctx: ctx, json: NewJSONParser(ctx)})
+	}
 	return &ParserRegistry{
 		csv: csvp,
-		parsers: []Parser{
+		parsers: append(custom,
 			csvp, // only active once the file's first line was a CSV header
 			NewXMLParser(ctx),
 			NewCEFParser(ctx), // before syslog: CEF/LEEF usually arrive in a syslog envelope
@@ -96,7 +102,7 @@ func NewParserRegistryWithOptions(opts Options) *ParserRegistry {
 			NewSyslogParser(ctx),
 			NewJSONParser(ctx),
 			NewApacheParser(ctx),
-		},
+		),
 		generic: NewGenericParser(ctx),
 		ctx:     ctx,
 		label:   label,

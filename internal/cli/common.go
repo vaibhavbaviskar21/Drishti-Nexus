@@ -4,6 +4,7 @@ import (
 	"drishti-nexus/internal/audit"
 	"drishti-nexus/internal/config"
 	"drishti-nexus/internal/models"
+	"drishti-nexus/internal/parser"
 	"drishti-nexus/internal/pipeline"
 	"drishti-nexus/internal/storage"
 	"drishti-nexus/internal/version"
@@ -18,10 +19,12 @@ type Common struct {
 	ConfigPath string
 	TZ         string
 	AuditLog   string
+	ParserDir  string
 
 	Config   *models.Config
 	usedPath string
 	Location *time.Location
+	Formats  []*parser.CustomFormat
 }
 
 // Register adds the shared flags to fs.
@@ -29,6 +32,7 @@ func (c *Common) Register(fs *flag.FlagSet) {
 	fs.StringVar(&c.ConfigPath, "config", "", "detection config (default: configs/config.yaml, then ./config.yaml, then built-in)")
 	fs.StringVar(&c.TZ, "tz", "UTC", "IANA timezone assumed for timestamps without an offset (e.g. Asia/Kolkata)")
 	fs.StringVar(&c.AuditLog, "audit-log", audit.DefaultLogPath, "append-only audit log path")
+	fs.StringVar(&c.ParserDir, "parsers", "", "folder of custom YAML parser definitions (see docs/CUSTOM_PARSERS.md)")
 }
 
 // Load resolves the config and timezone after flags are parsed.
@@ -46,6 +50,11 @@ func (c *Common) Load() error {
 		return fmt.Errorf("invalid -tz %q: %w", c.TZ, err)
 	}
 	c.Location = loc
+	if c.ParserDir != "" {
+		if c.Formats, err = parser.LoadCustomFormats(c.ParserDir); err != nil {
+			return fmt.Errorf("load parsers: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -59,6 +68,7 @@ func (c *Common) PipelineOptions(command string, args []string) pipeline.Options
 		Args:         args,
 		AuditLogPath: c.AuditLog,
 		ToolVersion:  version.Version,
+		Formats:      c.Formats,
 	}
 }
 

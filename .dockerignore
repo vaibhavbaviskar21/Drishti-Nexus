@@ -1,0 +1,11 @@
+.git
+.venv
+bin
+dist
+testdata/datasets
+testdata/benign
+benchmarks
+docs/report
+*.db
+drishti_audit.log
+drishti-scan-*

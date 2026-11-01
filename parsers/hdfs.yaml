@@ -1,0 +1,6 @@
+# Hadoop HDFS daemon log (LogHub HDFS):
+# 081109 203615 148 INFO dfs.DataNode$PacketResponder: PacketResponder 1 for block blk_38865049064139660 terminating
+name: hdfs
+pattern: '^(?P<timestamp>\d{6} \d{6}) (?P<pid>\d+) (?P<severity>[A-Z]+) (?P<program>[^:]+): (?P<message>.*)$'
+time_layout: "060102 150405"   # yyMMdd HHmmss, no zone: read in -tz
+facility: hdfs
