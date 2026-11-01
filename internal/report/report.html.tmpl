@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti Nexus incident report - session {{.Session.SessionID}}</title>
+<style>
+:root { --fg:#1b1f24; --muted:#5b6470; --line:#d8dde3; --bg:#ffffff; --panel:#f5f7f9;
+  --crit:#9b1c1c; --high:#c2410c; --med:#a16207; --low:#3f6212; --ok:#166534; --bad:#b91c1c; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+main { max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
+h1 { font-size:24px; margin:0 0 4px; }
+h2 { font-size:18px; margin:32px 0 10px; padding-bottom:4px; border-bottom:2px solid var(--fg); }
+h3 { font-size:15px; margin:0; }
+.muted { color:var(--muted); }
+.mono, code { font-family:Consolas,"Liberation Mono",Menlo,monospace; font-size:12px; overflow-wrap:anywhere; }
+table { border-collapse:collapse; width:100%; margin:6px 0 12px; }
+th, td { text-align:left; vertical-align:top; padding:4px 8px; border-bottom:1px solid var(--line); }
+th { background:var(--panel); font-weight:600; }
+td.n { text-align:right; font-variant-numeric:tabular-nums; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin:8px 0 12px; }
+.stat { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 10px; }
+.stat b { display:block; font-size:22px; }
+.sev { display:inline-block; padding:1px 7px; border-radius:10px; color:#fff; font-size:12px; font-weight:600; text-transform:uppercase; }
+.sev-critical { background:var(--crit); } .sev-high { background:var(--high); }
+.sev-medium { background:var(--med); } .sev-low { background:var(--low); }
+.tag { display:inline-block; border:1px solid var(--line); border-radius:4px; padding:0 5px; margin:0 4px 2px 0; font-size:12px; background:var(--panel); }
+.incident { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:14px 0; break-inside:avoid-page; }
+.incident > header { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px; }
+.timeline { list-style:none; margin:10px 0 0; padding:0 0 0 14px; border-left:2px solid var(--line); }
+.timeline > li { position:relative; margin:0 0 14px; }
+.timeline > li::before { content:""; position:absolute; left:-21px; top:5px; width:10px; height:10px; border-radius:50%; background:var(--fg); }
+.kv { margin:4px 0; }
+.kv span { margin-right:12px; }
+.ok { color:var(--ok); font-weight:600; } .bad { color:var(--bad); font-weight:700; }
+.ai { border:2px dashed var(--med); border-radius:8px; padding:10px 14px; background:#fffbeb; }
+.warn { color:var(--bad); }
+@media print {
+  body { font-size:11px; }
+  main { max-width:none; padding:0; }
+  h2 { break-after:avoid-page; }
+  .incident, tr { break-inside:avoid-page; }
+  .sev, th, .stat, .tag { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  @page { size:A4; margin:14mm 12mm; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Drishti Nexus - Incident Report</h1>
+<div class="muted">Session <code>{{.Session.SessionID}}</code> · generated {{time .GeneratedAt}} · tool {{.Session.ToolVersion}}</div>
+<p class="muted">All findings below are produced by deterministic, explainable detection rules. Every alert cites the evidence lines it is based on (<code>&lt;file&gt;:&lt;line&gt;</code>).</p>
+</header>
+
+<h2>1. Summary</h2>
+<div class="grid">
+  <div class="stat"><b>{{.Stats.Incidents}}</b>incidents</div>
+  <div class="stat"><b>{{.Stats.Alerts}}</b>alerts</div>
+  <div class="stat"><b>{{.Stats.Entries}}</b>log entries</div>
+  <div class="stat"><b>{{.Stats.Lines}}</b>physical lines</div>
+  <div class="stat"><b>{{len .Session.Evidence}}</b>evidence files</div>
+  <div class="stat"><b>{{.Stats.DurationMs}} ms</b>analysis time</div>
+</div>
+{{if .Rules}}
+<table><thead><tr><th>Rule</th><th class="n">Alerts</th></tr></thead><tbody>
+{{range .Rules}}<tr><td>{{.Name}}</td><td class="n">{{.N}}</td></tr>
+{{end}}</tbody></table>
+{{end}}
+{{if .Techniques}}
+<h3>MITRE ATT&amp;CK techniques observed</h3>
+<table><thead><tr><th>Technique</th><th>Name</th><th>Tactic</th><th class="n">Alerts</th></tr></thead><tbody>
+{{range .Techniques}}<tr><td><code>{{.ID}}</code></td><td>{{.Name}}</td><td>{{.Tactic}}</td><td class="n">{{.Alerts}}</td></tr>
+{{end}}</tbody></table>
+{{end}}
+
+<h2>2. Parse quality</h2>
+<p class="muted">Clean: a format parser matched exactly. Partial: a parser matched but something was repaired or assumed. BestEffort: no parser matched; raw text kept.</p>
+<table><thead><tr><th>Quality</th><th class="n">Entries</th><th class="n">%</th></tr></thead><tbody>
+{{range .Quality}}<tr><td>{{.Name}}</td><td class="n">{{.N}}</td><td class="n">{{printf "%.1f" .Pct}}</td></tr>
+{{end}}</tbody></table>
+<table><thead><tr><th>Parser</th><th class="n">Entries</th><th class="n">%</th></tr></thead><tbody>
+{{range .Parsers}}<tr><td>{{.Name}}</td><td class="n">{{.N}}</td><td class="n">{{printf "%.1f" .Pct}}</td></tr>
+{{end}}</tbody></table>
+{{if .Repairs}}
+<table><thead><tr><th>Repair / assumption</th><th class="n">Entries</th></tr></thead><tbody>
+{{range .Repairs}}<tr><td>{{.Name}}</td><td class="n">{{.N}}</td></tr>
+{{end}}</tbody></table>
+{{end}}
+
+<h2>3. Incidents</h2>
+{{if not .Incidents}}<p>No alerts were raised.</p>{{else}}
+<table><thead><tr><th>Incident</th><th>Severity</th><th>First seen</th><th>Last seen</th><th class="n">Alerts</th><th>ATT&amp;CK</th><th>Correlation</th></tr></thead><tbody>
+{{range .Incidents}}<tr><td><a href="#{{.ID}}">{{.ID}}</a></td><td><span class="sev sev-{{lower .Severity}}">{{.Severity}}</span></td><td>{{time .Start}}</td><td>{{time .End}}</td><td class="n">{{len .Alerts}}</td><td>{{join .Techniques ", "}}</td><td class="mono">{{join .Keys "; "}}</td></tr>
+{{end}}</tbody></table>
+
+{{range .Incidents}}
+<section class="incident" id="{{.ID}}">
+<header><h3>{{.ID}}</h3><span class="sev sev-{{lower .Severity}}">{{.Severity}}</span>
+<span class="muted">{{time .Start}} → {{time .End}}</span>
+{{range .Techniques}}<span class="tag">{{.}}</span>{{end}}</header>
+<div class="muted mono">{{join .Keys "; "}}</div>
+<ol class="timeline">
+{{range .Alerts}}<li>
+  <div><b>{{time .Timestamp}}</b> <span class="sev sev-{{lower .Severity}}">{{.Severity}}</span> <b>{{.RuleName}}</b> <span class="muted">{{.ID}}{{if gt .Count 1}} · {{.Count}} matches until {{time .LastSeen}}{{end}}</span></div>
+  <div>{{.Description}}</div>
+  {{if .MITRETechniqueID}}<div class="kv"><span class="tag">ATT&amp;CK {{.MITRETechniqueID}}{{if .MITRETechniqueName}} {{.MITRETechniqueName}}{{end}}{{if .MITRETactic}} · {{.MITRETactic}}{{end}}</span></div>{{end}}
+  {{if .Details}}<div class="kv muted">{{range .Details}}<span>{{.Key}}=<code>{{.Value}}</code></span>{{end}}</div>{{end}}
+  {{if .RelatedAlerts}}<div class="kv muted">Related alerts: {{join .RelatedAlerts ", "}}</div>{{end}}
+  <table><thead><tr><th>Evidence line</th><th>Time</th><th>Source</th><th>Parsed message</th></tr></thead><tbody>
+  {{range .Evidence}}<tr><td class="mono">{{.ID}}</td>{{if .Found}}<td>{{time .Time}}</td><td>{{.Source}}</td><td class="mono">{{.Text}}</td>{{else}}<td colspan="3" class="muted">entry not retained in this run (alerts-only or store cap); the line is in the evidence file at this ID</td>{{end}}</tr>
+  {{end}}{{if .Omitted}}<tr><td colspan="4" class="muted">+{{.Omitted}} more cited lines, listed in the JSON report</td></tr>{{end}}
+  </tbody></table>
+</li>
+{{end}}</ol>
+</section>
+{{end}}{{end}}
+
+{{if .AISummaries}}
+<h2>AI-generated summaries (not evidence)</h2>
+<div class="ai">
+<p><b>These narratives were generated by a language model from the deterministic findings above. They are not evidence and are not part of the detection results.</b> Verify every statement against the cited alerts and evidence lines.</p>
+{{range .AISummaries}}
+<h3>{{.IncidentID}} <span class="muted">· model {{.Model}} · {{if .Verified}}<span class="ok">all claims matched the incident data</span>{{else}}<span class="bad">NOT verified against the incident data</span>{{end}}</span></h3>
+<p>{{.Text}}</p>
+{{if .Unsupported}}<p class="warn">Unsupported claims:</p><ul>{{range .Unsupported}}<li>{{.}}</li>{{end}}</ul>{{end}}
+{{end}}
+</div>
+{{end}}
+
+<h2>4. Chain of custody</h2>
+<p class="muted">Evidence was opened read-only. Each file is hashed before analysis and re-hashed afterwards; a mismatch means it changed during analysis.</p>
+<table><thead><tr><th>Evidence file</th><th class="n">Bytes</th><th>SHA-256 before / after</th><th>Check</th></tr></thead><tbody>
+{{range .Session.Evidence}}<tr><td class="mono">{{.Path}}</td><td class="n">{{.SizeBytes}}</td><td class="mono">{{.SHA256Before}}<br>{{if .SHA256After}}{{.SHA256After}}{{else}}-{{end}}</td><td>{{$u := unchanged .}}{{if eq $u "unchanged"}}<span class="ok">{{$u}}</span>{{else}}<span class="bad">{{$u}}</span>{{end}}</td></tr>
+{{end}}</tbody></table>
+<table><tbody>
+<tr><th>Detection config</th><td class="mono">{{if .Session.Config.ConfigPath}}{{.Session.Config.ConfigPath}}<br>sha256 {{.Session.Config.ConfigSHA256}}{{else}}built-in defaults{{end}}</td></tr>
+{{range .Session.Config.Definitions}}<tr><th>Definition file</th><td class="mono">{{.Path}}<br>sha256 {{.SHA256}}</td></tr>
+{{end}}{{range .Session.Outputs}}<tr><th>Output</th><td class="mono">{{.Path}}<br>sha256 {{.SHA256}}</td></tr>
+{{end}}</tbody></table>
+<p class="muted">This report file is itself hashed in the session_end record of the audit log.</p>
+
+<h2>5. Audit session</h2>
+<table><tbody>
+<tr><th>Session ID</th><td class="mono">{{.Session.SessionID}}</td></tr>
+<tr><th>Command</th><td class="mono">{{.Session.Command}} {{join .Session.Args " "}}</td></tr>
+<tr><th>Analyst (OS user)</th><td>{{.Session.OSUser}} on {{.Session.Hostname}}</td></tr>
+<tr><th>Tool</th><td>Drishti Nexus {{.Session.ToolVersion}} ({{.Session.GoVersion}}, {{.Session.Platform}})</td></tr>
+<tr><th>Started</th><td>{{time .Session.StartedAt}}</td></tr>
+<tr><th>Report generated</th><td>{{time .GeneratedAt}} (the session_end record follows in the audit log)</td></tr>
+{{if .Session.RecordHash}}<tr><th>session_start record hash</th><td class="mono">{{.Session.RecordHash}}</td></tr>{{end}}
+<tr><th>Normal hours</th><td>{{.Session.Config.NormalHours}}</td></tr>
+<tr><th>Incident gap</th><td>{{.Session.Config.IncidentGap}}</td></tr>
+<tr><th>Adaptive thresholds</th><td>{{if .Session.Config.Adaptive}}{{.Session.Config.Adaptive}}{{else}}-{{end}}</td></tr>
+<tr><th>Assumed timezone</th><td>{{.Session.Config.AssumedTimezone}}</td></tr>
+<tr><th>Storage</th><td>{{.Session.Config.Storage}}</td></tr>
+</tbody></table>
+<table><thead><tr><th>Rule</th><th>Enabled</th><th>Severity</th><th class="n">Threshold</th><th>Window</th></tr></thead><tbody>
+{{range .Session.Config.Rules}}<tr><td>{{.Name}}</td><td>{{.Enabled}}</td><td>{{.Severity}}</td><td class="n">{{if .Threshold}}{{.Threshold}}{{else}}-{{end}}</td><td>{{if .Window}}{{.Window}}{{else}}-{{end}}</td></tr>
+{{end}}</tbody></table>
+{{if .Session.Config.Warnings}}<h3>Warnings</h3><ul>{{range .Session.Config.Warnings}}<li class="warn">{{.}}</li>{{end}}</ul>{{end}}
+</main>
+</body>
+</html>

