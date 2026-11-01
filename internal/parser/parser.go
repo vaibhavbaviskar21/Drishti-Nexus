@@ -53,6 +53,7 @@ type Options struct {
 type ParserRegistry struct {
 	parsers []Parser
 	generic *GenericParser
+	csv     *CSVParser // header set when the file's first line is a CSV log header
 	ctx     *Context
 	label   string
 
@@ -62,6 +63,9 @@ type ParserRegistry struct {
 	pendingStart int      // line number of pending[0]
 	pendingBytes int
 	pendingJSON  bool // pending is an unfinished JSON object
+	pendingXML   bool // pending is an unfinished <Event> element
+	csvOpen      bool // pending CSV record is inside a quoted field
+	sawRecord    bool // a non-blank line has been seen (only the first can be a CSV header)
 	pendingNotes map[string]interface{}
 	pendingDirty bool // encoding repaired or truncated on some physical line
 
@@ -81,8 +85,14 @@ func NewParserRegistryWithOptions(opts Options) *ParserRegistry {
 	if label == "" {
 		label = "input"
 	}
+	csvp := NewCSVParser(ctx)
 	return &ParserRegistry{
+		csv: csvp,
 		parsers: []Parser{
+			csvp, // only active once the file's first line was a CSV header
+			NewXMLParser(ctx),
+			NewCEFParser(ctx), // before syslog: CEF/LEEF usually arrive in a syslog envelope
+			NewLEEFParser(ctx),
 			NewSyslogParser(ctx),
 			NewJSONParser(ctx),
 			NewApacheParser(ctx),
@@ -141,6 +151,24 @@ func (r *ParserRegistry) Parse(line string) (*models.LogEntry, error) {
 		notes["encoding_repaired"] = strings.Join(repairs, ",")
 	}
 
+	if r.pendingXML || r.csvOpen {
+		r.appendPending(line, notes, dirty)
+		if r.pendingXML {
+			r.pendingXML = !strings.Contains(line, "</Event>")
+		} else {
+			r.csvOpen = csvQuoteOpen(true, line)
+		}
+		if !r.pendingXML && !r.csvOpen {
+			return r.finish()
+		}
+		if r.pendingBytes > maxEntryBytes || len(r.pending) > maxEntryLines {
+			r.pendingNotes["record_incomplete"] = true
+			r.pendingDirty = true
+			return r.finish()
+		}
+		return nil, nil
+	}
+
 	if r.pendingJSON {
 		r.appendPending(line, notes, dirty)
 		r.js.feedLine(&r.jsonText, line, false)
@@ -155,11 +183,19 @@ func (r *ParserRegistry) Parse(line string) (*models.LogEntry, error) {
 		return nil, nil
 	}
 
-	if strings.TrimSpace(line) == "" {
+	if strings.TrimSpace(line) == "" || isXMLWrapper(line) {
 		return nil, nil
 	}
+	// shortcut: the header is only seen from line 1, so a tail resumed mid-file loses CSV mode.
+	if !r.sawRecord {
+		r.sawRecord = true
+		if h := csvHeader(line); h != nil {
+			r.csv.header = h
+			return nil, nil
+		}
+	}
 
-	if len(r.pending) > 0 && isContinuation(line) &&
+	if len(r.pending) > 0 && r.csv.header == nil && isContinuation(line) &&
 		r.pendingBytes+len(line) <= maxEntryBytes && len(r.pending) < maxEntryLines {
 		r.appendPending(line, notes, dirty)
 		return nil, nil
@@ -169,6 +205,12 @@ func (r *ParserRegistry) Parse(line string) (*models.LogEntry, error) {
 	prev, err := r.finish()
 	r.startPending(line, notes, dirty)
 
+	switch {
+	case r.csv.header != nil:
+		r.csvOpen = csvQuoteOpen(false, line)
+	case isEventXMLStart(line):
+		r.pendingXML = !strings.Contains(line, "</Event>")
+	}
 	if strings.HasPrefix(strings.TrimSpace(line), "{") {
 		r.js = jsonScan{}
 		r.jsonText.Reset()
@@ -222,6 +264,10 @@ func (r *ParserRegistry) Flush() (*models.LogEntry, error) {
 		r.pendingNotes["json_incomplete"] = true
 		r.pendingDirty = true
 	}
+	if (r.pendingXML || r.csvOpen) && len(r.pending) > 0 {
+		r.pendingNotes["record_incomplete"] = true
+		r.pendingDirty = true
+	}
 	return r.finish()
 }
 
@@ -229,7 +275,7 @@ func (r *ParserRegistry) startPending(line string, notes map[string]interface{},
 	r.pending = []string{line}
 	r.pendingStart = r.lineNo
 	r.pendingBytes = len(line)
-	r.pendingJSON = false
+	r.pendingJSON, r.pendingXML, r.csvOpen = false, false, false
 	r.pendingNotes = notes
 	r.pendingDirty = dirty
 }
@@ -315,7 +361,7 @@ func (r *ParserRegistry) parseRecord(lines []string, raw, jsonText string) (*mod
 	switch {
 	case jsonText != "":
 		head = jsonText
-	case strings.HasPrefix(strings.TrimSpace(head), "{"):
+	case strings.HasPrefix(strings.TrimSpace(head), "{"), r.csv.header != nil, isEventXMLStart(head):
 		head = raw
 	default:
 		wholeRecord = false

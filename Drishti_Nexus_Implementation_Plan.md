@@ -97,10 +97,10 @@ This is the highest-leverage phase. Do this before any AI work.
 
 ### 2.6 Universal Schema & Ingestion (added 2026-10-31 for the NTRO "Universal Log Pre-processing Framework" brief)
 Do this before 2.4: the Sigma field-mapping layer and the NTRO common taxonomy are the same work.
-- [ ] Normalize every parser's output onto Elastic Common Schema (ECS) field names, keeping `raw_log` and the `file:line` ID so every normalized event traces back to its original (NTRO a, c, d).
-- [ ] Add CEF, LEEF, CSV and XML parsers, each tested against real samples (NTRO b).
+- [x] Normalize every parser's output onto Elastic Common Schema (ECS) field names, keeping `raw_log` and the `file:line` ID so every normalized event traces back to its original (NTRO a, c, d).
+- [x] Add CEF, LEEF, CSV and XML parsers, each tested against real samples (NTRO b). *(XML = Windows Event XML; see docs/ECS_MAPPING.md for scope.)*
 - [ ] Declarative YAML parser definitions loaded from disk, so a new source needs no Go code (NTRO e, i).
-- [ ] ECS NDJSON export for SIEM/data-lake ingestion (NTRO g, h).
+- [x] ECS NDJSON export for SIEM/data-lake ingestion (NTRO g, h).
 - [ ] Measure and publish sustained throughput in `BASELINE.md` instead of building distributed mode (NTRO "billions of events/day").
 - [ ] Dockerfile wrapping the single binary (NTRO k). Pulled forward from Phase 6 by explicit approval; the air-gapped binary stays the flagship.
 

@@ -36,6 +36,10 @@ type Options struct {
 	// OnEntry is called for every parsed entry with the alerts it created.
 	OnEntry func(entry *models.LogEntry, alerts []*models.Alert)
 
+	// OnStart (Run only) is called after evidence is hashed, before any line is
+	// read: streaming outputs open here. An error aborts the run.
+	OnStart func(res *Result) error
+
 	// Audit trail. Empty AuditLogPath disables the on-disk audit log (tests,
 	// benchmarks); the Session is still built and returned.
 	Command      string
@@ -139,6 +143,12 @@ func Run(paths []string, opts Options) (*Result, error) {
 	res, err := Prepare(paths, &opts)
 	if err != nil {
 		return nil, err
+	}
+	if opts.OnStart != nil {
+		if err := opts.OnStart(res); err != nil {
+			_ = res.Finish(&opts, "error: "+err.Error())
+			return res, err
+		}
 	}
 	start := time.Now()
 	err = res.processMerged(&opts)

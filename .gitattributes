@@ -1,0 +1,7 @@
+# LF in the working tree on every OS (core.autocrlf=true otherwise rewrites
+# files to CRLF on checkout, and gofmt / bash scripts reject that).
+* text=auto eol=lf
+*.ps1 text eol=crlf
+
+# Test fixtures are evidence for the parser tests: never rewrite their bytes.
+testdata/** -text

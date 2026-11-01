@@ -154,6 +154,7 @@ var zonedLayouts = []string{
 	time.RFC1123Z,
 	time.RFC1123,
 	"02/Jan/2006:15:04:05 -0700",
+	"Jan 02 2006 15:04:05 -0700", // ArcSight CEF rt / LEEF devTime with a numeric offset
 }
 
 var zonelessLayouts = []string{
@@ -162,4 +163,5 @@ var zonelessLayouts = []string{
 	"2006-01-02 15:04:05.999999999",
 	"2006-01-02 15:04:05",
 	"2006/01/02 15:04:05",
+	"Jan 02 2006 15:04:05", // ArcSight CEF rt / LEEF devTime (fractional seconds accepted)
 }

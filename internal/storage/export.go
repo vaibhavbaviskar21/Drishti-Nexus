@@ -46,7 +46,7 @@ func ExportJSON(logs []*models.LogEntry, alerts []*models.Alert, session *audit.
 		report.AuditStartHash = session.RecordHash
 	}
 
-	file, err := createOutput(filename)
+	file, err := CreateOutput(filename)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func ExportJSON(logs []*models.LogEntry, alerts []*models.Alert, session *audit.
 // ExportAlertsCSV exports alerts to CSV. Every row carries the session ID and the
 // SHA-256 of the evidence it was derived from, so a row can be cited on its own.
 func ExportAlertsCSV(alerts []*models.Alert, session *audit.Session, filename string) error {
-	file, err := createOutput(filename)
+	file, err := CreateOutput(filename)
 	if err != nil {
 		return err
 	}
@@ -144,9 +144,9 @@ func evidenceFor(alert *models.Alert, byLabel map[string]*audit.EvidenceFile) (s
 	return "", ""
 }
 
-// createOutput creates a report file. Reports are new files written next to, never
+// CreateOutput creates a report file. Reports are new files written next to, never
 // over, evidence (callers check audit.CheckOutputPath first).
-func createOutput(filename string) (*os.File, error) {
+func CreateOutput(filename string) (*os.File, error) {
 	f, err := os.OpenFile(filepath.Clean(filename), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create export file: %w", err)

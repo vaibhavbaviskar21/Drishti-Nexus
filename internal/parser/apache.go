@@ -60,9 +60,10 @@ func (p *ApacheParser) Parse(line string) (*models.LogEntry, error) {
 		fields["referer"], fields["user_agent"] = m[8], m[9]
 	}
 
+	// Source stays empty: an access log does not name the server that wrote it,
+	// and the client address is src_ip, not the host.
 	return &models.LogEntry{
 		Timestamp: timestamp,
-		Source:    ip,
 		Facility:  "web",
 		Severity:  p.severityFromStatus(status),
 		Message:   strings.TrimSpace(m[5] + " " + status),
