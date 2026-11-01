@@ -114,31 +114,89 @@ func (d *ExcessiveFailuresDetector) Analyze(ev *Event) *Finding {
 
 // PrivilegeEscalationDetector detects failed or denied privilege escalation
 // attempts (normal successful sudo/su usage is not flagged).
-type PrivilegeEscalationDetector struct{}
+type PrivilegeEscalationDetector struct {
+	engine *Engine
+}
 
 func (d *PrivilegeEscalationDetector) Name() string {
 	return RulePrivilegeEsc
 }
 
+// Severity comes from corroboration, not the keyword alone (Phase 2.5): none → low,
+// one → the configured severity, both → high. Corroborations: outside normal hours,
+// and an account never seen using sudo/su on a host with established privilege history.
 func (d *PrivilegeEscalationDetector) Analyze(ev *Event) *Finding {
+	e := d.engine
+	actor := privilegeActor(ev.Entry)
+	unusual := actor != "" && e.state.PrivUse[ev.Host] >= minPrivHistory && e.state.PrivUse[ev.Host+"|"+actor] == 0
+	if isPrivilegeProgram(ev.Entry) {
+		e.state.PrivUse[ev.Host]++
+		if actor != "" {
+			e.state.PrivUse[ev.Host+"|"+actor]++
+		}
+	}
+
 	indicator := privilegeEscalationIndicator(ev.Entry)
 	if indicator == "" {
 		return nil
+	}
+	var why []string
+	if e.isOutsideNormalHours(ev.Entry.Timestamp) {
+		why = append(why, "outside normal hours")
+	}
+	if unusual {
+		why = append(why, fmt.Sprintf("first privileged use by %s on %s (after %d privileged events by others)", actor, ev.Host, e.state.PrivUse[ev.Host]-1))
 	}
 	f := &Finding{
 		AggKey:      ev.Host + "|" + indicator,
 		CorrKey:     ev.Key,
 		Description: fmt.Sprintf("Failed or denied privilege escalation (%s) on %s", indicator, ev.Host),
 		Details: map[string]interface{}{
-			"source":    ev.Host,
-			"indicator": indicator,
-			"message":   ev.Entry.Message,
+			"source":        ev.Host,
+			"indicator":     indicator,
+			"message":       ev.Entry.Message,
+			"corroboration": why,
 		},
 	}
-	if ev.Entry.Severity >= models.SeverityError {
+	if actor != "" {
+		f.Details["user"] = actor
+	}
+	switch len(why) {
+	case 0:
+		f.Severity = "low"
+	case 2:
 		f.Severity = "high"
 	}
 	return f
+}
+
+// minPrivHistory is how many privileged events a host needs before "this account
+// has never used sudo here" means anything.
+const minPrivHistory = 20
+
+var privPrograms = map[string]bool{"sudo": true, "su": true, "runas": true, "pkexec": true, "doas": true}
+
+func isPrivilegeProgram(entry *models.LogEntry) bool {
+	return privPrograms[strings.ToLower(fieldString(entry, "program"))] || strings.HasPrefix(entry.Message, "pam_unix(sudo") || strings.HasPrefix(entry.Message, "pam_unix(su")
+}
+
+var (
+	sudoActor = regexp.MustCompile(`^\s*([A-Za-z0-9._-]+) : `)                   // "bob : 3 incorrect password attempts ; ..."
+	pamActor  = regexp.MustCompile(`\b(?:logname|ruser)=([A-Za-z0-9._-]+)`)      // pam_unix(sudo:auth): ... logname=bob
+	suActor   = regexp.MustCompile(`\bsu (?:for \S+ )?by ([A-Za-z0-9._-]+)\s*$`) // "FAILED su for root by mallory"
+)
+
+// privilegeActor returns the account attempting the escalation, if the line names it.
+func privilegeActor(entry *models.LogEntry) string {
+	if !isPrivilegeProgram(entry) {
+		return ""
+	}
+	for _, re := range []*regexp.Regexp{sudoActor, pamActor, suActor} {
+		if m := re.FindStringSubmatch(entry.Message); m != nil {
+			return m[1]
+		}
+	}
+	return fieldString(entry, "user")
 }
 
 // privilegeEscalationIndicator returns the matched escalation mechanism when the
@@ -323,26 +381,35 @@ func (d *TimeAnomalyDetector) Name() string {
 	return RuleTimeAnomaly
 }
 
+// Phase 2.5: once a host has `threshold` days of history, an off-hours event is
+// flagged only if that host was active at that hour on fewer than half of its
+// prior days. Hosts that routinely work at night stop alerting; a host that
+// never does still alerts, and the alert says what its history was.
 func (d *TimeAnomalyDetector) Analyze(ev *Event) *Finding {
-	if ev.fired[RuleBruteForce] || ev.fired[RuleExcessiveFailures] {
-		return nil
-	}
-	if !d.engine.isOutsideNormalHours(ev.Entry.Timestamp) {
-		return nil
-	}
 	if ev.AuthResult == "" && ev.Entry.Severity < models.SeverityError {
 		return nil
 	}
+	e := d.engine
+	local := ev.Entry.Timestamp.In(e.hoursLoc)
+	seen, days := e.hostHourHistory(ev.Host, local)
+	e.recordHostHour(ev.Host, local)
 
-	hour := ev.Entry.Timestamp.In(d.engine.hoursLoc).Hour()
+	if ev.fired[RuleBruteForce] || ev.fired[RuleExcessiveFailures] || !e.isOutsideNormalHours(ev.Entry.Timestamp) {
+		return nil
+	}
+	hour := local.Hour()
+	details := map[string]interface{}{"source": ev.Host, "hour": hour}
+	if minDays := e.setting(RuleTimeAnomaly).Threshold; minDays > 0 && days >= minDays {
+		if seen*2 >= days {
+			return nil // routine for this host
+		}
+		details["host_history"] = fmt.Sprintf("active at %02d:00 on %d of %d prior days", hour, seen, days)
+	}
 	return &Finding{
 		AggKey:      ev.Host,
 		CorrKey:     ev.Key,
-		Description: fmt.Sprintf("Activity outside normal hours (%02d:00 %s) on %s", hour, d.engine.hoursLoc, ev.Host),
-		Details: map[string]interface{}{
-			"source": ev.Host,
-			"hour":   hour,
-		},
+		Description: fmt.Sprintf("Activity outside normal hours (%02d:00 %s) on %s", hour, e.hoursLoc, ev.Host),
+		Details:     details,
 	}
 }
 

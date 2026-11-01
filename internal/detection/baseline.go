@@ -89,6 +89,52 @@ func (e *Engine) adaptiveThreshold(b *sourceBaseline, static int) int {
 	return static
 }
 
+// hostHours records, per host, on how many days it was active in each hour of the
+// day (in the normal-hours zone), for the Time-based Anomaly host profile.
+type hostHours struct {
+	Day      string  `json:"day"`       // current day, YYYY-MM-DD
+	Days     int     `json:"days"`      // days with activity, including Day
+	Today    uint32  `json:"today"`     // hours active on Day, one bit per hour
+	HourDays [24]int `json:"hour_days"` // days with activity in each hour, including Day
+}
+
+// hostHourHistory returns, for t's hour, on how many prior days (today excluded)
+// the host was active, and how many prior days it has history for.
+func (e *Engine) hostHourHistory(host string, t time.Time) (seen, days int) {
+	h := e.state.HostHours[host]
+	if h == nil {
+		return 0, 0
+	}
+	seen, days = h.HourDays[t.Hour()], h.Days
+	if h.Day == t.Format("2006-01-02") {
+		days--
+		if h.Today&(1<<t.Hour()) != 0 {
+			seen--
+		}
+	}
+	return seen, days
+}
+
+func (e *Engine) recordHostHour(host string, t time.Time) {
+	h := e.state.HostHours[host]
+	if h == nil {
+		h = &hostHours{}
+		e.state.HostHours[host] = h
+	}
+	day := t.Format("2006-01-02")
+	switch {
+	case day < h.Day:
+		return // shortcut: a line from an earlier day after the day changed is not counted; fine for time-merged input
+	case day > h.Day:
+		h.Day, h.Today = day, 0
+		h.Days++
+	}
+	if bit := uint32(1) << t.Hour(); h.Today&bit == 0 {
+		h.Today |= bit
+		h.HourDays[t.Hour()]++
+	}
+}
+
 // threshold returns the effective threshold for key and, when the baseline
 // raised it above the static value, the details that explain why.
 func (e *Engine) threshold(key string, static int) (int, map[string]interface{}) {

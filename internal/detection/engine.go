@@ -40,7 +40,7 @@ var defaultSettings = []RuleSettings{
 	{Name: RulePrivilegeEsc, Enabled: true, Severity: "medium", Window: 10 * time.Minute},
 	{Name: RuleSuspiciousCommand, Enabled: true, Severity: "high", Window: 10 * time.Minute},
 	{Name: RuleInjection, Enabled: true, Severity: "critical", Window: 10 * time.Minute},
-	{Name: RuleTimeAnomaly, Enabled: true, Severity: "low", Window: time.Hour},
+	{Name: RuleTimeAnomaly, Enabled: true, Severity: "low", Threshold: 3, Window: time.Hour}, // threshold: days of host history
 	{Name: RuleLateralMovement, Enabled: true, Severity: "critical", Window: 30 * time.Minute},
 }
 
@@ -194,7 +194,7 @@ func (e *Engine) initializeRules() {
 	e.rules = []DetectionRule{
 		&BruteForceDetector{engine: e},
 		&ExcessiveFailuresDetector{engine: e},
-		&PrivilegeEscalationDetector{},
+		&PrivilegeEscalationDetector{engine: e},
 		&SuspiciousCommandDetector{},
 		&InjectionPatternDetector{},
 		&TimeAnomalyDetector{engine: e},

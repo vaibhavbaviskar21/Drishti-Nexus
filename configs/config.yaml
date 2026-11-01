@@ -39,7 +39,8 @@ rules:
   - name: "Time-based Anomaly"
     enabled: true
     severity: "low"
-    description: "Authentication activity or errors outside normal hours"
+    description: "Authentication activity or errors outside normal hours, unless routine for that host"
+    threshold: 3         # days of host history before the host's own hours are used (a large value = static hours only)
     time_window: "1h"
 
   - name: "Lateral Movement Candidate"
