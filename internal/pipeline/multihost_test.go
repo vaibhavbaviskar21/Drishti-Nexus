@@ -69,3 +69,16 @@ func TestExpandPaths(t *testing.T) {
 		t.Error("an empty directory should be an error, not a silent no-op")
 	}
 }
+
+// Vendor formats reach the same rules as native logs: a brute force reported
+// only by a VPN appliance in CEF raises the same alert as one from sshd.
+func TestIntegration_CEFLEEFFixture(t *testing.T) {
+	res := runFiles(t, filepath.Join(repoRoot, "testdata", "fixtures", "cef_leef.log"))
+	st := res.Stats
+	if st.ByParser["cef"] != 4 || st.ByParser["leef"] != 1 || st.ParseQuality[models.QualityClean] != 5 {
+		t.Errorf("parsers=%v quality=%v", st.ByParser, st.ParseQuality)
+	}
+	if st.AlertsByRule["Authentication Brute Force"] != 1 || st.Alerts != 1 {
+		t.Errorf("alerts = %v, want exactly one brute force", st.AlertsByRule)
+	}
+}
