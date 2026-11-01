@@ -35,21 +35,29 @@ func (p *JSONParser) Parse(line string) (*models.LogEntry, error) {
 	if err := json.Unmarshal([]byte(line), &data); err != nil {
 		return nil, err
 	}
+	return p.fromMap(data, line), nil
+}
 
+// fromMap builds an entry from decoded key/value data: JSON objects, and CSV rows
+// and Windows XML events once mapped to the same shape.
+func (p *JSONParser) fromMap(data map[string]interface{}, raw string) *models.LogEntry {
 	entry := &models.LogEntry{
-		RawLog: line,
+		RawLog: raw,
 		Fields: data,
 		Tags:   []string{},
 	}
 
 	entry.Timestamp = p.extractTimestamp(data)
-	entry.Message = p.extractString(data, "message", "msg", "text", "log")
+	entry.Message = p.extractString(data, messageKeys...)
 	entry.Source = p.extractSource(data)
 	entry.Severity = p.extractSeverity(data)
 	entry.Facility = p.extractString(data, "facility", "logger", "category", "service", "channel")
 
-	return entry, nil
+	return entry
 }
+
+// messageKeys are the fields that hold the event text, in preference order.
+var messageKeys = []string{"message", "msg", "text", "log", "content"}
 
 // lookup finds a key case-insensitively ("Hostname", "hostname", "HostName").
 func lookup(data map[string]interface{}, key string) (interface{}, bool) {
@@ -142,7 +150,7 @@ func (p *JSONParser) extractSeverity(data map[string]interface{}) models.Severit
 	}
 
 	// Fallback to keyword detection in message
-	if msg := p.extractString(data, "message", "msg"); msg != "" {
+	if msg := p.extractString(data, messageKeys...); msg != "" {
 		return parseSeverityKeyword(msg)
 	}
 

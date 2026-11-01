@@ -27,6 +27,8 @@ func TestEvidenceOpenedReadOnly(t *testing.T) {
 		"internal/storage/export.go:os.OpenFile": "report outputs, guarded by CheckOutputPath",
 		"internal/cli/summarize.go:os.ReadFile":  "scan report input (not evidence)",
 		"internal/config/config.go:os.ReadFile":  "config file",
+		"internal/parser/custom.go:os.ReadFile":  "custom parser definitions (not evidence)",
+		"internal/sigma/sigma.go:os.ReadFile":    "Sigma rule files (not evidence)",
 		"cmd/genbenign/main.go:os.Create":        "generates synthetic test data",
 		"cmd/benchmark/main.go:os.Create":        "CPU profile output",
 		"cmd/benchmark/main.go:os.WriteFile":     "benchmark report output",

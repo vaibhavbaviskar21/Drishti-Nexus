@@ -45,5 +45,5 @@ A technique is tagged only when the rule's logic is a reasonable proxy for it, n
 
 ## Not mapped
 
-- **rpc.statd format-string exploitation** (seen in loghub-linux, T1203/T1190). There is no rule for it yet; it is a known detection gap in [BASELINE.md](../BASELINE.md).
-- **Sigma rules (Phase 2.4)** carry their own `attack.*` tags. Those will be read from each rule's `tags:` field, not from this table.
+- **rpc.statd format-string exploitation** (seen in loghub-linux). No built-in rule covers it; the shipped Sigma rule does (T1190).
+- **Sigma rules** (`-sigma`, [SIGMA.md](SIGMA.md)) carry their own `attack.*` tags, read from each rule's `tags:` field rather than this table. The shipped rules map to T1190 (format-string exploitation, which covers the rpc.statd exploit above), T1003.001 (LSASS credential dumping) and T1569.002 (service execution).

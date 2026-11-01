@@ -130,35 +130,34 @@ This document explicitly states what Drishti Nexus **does not do** and **is not 
 
 ---
 
-### 3. No Advanced Correlation
-
-**Drishti Nexus does NOT:**
-- Correlate events across multiple log sources automatically
-- Build attack timelines spanning days/weeks
-- Track multi-stage attack chains
-- Perform root cause analysis
-- Map to MITRE ATT&CK framework
+### 3. Limited Correlation
 
 **Drishti Nexus DOES:**
-- Track stateful patterns within one log stream (e.g., failed → success login)
-- Detect immediate threats in individual log entries
+- Merge many files or a whole directory by event time, so activity across hosts and rotated files is analysed together
+- Group alerts into incidents (same actor/host, within `incident_gap`) and link related alerts (Excessive Failures → Brute Force)
+- Correlate one cross-host pattern: brute force on host A, then a login with the same account on host B (**Lateral Movement Candidate**, [demo](demo/MULTIHOST_DEMO.md))
+- Tag every alert with a MITRE ATT&CK technique ([ATTACK_MAPPING.md](ATTACK_MAPPING.md))
 
-**Scope:** Simple, deterministic rule-based detection on single log files.
+**Drishti Nexus does NOT:**
+- Model other multi-stage chains (pass-the-hash, RDP hops, persistence → exfiltration)
+- Link an incident to the attacker's later activity when no rule fires on it (e.g. `sudo pg_dumpall` right after a lateral login)
+- Correlate on anything but host, source IP and account
+- Perform root cause analysis
+
+**Scope:** Deterministic, explainable correlation of a few well-defined patterns.
 
 ---
 
 ### 4. No Machine Learning / AI
 
 **Drishti Nexus does NOT:**
-- Build behavioral baselines
-- Use anomaly detection via ML models
+- Use ML models for detection (no ONNX, no clustering, no trained classifiers)
 - Perform predictive analysis
-- Adapt detection rules automatically
 - Cluster similar events
 
 **Drishti Nexus DOES:**
-- Use threshold-based anomaly detection (e.g., >5 failed logins)
-- Apply time-based anomaly detection (activity outside normal hours)
+- Use threshold-based detection (e.g. ≥ 5 failed logins in 10 minutes)
+- Learn simple, explainable baselines: per-source failure rates (EWMA mean + 3σ, with the configured threshold as the floor) and per-host hours of activity. Every alert they influence records the baseline behind it.
 
 **Scope:** Deterministic, explainable detection only. No black-box ML.
 
@@ -306,17 +305,17 @@ This document explicitly states what Drishti Nexus **does not do** and **is not 
 
 ### Rule Extensibility
 
-**What you can do:**
-- Enable/disable existing 6 rules
-- Adjust thresholds and time windows
-- Modify normal hours for time-based anomaly
+**What you can do without code changes:**
+- Enable/disable the 7 built-in rules; adjust thresholds, windows, severity, normal hours, incident gap and adaptive-threshold parameters (`configs/config.yaml`)
+- Add detection rules as **Sigma** YAML files (`-sigma <dir>`, [SIGMA.md](SIGMA.md)), within the supported subset
+- Add log formats as **YAML parser definitions** (`-parsers <dir>`, [CUSTOM_PARSERS.md](CUSTOM_PARSERS.md))
 
 **What you CANNOT do (without code changes):**
-- Add new detection rules via config alone
-- Create complex correlation logic
-- Define custom log parsers
+- Use Sigma aggregations (`| count()`), `near`, `timeframe` or unsupported modifiers (such rules are skipped and listed)
+- Write new correlation logic (cross-host patterns are Go code)
+- Parse formats a single regular expression cannot describe
 
-**Scope:** Configuration tuning of existing rules. New rules require Go code changes and recompilation.
+**Scope:** Rule and parser files are hashed into the audit trail, so every result can be traced to the exact definitions that produced it.
 
 ---
 

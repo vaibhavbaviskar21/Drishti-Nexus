@@ -8,6 +8,7 @@ import (
 	"drishti-nexus/internal/detection"
 	"drishti-nexus/internal/models"
 	"drishti-nexus/internal/parser"
+	"drishti-nexus/internal/sigma"
 	"drishti-nexus/internal/storage"
 	"errors"
 	"fmt"
@@ -30,11 +31,22 @@ type Options struct {
 	Store       storage.Storage
 	StorageDesc string // e.g. "sqlite:case.db"; default "memory"
 
+	// Formats are custom YAML parser definitions (-parsers); hashed into the audit trail.
+	Formats []*parser.CustomFormat
+	// Sigma rules (-sigma) run after the built-in rules; hashed into the audit trail.
+	Sigma []*sigma.Rule
+	// Warnings from loading (e.g. skipped Sigma rules) are recorded in the audit trail.
+	Warnings []string
+
 	// KeepLogs=false skips storing entries (benchmarks on large corpora); alerts are always stored.
 	KeepLogs bool
 
 	// OnEntry is called for every parsed entry with the alerts it created.
 	OnEntry func(entry *models.LogEntry, alerts []*models.Alert)
+
+	// OnStart (Run only) is called after evidence is hashed, before any line is
+	// read: streaming outputs open here. An error aborts the run.
+	OnStart func(res *Result) error
 
 	// Audit trail. Empty AuditLogPath disables the on-disk audit log (tests,
 	// benchmarks); the Session is still built and returned.
@@ -112,12 +124,24 @@ func Prepare(paths []string, opts *Options) (*Result, error) {
 	}
 
 	engine := detection.NewEngine(opts.Store, opts.Config)
+	engine.AddSigma(opts.Sigma)
 	session.Config.Rules = RuleConfigs(engine)
 	session.Config.NormalHours = describeHours(opts.Config.NormalHours)
 	session.Config.IncidentGap = engine.IncidentGap().String()
+	session.Config.Adaptive = "off"
+	if a := engine.Adaptive(); a.Enabled {
+		session.Config.Adaptive = fmt.Sprintf("max(static, mean+%gσ), α=%g, after %d windows of %s", a.Deviation, a.Alpha, a.MinSamples, a.Window)
+	}
 	session.Config.AssumedTimezone = opts.Location.String()
 	session.Config.Storage = opts.StorageDesc
 	session.Config.Warnings = append(session.Config.Warnings, engine.Warnings()...)
+	session.Config.Warnings = append(session.Config.Warnings, opts.Warnings...)
+	for _, r := range opts.Sigma {
+		session.Config.Definitions = append(session.Config.Definitions, audit.OutputFile{Path: r.File, SHA256: r.SHA256})
+	}
+	for _, f := range opts.Formats {
+		session.Config.Definitions = append(session.Config.Definitions, audit.OutputFile{Path: f.File, SHA256: f.SHA256})
+	}
 
 	if opts.AuditLogPath != "" {
 		if err := audit.Append(opts.AuditLogPath, "session_start", session); err != nil {
@@ -139,6 +163,12 @@ func Run(paths []string, opts Options) (*Result, error) {
 	res, err := Prepare(paths, &opts)
 	if err != nil {
 		return nil, err
+	}
+	if opts.OnStart != nil {
+		if err := opts.OnStart(res); err != nil {
+			_ = res.Finish(&opts, "error: "+err.Error())
+			return res, err
+		}
 	}
 	start := time.Now()
 	err = res.processMerged(&opts)
@@ -261,6 +291,7 @@ func (r *Result) processMerged(opts *Options) error {
 				SourceLabel: ev.Label,
 				Location:    opts.Location,
 				Reference:   ev.ModTime,
+				Custom:      opts.Formats,
 			}),
 		}
 		if err := s.advance(r.Stats); err != nil {

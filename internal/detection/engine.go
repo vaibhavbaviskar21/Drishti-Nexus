@@ -2,6 +2,7 @@ package detection
 
 import (
 	"drishti-nexus/internal/models"
+	"drishti-nexus/internal/sigma"
 	"drishti-nexus/internal/storage"
 	"fmt"
 	"sort"
@@ -40,7 +41,7 @@ var defaultSettings = []RuleSettings{
 	{Name: RulePrivilegeEsc, Enabled: true, Severity: "medium", Window: 10 * time.Minute},
 	{Name: RuleSuspiciousCommand, Enabled: true, Severity: "high", Window: 10 * time.Minute},
 	{Name: RuleInjection, Enabled: true, Severity: "critical", Window: 10 * time.Minute},
-	{Name: RuleTimeAnomaly, Enabled: true, Severity: "low", Window: time.Hour},
+	{Name: RuleTimeAnomaly, Enabled: true, Severity: "low", Threshold: 3, Window: time.Hour}, // threshold: days of host history
 	{Name: RuleLateralMovement, Enabled: true, Severity: "critical", Window: 30 * time.Minute},
 }
 
@@ -89,8 +90,8 @@ type Engine struct {
 	incidentGap time.Duration
 	hoursLoc    *time.Location
 
-	// Phase 2.1: adaptive thresholds
-	baseline *BaselineTracker
+	adaptive AdaptiveSettings
+	sigmaTag map[string]ATTACKTechnique // ATT&CK tags of loaded Sigma rules
 
 	mu     sync.Mutex
 	state  *State
@@ -110,9 +111,6 @@ func NewEngine(store storage.Storage, config *models.Config) *Engine {
 		state:       newState(),
 		alerts:      make(map[string]*models.Alert),
 	}
-	// Phase 2.1: adaptive thresholds — uses the excessive-failures window as
-	// the observation window, so the baseline tracks the same time scale.
-	e.baseline = NewBaselineTracker(DefaultBaselineConfig(10 * time.Minute))
 	if config.IncidentGap != "" {
 		if d, err := time.ParseDuration(config.IncidentGap); err == nil && d > 0 {
 			e.incidentGap = d
@@ -128,12 +126,82 @@ func NewEngine(store storage.Storage, config *models.Config) *Engine {
 		}
 	}
 	e.loadSettings()
+	e.loadAdaptive()
 	e.initializeRules()
-	// Phase 2.1: update baseline window to match the effective excessive-failures config.
-	if s, ok := e.settings[RuleExcessiveFailures]; ok && s.Window > 0 {
-		e.baseline = NewBaselineTracker(DefaultBaselineConfig(s.Window))
-	}
 	return e
+}
+
+// loadAdaptive sets adaptive-threshold parameters: defaults (on, 3 sigma, alpha 0.1,
+// 5 windows), overridden by config. The observation window and learning cut-off
+// follow the effective Excessive Failures settings so both measure the same thing.
+func (e *Engine) loadAdaptive() {
+	ef := e.settings[RuleExcessiveFailures]
+	e.adaptive = AdaptiveSettings{Enabled: true, Deviation: 3, Alpha: 0.1, MinSamples: 5, Window: ef.Window, Floor: ef.Threshold}
+	c := e.config.Adaptive
+	if c == nil {
+		return
+	}
+	e.adaptive.Enabled = c.Enabled
+	if c.Deviation > 0 {
+		e.adaptive.Deviation = c.Deviation
+	}
+	if c.Alpha > 0 && c.Alpha <= 1 {
+		e.adaptive.Alpha = c.Alpha
+	} else if c.Alpha != 0 {
+		e.warnings = append(e.warnings, fmt.Sprintf("adaptive_thresholds.alpha %v outside (0,1], using %v", c.Alpha, e.adaptive.Alpha))
+	}
+	if c.MinSamples > 0 {
+		e.adaptive.MinSamples = c.MinSamples
+	}
+}
+
+// AddSigma registers Sigma rules after the built-in ones, as "Sigma: <title>",
+// with the rule's level as severity and its attack.* tags as ATT&CK mapping.
+func (e *Engine) AddSigma(rules []*sigma.Rule) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.sigmaTag == nil {
+		e.sigmaTag = map[string]ATTACKTechnique{}
+	}
+	for _, r := range rules {
+		name := "Sigma: " + r.Title
+		if _, dup := e.settings[name]; dup {
+			name += " [" + r.ID + "]"
+		}
+		e.settings[name] = RuleSettings{Name: name, Enabled: true, Severity: r.Severity(), Window: 10 * time.Minute, WindowStr: "10m0s"}
+		e.rules = append(e.rules, &sigmaDetector{name: name, rule: r})
+		id, tactic := r.ATTACK()
+		e.sigmaTag[name] = ATTACKTechnique{ID: id, Tactic: tactic}
+	}
+}
+
+// sigmaDetector adapts a Sigma rule to the engine: one alert per host per window.
+type sigmaDetector struct {
+	name string
+	rule *sigma.Rule
+}
+
+func (d *sigmaDetector) Name() string { return d.name }
+
+func (d *sigmaDetector) Analyze(ev *Event) *Finding {
+	if !d.rule.Match(ev.Entry) {
+		return nil
+	}
+	details := map[string]interface{}{"source": ev.Host, "sigma_id": d.rule.ID, "sigma_file": d.rule.File, "sigma_level": d.rule.Level}
+	if d.rule.Description != "" {
+		details["sigma_description"] = d.rule.Description
+	}
+	return &Finding{
+		AggKey:      ev.Host,
+		CorrKey:     ev.Key,
+		Description: fmt.Sprintf("Sigma rule %q matched on %s", d.rule.Title, ev.Host),
+		Details:     details,
+	}
+}
+
+// Adaptive returns the effective adaptive-threshold settings (for the audit trail).
+func (e *Engine) Adaptive() AdaptiveSettings {
+	return e.adaptive
 }
 
 func (e *Engine) loadSettings() {
@@ -172,7 +240,7 @@ func (e *Engine) initializeRules() {
 	e.rules = []DetectionRule{
 		&BruteForceDetector{engine: e},
 		&ExcessiveFailuresDetector{engine: e},
-		&PrivilegeEscalationDetector{},
+		&PrivilegeEscalationDetector{engine: e},
 		&SuspiciousCommandDetector{},
 		&InjectionPatternDetector{},
 		&TimeAnomalyDetector{engine: e},
@@ -213,9 +281,8 @@ func (e *Engine) AnalyzeLog(entry *models.LogEntry) []*models.Alert {
 	ev := e.prepare(entry)
 	created := make([]*models.Alert, 0)
 
-	// Phase 2.1: feed auth failures to the baseline tracker.
 	if ev.AuthResult == "failure" && ev.Attempts > 0 {
-		e.baseline.RecordFailures(ev.Key, entry.Timestamp, ev.Attempts)
+		e.recordBaseline(ev.Key, entry.Timestamp, ev.Attempts)
 	}
 
 	for _, rule := range e.rules {
@@ -236,7 +303,6 @@ func (e *Engine) AnalyzeLog(entry *models.LogEntry) []*models.Alert {
 	e.state.Processed++
 	if e.state.Processed%sweepEvery == 0 {
 		e.sweep()
-		e.baseline.Sweep(e.state.Latest, e.maxAuthWindow()*10)
 	}
 	return created
 }
@@ -386,7 +452,10 @@ func (e *Engine) emit(rule string, s RuleSettings, f *Finding, entry *models.Log
 		Details:        f.Details,
 		Count:          f.Count,
 	}
-	tech := ATTACKForRule(rule)
+	tech, ok := e.sigmaTag[rule]
+	if !ok {
+		tech = ATTACKForRule(rule)
+	}
 	alert.MITRETechniqueID, alert.MITRETechniqueName, alert.MITRETactic = tech.ID, tech.Name, tech.Tactic
 	if !f.FirstSeen.IsZero() && f.FirstSeen.Before(alert.Timestamp) {
 		alert.Timestamp = f.FirstSeen
@@ -481,6 +550,11 @@ func (e *Engine) sweep() {
 	for k, inc := range e.state.Incidents {
 		if now.Sub(inc.LastSeen) > e.incidentGap {
 			delete(e.state.Incidents, k)
+		}
+	}
+	for k, b := range e.state.Baselines {
+		if now.Sub(b.WindowStart) > e.adaptive.Window*maxEmptyWindows {
+			delete(e.state.Baselines, k) // fully decayed: indistinguishable from a new source
 		}
 	}
 	for user, c := range e.state.Compromised {

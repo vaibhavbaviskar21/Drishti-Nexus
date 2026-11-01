@@ -68,3 +68,18 @@ jobs:
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@v2.22.8
           gosec -conf .gosec.json ./...
+
+  docker:
+    name: Container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t drishti-nexus:ci .
+      - name: Smoke test (read-only evidence mount)
+        run: |
+          mkdir -p out
+          docker run --rm drishti-nexus:ci version
+          docker run --rm --read-only -v "$PWD/testdata/fixtures:/evidence:ro" -v "$PWD/out:/out" --user "$(id -u):$(id -g)" \
+            drishti-nexus:ci scan -parsers /etc/drishti/parsers -audit-log /out/audit.log -output /out/report.json /evidence/multihost
+          test -s out/report.json

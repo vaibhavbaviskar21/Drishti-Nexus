@@ -52,3 +52,12 @@ go run ./cmd/benchmark -suite -cpuprofile cpu.prof                    # with pro
 ```
 
 Phase results are committed under [`benchmarks/results/`](../benchmarks/results/) and summarised in [`BASELINE.md`](../BASELINE.md).
+
+## Format fixtures (Phase 2.6)
+
+| File | Source | License | What it pins |
+|---|---|---|---|
+| `fixtures/loghub_openssh_2k_structured.csv` | [LogHub](https://github.com/logpai/loghub) `OpenSSH/OpenSSH_2k.log_structured.csv`, verbatim (CRLF) | Research use, see LogHub | The same 2,000 events as `loghub_openssh_2k.log`, as CSV: alerts must match the raw log |
+| `fixtures/loghub_windows_200_structured.csv` | LogHub `Windows/Windows_2k.log_structured.csv`, header + first 200 rows | same | Date+Time split timestamps |
+| `fixtures/windows_events.xml` | Microsoft's documented example for event 4625 ("An account failed to log on"), with the docs page's tree markers removed; pretty-printed, then the same event on one line | Microsoft docs | Windows Event XML parsing and logon classification |
+| `fixtures/cef_leef.log` | Written for the test | — | A brute force seen only in vendor CEF/LEEF raises the same alert as sshd |
