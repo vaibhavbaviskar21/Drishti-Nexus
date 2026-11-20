@@ -74,8 +74,9 @@ in that phase.
 - 2026-11-01 2.6 ECS export, CEF/LEEF/CSV/XML parsers (PR #2), YAML parsers, Dockerfile; 2.1 adaptive thresholds; 2.5 FP tuning (0.92 FP/1k); 2.4 Sigma engine + 3 rules; Phase 3 HTML/PDF reports; Phase 5 opt-in AI summaries with grounding check; Phase 6 UI refresh; Phase 4 feedback log and write-up draft.
 - 2026-11-06/07 Sustained-throughput benchmark (`-repeat`), compliance references (PCI DSS/ISO 27001/HIPAA) in reports, project site `docs/site/`, UI design tokens.
 - 2026-11-20 Defanged the Sigma fixture (Defender had quarantined it); filled the throughput numbers in the write-up; this log.
+- 2026-11-20 Opened PR #3 (`phase2-to-6` → `main`); CI fully green including the first Docker image build; redesigned dashboard checked in Chrome (all tabs, drawer, custody table, no console errors).
 
-**Status:** all planned engineering for Phases 0–6 is done on branch `phase2-to-6`. Tests, golangci-lint and gosec pass locally. PR #2 (2.6 subset) is open; its content is included in `phase2-to-6`.
+**Status:** all planned engineering for Phases 0–6 is done. PR #3 (`phase2-to-6` → `main`) is open with CI green. PR #2 (2.6 subset) is still open, and its commit is included in PR #3, so close #2 or merge it first.
 
 **Open items**
 - Phase 4 (owner): post the write-up (`docs/VALIDATION_WRITEUP.md`), recruit 3–5 practitioners, fill `FEEDBACK_LOG.md`.
