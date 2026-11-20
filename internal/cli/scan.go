@@ -2,10 +2,15 @@ package cli
 
 import (
 	"drishti-nexus/internal/audit"
+	"drishti-nexus/internal/ecs"
+	"drishti-nexus/internal/models"
 	"drishti-nexus/internal/pipeline"
+	"drishti-nexus/internal/report"
 	"drishti-nexus/internal/storage"
 	"flag"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -19,6 +24,9 @@ func ScanCommand(args []string) error {
 	output := fs.String("output", "", "JSON report path (default: drishti-scan-<time>.json); alerts CSV is written alongside")
 	db := fs.String("db", "", "optional SQLite database for persistent storage")
 	noLogs := fs.Bool("alerts-only", false, "omit parsed log entries from the JSON report")
+	ecsPath := fs.String("ecs", "", "also stream every parsed entry as ECS NDJSON to this path (SIEM / data-lake export)")
+	htmlPath := fs.String("report", "", "also write a self-contained HTML incident report (see docs/REPORTING.md)")
+	pdfPath := fs.String("pdf", "", "also write the incident report as PDF")
 	files, err := ParseInterleaved(fs, args)
 	if err != nil {
 		return err
@@ -50,13 +58,51 @@ func ScanCommand(args []string) error {
 	}
 	alertsCSV := strings.TrimSuffix(outputFile, ".json") + "-alerts.csv"
 
+	var ecsFile *os.File
+	var ecsOut *ecs.Writer
+	if *ecsPath != "" {
+		opts.OnStart = func(res *pipeline.Result) error {
+			if err := audit.CheckOutputPath(*ecsPath, res.Session.Evidence); err != nil {
+				return err
+			}
+			f, err := storage.CreateOutput(*ecsPath)
+			if err != nil {
+				return err
+			}
+			ecsFile, ecsOut = f, ecs.NewWriter(f, res.Session)
+			return nil
+		}
+		opts.OnEntry = func(entry *models.LogEntry, _ []*models.Alert) { ecsOut.Write(entry) }
+		defer func() {
+			if ecsFile != nil {
+				_ = ecsFile.Close()
+			}
+		}()
+	}
+
 	fmt.Println("Scanning...")
 	res, err := pipeline.Run(files, opts)
 	if err != nil {
 		return err
 	}
+	if ecsOut != nil {
+		err := ecsOut.Flush()
+		if cerr := ecsFile.Close(); err == nil {
+			err = cerr
+		}
+		ecsFile = nil
+		if err != nil {
+			_ = res.Finish(&opts, "error: "+err.Error())
+			return fmt.Errorf("ECS export: %w", err)
+		}
+		res.Session.AddOutput(*ecsPath)
+		fmt.Printf("ECS events: %s\n", *ecsPath)
+	}
 	printEvidence(res.Session)
-	for _, out := range []string{outputFile, alertsCSV} {
+	for _, out := range []string{outputFile, alertsCSV, *htmlPath, *pdfPath} {
+		if out == "" {
+			continue
+		}
 		if err := audit.CheckOutputPath(out, res.Session.Evidence); err != nil {
 			_ = res.Finish(&opts, "error: "+err.Error())
 			return err
@@ -88,6 +134,24 @@ func ScanCommand(args []string) error {
 		fmt.Printf("Alert summary: %s\n", alertsCSV)
 	}
 
+	if *htmlPath != "" || *pdfPath != "" {
+		data := report.Build(res)
+		for _, r := range []struct {
+			path  string
+			write func(io.Writer, report.Data) error
+		}{{*htmlPath, report.WriteHTML}, {*pdfPath, report.WritePDF}} {
+			if r.path == "" {
+				continue
+			}
+			if err := writeReport(r.path, data, r.write); err != nil {
+				_ = res.Finish(&opts, "error: "+err.Error())
+				return fmt.Errorf("incident report: %w", err)
+			}
+			res.Session.AddOutput(r.path)
+			fmt.Printf("Incident report: %s\n", r.path)
+		}
+	}
+
 	ferr := res.Finish(&opts, "ok")
 	printCustody(res.Session, opts.AuditLogPath)
 	if ferr != nil {
@@ -95,6 +159,18 @@ func ScanCommand(args []string) error {
 	}
 	fmt.Println("\n✓ Scan complete")
 	return nil
+}
+
+func writeReport(path string, d report.Data, write func(io.Writer, report.Data) error) error {
+	f, err := storage.CreateOutput(path)
+	if err != nil {
+		return err
+	}
+	if err := write(f, d); err != nil {
+		_ = f.Close()
+		return err
+	}
+	return f.Close()
 }
 
 func formatCounts(m map[string]int) string {

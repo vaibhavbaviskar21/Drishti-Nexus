@@ -173,13 +173,15 @@ func TestIntegration_Datasets(t *testing.T) {
 				"Excessive Authentication Failures": {1450, 1900},
 				"Authentication Brute Force":        {0, 5},
 				"Privilege Escalation Indicator":    {0, 0},
+				"Time-based Anomaly":                {0, 10}, // Phase 2.5 host profile: 30 → 4
 			},
 		},
 		{
 			name: "loghub-linux", path: "testdata/datasets/loghub-linux/Linux.log", lines: 25567, structured: 99.9,
-			alerts: span{650, 900},
+			alerts: span{480, 700},
 			rules: map[string]span{
 				"Excessive Authentication Failures": {300, 400},
+				"Time-based Anomaly":                {150, 300}, // Phase 2.5 host profile: 431 → 219
 				"Injection Pattern Detected":        {0, 2},
 			},
 		},
@@ -198,8 +200,9 @@ func TestIntegration_Datasets(t *testing.T) {
 		},
 		{
 			name: "synthetic-benign", path: "testdata/benign/auth_benign.log", lines: 50000, structured: 100,
-			alerts: span{0, 100}, // every alert here is a false positive
+			alerts: span{0, 60}, // every alert here is a false positive (Phase 2.5: 87 → 46)
 			rules: map[string]span{
+				"Time-based Anomaly":             {0, 50},
 				"Privilege Escalation Indicator": {0, 0},
 				"Authentication Brute Force":     {0, 0},
 				"Injection Pattern Detected":     {0, 0},

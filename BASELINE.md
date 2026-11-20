@@ -6,13 +6,99 @@ Every number here comes from a file in [`benchmarks/results/`](benchmarks/result
 ```bash
 bash scripts/fetch-datasets.sh        # public datasets, SHA-256 pinned
 make genbenign                        # deterministic synthetic benign set (seed 42, fixed end date)
-go run ./cmd/benchmark -suite -out benchmarks/results/latest.json
+go run ./cmd/benchmark -suite -sigma rules/sigma -out benchmarks/results/latest.json
 ```
 
 | Phase | Date | Build | Results file |
 |---|---|---|---|
 | 0 (re-measured) | 2026-10-04 | commit `f5f55a9` | [`phase0-remeasured.json`](benchmarks/results/phase0-remeasured.json) |
-| **1** | **2026-10-04** | **Phase 1 working tree, go1.25.5 windows/amd64** | [**`phase1.json`**](benchmarks/results/phase1.json) |
+| 1 | 2026-10-04 | Phase 1 working tree, go1.25.5 windows/amd64 | [`phase1.json`](benchmarks/results/phase1.json) |
+| **2** | **2026-11-01** | **branch `phase2-to-6`, go1.25.5 windows/amd64, with `-sigma rules/sigma`** | [**`phase2.json`**](benchmarks/results/phase2.json) |
+
+Sections 1–7 below are the Phase 1 report card, kept for history. **The Phase 2 report card is section 0.**
+
+---
+
+## 0. Phase 2 report card
+
+### 0.1 False positives (synthetic benign set: every alert is a false positive)
+
+| Rule | Phase 0 | Phase 1 | **Phase 2** | What changed in Phase 2 |
+|---|---:|---:|---:|---|
+| Time-based Anomaly | 0* | 79 | **38** | Per-host hour profile (2.5): after 3 days of history, an off-hours event alerts only if the host was active at that hour on < half its prior days |
+| Excessive Authentication Failures | 4,024 | 8 | **8** | Unchanged. All 8 are console-login bursts from the generator (see §4) |
+| Privilege Escalation Indicator | 17,610 | 0 | **0** | Severity now comes from corroboration (2.5), not the keyword |
+| Authentication Brute Force | 6,860 | 0 | **0** | |
+| Injection / Suspicious Command / Lateral Movement | — | 0 | **0** | |
+| Sigma (3 shipped rules) | — | — | **0** | |
+| **Total** | **28,494** | **87** | **46** | |
+| **False positives per 1,000 benign lines** | 569.9 | 1.74 | **0.92** (−47% vs Phase 1) | |
+
+\* Phase 0 timestamps were `time.Now()`, i.e. always "inside business hours".
+
+The same host profile cut Time-based Anomaly on real data: **loghub-linux 431 → 219**, **loghub-ssh 30 → 4**.
+
+### 0.2 Detection on attack data
+
+| Dataset | Phase 1 | **Phase 2** | Phase 2 additions |
+|---|---|---|---|
+| loghub-ssh (655k) | 1,711 alerts | **1,595** | Adaptive thresholds (2.1) quiet the host-level bucket of IP-less failures (EF 1,680 → 1,590). **Every one of the 554 attacking IPs still gets exactly as many alerts as before.** |
+| loghub-linux | 775 | **570** | **Sigma: 7 alerts = all 7 rpc.statd format-string exploit attempts (20 lines), 0 false positives.** This was a Phase 1 detection gap. |
+| mordor-mimikatz | 2 | **3** | **Sigma: LSASS read with credential-dumping rights (T1003.001)**: the one Mimikatz access, not the 3 benign svchost accesses |
+| mordor-psexec | 6 | **7** | **Sigma: service installed running encoded PowerShell (T1569.002)**: Empire's `Updater` service |
+| multihost fixture | — | **3 alerts, 1 incident** | **Lateral Movement Candidate (2.2)**: brute force on web01 → login on db01 7m26s later, linked into one incident ([demo](docs/demo/MULTIHOST_DEMO.md)) |
+
+Incident counts went up on loghub-ssh (1,094 → 1,370) although alerts went down. Fewer low-severity Time-based Anomaly alerts no longer keep attackers' Excessive Failures incidents open across quiet gaps, so later bursts after a > 30-minute gap start new incidents.
+
+**Adaptive thresholds (2.1), measured:** on loghub-ssh, 204 Excessive Failures alerts fired at a raised threshold (each records `static_threshold`, `baseline_mean`, `baseline_stddev`, `baseline_windows`). The 90 alerts the feature removed all belong to one key, the per-host bucket of failures that carry no source IP. On the benign set the feature changes nothing (its 8 EF bursts are not from a learned noisy source). A sustained attack cannot raise its own threshold: windows at or above the threshold are never learned (`TestAdaptive_AttacksAreNotLearned`).
+
+### 0.3 Parsing and formats (2.6, NTRO)
+
+| Input | Real sample | Result |
+|---|---|---|
+| CEF 0/1 (bare or in any syslog envelope) | logstash-codec-cef test suite (Apache-2.0), ArcSight spec examples | All cases parsed (escapes, `=` in values, dotted/bracketed keys) |
+| LEEF 1.0 / 2.0 | IBM LEEF spec examples | Tab, caret and hex delimiters; `devTime` beats the envelope time |
+| CSV with header | LogHub OpenSSH 2k structured CSV, LogHub Windows CSV | 100% Clean. **The CSV raises exactly the same alerts, with the same counts, as the raw OpenSSH log.** |
+| Windows Event XML | Microsoft's documented 4625 event | Failed logon classified, host/user/IP/time exact |
+| YAML-defined (`-parsers`) | LogHub HDFS and ZooKeeper (200 lines each) | 0% → **100% Clean** with the shipped definitions |
+| ECS export (`scan -ecs`) | every format | Raw line, `file:line`, evidence SHA-256 and session on every event |
+
+Alert counts on every benchmark dataset were unchanged by the new parsers. In a controlled parse benchmark, CEF/LEEF detection added no measurable cost.
+
+### 0.4 Throughput
+
+Sustained run: `cmd/benchmark -repeat N` runs the whole dataset N times back to back in one process (full pipeline: read, parse, 7 native rules + 3 Sigma rules, in-memory store), sampling the live heap every 250 ms. Raw results: `benchmarks/results/phase2-throughput-ssh.json`, `phase2-throughput-json.json`.
+
+| Input | Passes | Lines processed | Wall time | Throughput | Per day at that rate | Peak live heap |
+|---|---|---|---|---|---|---|
+| LogHub SSH (syslog, 655,147 lines, 73 MB) | 10 | 6,551,470 | 187.5 s | **34,932 lines/s** (3.9 MB/s) | ~3.0 billion lines | **10 MB** |
+| Mordor Mimikatz (Windows JSON events, 6,026 lines, 43 MB) | 20 | 120,520 | 45.6 s | **2,644 events/s** (19 MB/s) | ~228 million events | **5 MB** |
+
+**Machine:** Intel Core i3-1005G1 laptop (2 cores / 4 threads, 1.2 GHz base), Windows 11, Go 1.25.5, measured 2026-11-07. **These are lower bounds:** the machine was at 64–100% CPU from unrelated work during the run (the benchmark ran at high priority). The pipeline is single-threaded, so this is roughly one core's worth.
+
+What it shows:
+- **Memory stays flat.** Peak live heap does not grow with input size (10 MB after 6.5 M lines), because detection state is pruned to the rule windows. Long-running `tail` sessions do not leak.
+- **Cost is linear.** Allocation per pass is constant (2.9 GB per SSH pass, 29 GB for 10), so throughput holds over the run.
+- **"Billions of events per day"** is reachable for syslog-style auth logs on one commodity core; Windows JSON events are ~13× more expensive per event (larger records, Sigma field matching), so a JSON-heavy feed needs per-host parallel runs.
+
+Method note: an earlier `-repeat` passed the same file N times to one pipeline. The pipeline merges files by timestamp, so the N copies interleaved and every detection window held N identical events; cost grew quadratically (10 passes allocated 547 GB). That measured an impossible input, not the engine, and was replaced by back-to-back passes before these numbers were taken. A real single source producing thousands of failures inside one window would hit the same per-event window scan; see `docs/LIMITATIONS.md`.
+
+### 0.5 Quality gates
+
+| Gate | Status |
+|---|---|
+| `go test ./...` (unit, fixture and dataset integration tests) | Pass |
+| golangci-lint v2.5.0 | 0 issues |
+| gosec v2.22.8 | 0 issues |
+| GitHub Actions | Green on PR #1. PR #2 (2.6 ECS/formats) and this branch run the same gates plus a container build and a smoke scan |
+
+### 0.6 Known gaps after Phase 2
+
+1. **Excessive Failures on the benign set (8)** are a generator artifact (console login failures from random daemons), not a rule defect.
+2. **Sigma subset:** aggregations (`| count()`), `near`, `timeframe` and some modifiers are not supported. Such rules are skipped and listed, never half-applied ([SIGMA.md](docs/SIGMA.md)).
+3. **BOTS** is still not ingested (Splunk index format). Windows coverage comes from Mordor JSON, Windows Event XML and CSV.
+4. **Year inference** for year-less syslog still relies on file mtime. loghub-linux spans a year boundary, and its alerts show 2016/2017 mixed (`year_inferred` is recorded on every entry).
+5. **Host profiles and privilege history start empty**, so the first days of any analysis behave like the static rules. That is by design: the history has to be earned.
 
 ---
 

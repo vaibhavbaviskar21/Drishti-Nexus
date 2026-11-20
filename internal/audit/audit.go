@@ -42,8 +42,10 @@ type AnalysisConfig struct {
 	Rules           []RuleConfig `json:"rules"`
 	NormalHours     string       `json:"normal_hours"`
 	IncidentGap     string       `json:"incident_gap"`
-	AssumedTimezone string       `json:"assumed_timezone"` // zone applied to timestamps without an offset
-	Storage         string       `json:"storage"`          // "memory" or "sqlite:<path>"
+	Adaptive        string       `json:"adaptive_thresholds,omitempty"` // effective adaptive-threshold settings
+	AssumedTimezone string       `json:"assumed_timezone"`              // zone applied to timestamps without an offset
+	Storage         string       `json:"storage"`                       // "memory" or "sqlite:<path>"
+	Definitions     []OutputFile `json:"definitions,omitempty"`         // custom parser / Sigma rule files, hashed
 	Warnings        []string     `json:"warnings,omitempty"`
 }
 

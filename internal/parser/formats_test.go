@@ -80,7 +80,7 @@ func TestJSON_InvalidFallsBackToGeneric(t *testing.T) {
 
 func TestApache_CombinedAndCommon(t *testing.T) {
 	e := parseOne(t, Options{}, `203.0.113.7 - - [10/Oct/2023:13:55:36 -0700] "GET /index.php?id=1' OR '1'='1 HTTP/1.1" 200 2326 "http://ref/" "curl/8.0"`)
-	if e.Parser != "apache" || e.Source != "203.0.113.7" || e.Fields["status"] != "200" || e.Fields["user_agent"] != "curl/8.0" {
+	if e.Parser != "apache" || e.Source != "" || e.Fields["src_ip"] != "203.0.113.7" || e.Fields["status"] != "200" || e.Fields["user_agent"] != "curl/8.0" {
 		t.Errorf("combined: parser=%s source=%s fields=%v", e.Parser, e.Source, e.Fields)
 	}
 	if want := time.Date(2023, 10, 10, 20, 55, 36, 0, time.UTC); !e.Timestamp.Equal(want) || e.Fields["tz_offset"] != "-07:00" {

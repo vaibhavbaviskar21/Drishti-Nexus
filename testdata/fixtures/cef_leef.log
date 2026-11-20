@@ -1,0 +1,5 @@
+<134>Mar 10 10:14:01 vpn01 CEF:0|Acme|VPN|2.1|4625|User login failed|5|rt=Mar 10 2025 10:14:01 duser=deploy src=203.0.113.50 outcome=Failure
+<134>Mar 10 10:14:04 vpn01 CEF:0|Acme|VPN|2.1|4625|User login failed|5|rt=Mar 10 2025 10:14:04 duser=deploy src=203.0.113.50 outcome=Failure
+<134>Mar 10 10:14:07 vpn01 CEF:0|Acme|VPN|2.1|4625|User login failed|5|rt=Mar 10 2025 10:14:07 duser=deploy src=203.0.113.50 outcome=Failure
+<134>Mar 10 10:14:10 vpn01 CEF:0|Acme|VPN|2.1|4624|User login succeeded|3|rt=Mar 10 2025 10:14:10 duser=deploy src=203.0.113.50 outcome=Success
+<13>Mar 10 10:20:00 fw01 LEEF:2.0|Acme|Firewall|5.0|DENY|^|src=198.51.100.9^dst=10.0.0.1^dstPort=22^sev=3^cat=blocked

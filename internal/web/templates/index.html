@@ -3,151 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drishti Nexus - SOC Dashboard</title>
+    <meta name="description" content="Offline triage of security log alerts, incidents and evidence.">
+    <title>Drishti Nexus</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/app.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🔍 Drishti Nexus</h1>
-            <p class="subtitle">Portable SOC Log Analysis</p>
-            <div class="status-indicator">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">Loading...</span>
-            </div>
-        </header>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Logs</div>
-                <div class="stat-value" id="totalLogs">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Security Alerts</div>
-                <div class="stat-value alert-count" id="totalAlerts">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Critical</div>
-                <div class="stat-value critical-count" id="criticalAlerts">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">High Priority</div>
-                <div class="stat-value high-count" id="highAlerts">0</div>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="topbar">
+        <div class="brand">
+            <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></svg>
+            <div>
+                <h1>Drishti Nexus</h1>
+                <p class="brand-sub">Offline security log analysis</p>
             </div>
         </div>
 
-        <div class="main-content">
-            <section class="panel full-width">
-                <div class="section-header">
-                    <h2>Recent Security Alerts</h2>
-                    <button class="btn btn-success" onclick="generateReport()">Generate Report</button>
-                </div>
-                <div class="alert-filters">
-                    <div class="filter-group">
-                        <input type="text" id="alertSearch" placeholder="Search alerts..." onkeyup="filterAlerts()" class="search-input">
-                    </div>
-                    <div class="filter-group">
-                        <select id="alertSeverityFilter" onchange="filterAlerts()">
-                            <option value="all">All Severities</option>
-                            <option value="critical">Critical</option>
-                            <option value="high">High</option>
-                            <option value="medium">Medium</option>
-                            <option value="low">Low</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <select id="alertTypeFilter" onchange="filterAlerts()">
-                            <option value="all">All Types</option>
-                            <option value="rule">By Rule</option>
-                            <option value="pattern">By Pattern</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-sm" onclick="refreshAlerts()">🔄 Refresh</button>
-                </div>
-                <div class="alert-list" id="alertList">
-                    <p class="empty-state">No alerts detected</p>
-                </div>
-            </section>
+        <nav class="tabs" role="tablist" aria-label="Dashboard views">
+            <button type="button" role="tab" id="tab-overview" aria-controls="view-overview" aria-selected="true">Overview</button>
+            <button type="button" role="tab" id="tab-incidents" aria-controls="view-incidents" aria-selected="false" tabindex="-1">Incidents <span class="tab-count" id="incidentTabCount"></span></button>
+            <button type="button" role="tab" id="tab-alerts" aria-controls="view-alerts" aria-selected="false" tabindex="-1">Alerts <span class="tab-count" id="alertTabCount"></span></button>
+            <button type="button" role="tab" id="tab-stream" aria-controls="view-stream" aria-selected="false" tabindex="-1">Log stream</button>
+            <button type="button" role="tab" id="tab-custody" aria-controls="view-custody" aria-selected="false" tabindex="-1">Chain of custody</button>
+        </nav>
 
-            <section class="panel full-width">
-                <div class="section-header">
-                    <h2>Recent Log Entries</h2>
-                    <button class="btn btn-sm" onclick="exportLogs()">⬇️ Export Logs</button>
-                </div>
-                <div class="log-filters">
-                    <div class="filter-group">
-                        <input type="text" id="logSearch" placeholder="Search logs..." onkeyup="filterLogs()" class="search-input">
-                    </div>
-                    <div class="filter-group">
-                        <select id="severityFilter" onchange="filterLogs()">
-                            <option value="all">All Severities</option>
-                            <option value="EMERGENCY">Emergency</option>
-                            <option value="ALERT">Alert</option>
-                            <option value="CRITICAL">Critical</option>
-                            <option value="ERROR">Error</option>
-                            <option value="WARNING">Warning</option>
-                            <option value="NOTICE">Notice</option>
-                            <option value="INFO">Info</option>
-                            <option value="DEBUG">Debug</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <select id="sourceFilter" onchange="filterLogs()">
-                            <option value="all">All Sources</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <input type="text" id="dateFilter" placeholder="Filter by date (YYYY-MM-DD)" onkeyup="filterLogs()" class="search-input">
-                    </div>
-                </div>
-                <div class="log-list" id="logList">
-                    <p class="empty-state">Loading logs...</p>
-                </div>
-            </section>
-
-            <section class="panel severity-panel">
-                <h2>Severity Distribution</h2>
-                <div class="severity-chart" id="severityChart">
-                    <!-- Populated by JS -->
-                </div>
-            </section>
+        <div class="topbar-right">
+            <span class="status" role="status" aria-live="polite"><span class="status-dot" id="statusDot"></span><span id="statusText">Connecting…</span></span>
+            <span class="muted small" id="lastUpdate"></span>
+            <button type="button" class="icon-btn" id="refreshBtn" aria-label="Refresh data" title="Refresh data">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button type="button" class="icon-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle dark mode" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </button>
         </div>
+    </header>
 
-        <footer>
-            <p>Drishti Nexus v1.0 | Offline-capable SOC Analysis Tool</p>
-            <p class="timestamp">Last updated: <span id="lastUpdate">--</span></p>
-        </footer>
-    </div>
+    <main id="main">
+        <section class="view" id="view-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+            <dl class="stats">
+                <div class="stat"><dt>Lines read</dt><dd class="stat-value" id="kpiLines">–</dd></div>
+                <div class="stat"><dt>Parsed entries</dt><dd class="stat-value" id="kpiEntries">–</dd></div>
+                <div class="stat"><dt>Clean parse</dt><dd class="stat-value" id="kpiQuality">–</dd><dd class="stat-note" id="kpiQualityNote"></dd></div>
+                <div class="stat"><dt>Alerts</dt><dd class="stat-value" id="kpiAlerts">–</dd></div>
+                <div class="stat"><dt>Incidents</dt><dd class="stat-value" id="kpiIncidents">–</dd></div>
+            </dl>
 
-    <div id="reportModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Generate Security Report</h2>
-                <span class="close" onclick="closeReportModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="report-options">
-                    <label><input type="checkbox" id="reportAlerts" checked> Include Security Alerts</label>
-                    <label><input type="checkbox" id="reportStats" checked> Include Statistics</label>
-                    <label><input type="checkbox" id="reportLogs" checked> Include Log Entries</label>
-                    <label><input type="checkbox" id="reportSeverity" checked> Include Severity Distribution</label>
+            <div class="overview-grid">
+                <div class="overview-main">
+                    <section class="chain ticks" aria-labelledby="chainTitle">
+                        <div class="section-head"><h2 id="chainTitle">Latest incident, by host</h2><span class="muted small" id="chainMeta"></span></div>
+                        <div id="overviewChain"><p class="empty">Loading…</p></div>
+                    </section>
+
+                    <section class="panel" aria-labelledby="recentTitle">
+                        <div class="section-head"><h2 id="recentTitle">Most recent incidents</h2><button type="button" class="link-btn" data-goto="incidents">View all incidents</button></div>
+                        <div id="overviewIncidents"><p class="empty">Loading…</p></div>
+                    </section>
                 </div>
-                <div class="report-format">
-                    <label>Report Format:</label>
-                    <select id="reportFormat">
-                        <option value="csv">CSV</option>
-                        <option value="json">JSON</option>
-                        <option value="html">HTML</option>
-                    </select>
-                </div>
+
+                <aside class="breakdowns" aria-label="Alert breakdowns">
+                    <section><h2>Alerts by severity</h2><div class="bars" id="chartSeverity"></div></section>
+                    <section><h2>Alerts by rule</h2><div class="bars" id="chartRules"></div></section>
+                    <section><h2>Top sources</h2><div class="bars" id="chartSources"></div></section>
+                </aside>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-cancel" onclick="closeReportModal()">Cancel</button>
-                <button class="btn btn-success" onclick="generateReportFile()">Generate & Download</button>
+        </section>
+
+        <section class="view" id="view-incidents" role="tabpanel" aria-labelledby="tab-incidents" tabindex="0" hidden>
+            <div class="section-head"><h2>Incidents</h2><span class="muted small">Alerts grouped by actor/host and timeframe, latest activity first</span></div>
+            <div id="incidentList" class="incident-list"><p class="empty">Loading…</p></div>
+        </section>
+
+        <section class="view" id="view-alerts" role="tabpanel" aria-labelledby="tab-alerts" tabindex="0" hidden>
+            <div class="toolbar" role="search">
+                <label class="field grow"><span class="sr-only">Search alerts</span><input type="search" id="alertSearch" placeholder="Search description, rule, ID, IP…"></label>
+                <label class="field"><span class="field-label">Severity</span>
+                    <select id="alertSeverity"><option value="">All</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+                </label>
+                <label class="field"><span class="field-label">Rule</span><select id="alertRule"><option value="">All</option></select></label>
+                <label class="field"><span class="field-label">Host</span><select id="alertHost"><option value="">All</option></select></label>
+                <span class="muted small" id="alertCountLabel" aria-live="polite"></span>
+                <span class="toolbar-actions">
+                    <button type="button" class="btn" id="exportCsv">Export CSV</button>
+                    <button type="button" class="btn" id="exportJson">Export JSON</button>
+                </span>
             </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th scope="col">Severity</th><th scope="col">First seen</th><th scope="col">Rule</th><th scope="col">Host</th><th scope="col">ATT&amp;CK</th><th scope="col" class="num">Count</th><th scope="col">Description</th></tr></thead>
+                    <tbody id="alertRows"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="view" id="view-stream" role="tabpanel" aria-labelledby="tab-stream" tabindex="0" hidden>
+            <div class="toolbar">
+                <button type="button" class="btn" id="pauseBtn" aria-pressed="false">Pause</button>
+                <label class="field grow"><span class="sr-only">Filter log lines</span><input type="search" id="logSearch" placeholder="Filter lines…"></label>
+                <span class="muted small" id="streamState" aria-live="polite"></span>
+            </div>
+            <div class="stream" id="logStream" aria-label="Recent log entries, newest first"></div>
+        </section>
+
+        <section class="view" id="view-custody" role="tabpanel" aria-labelledby="tab-custody" tabindex="0" hidden>
+            <div id="custody"></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Drishti Nexus runs fully offline.</p>
+        <p>Source logs are opened read-only.</p>
+        <p>Detections are deterministic rules.</p>
+    </footer>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden tabindex="-1">
+        <div class="drawer-head">
+            <h2 id="drawerTitle">Alert</h2>
+            <button type="button" class="icon-btn" id="drawerClose" aria-label="Close alert details">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
         </div>
-    </div>
-
-    <script src="/static/js/app.js"></script>
+        <div class="drawer-body" id="drawerBody"></div>
+    </aside>
 </body>
 </html>

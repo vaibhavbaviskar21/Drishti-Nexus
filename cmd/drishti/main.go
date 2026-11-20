@@ -31,6 +31,8 @@ func main() {
 		err = cli.ScanCommand(args)
 	case "serve":
 		err = serve(args)
+	case "summarize":
+		err = cli.SummarizeCommand(args)
 	case "audit":
 		err = cli.AuditCommand(args)
 	case "version":
@@ -59,7 +61,8 @@ func serve(args []string) error {
 	port := fs.Int("port", 8080, "port to listen on")
 	host := fs.String("host", "127.0.0.1", "interface to bind (use 0.0.0.0 to expose on the network)")
 	logFile := fs.String("log", "", "log file to load")
-	if _, err := cli.ParseInterleaved(fs, args); err != nil {
+	files, err := cli.ParseInterleaved(fs, args)
+	if err != nil {
 		return err
 	}
 	if err := common.Load(); err != nil {
@@ -67,11 +70,12 @@ func serve(args []string) error {
 	}
 
 	opts := web.Options{
+		LogFiles: files, // positional files/dirs, so multi-host cases correlate in the dashboard
 		Addr:     *host + ":" + strconv.Itoa(*port),
 		Pipeline: common.PipelineOptions("serve", args),
 	}
 	if *logFile != "" {
-		opts.LogFiles = []string{*logFile}
+		opts.LogFiles = append([]string{*logFile}, files...)
 	}
 	return web.NewServer(common.Config).Start(opts)
 }
@@ -95,7 +99,11 @@ func printUsage() {
 	fmt.Println("    Export findings to JSON + CSV with chain-of-custody metadata")
 	fmt.Println("    Example: drishti scan access.log -output report.json")
 	fmt.Println()
-	fmt.Println("  serve [-port 8080] [-host 127.0.0.1] [-log <file>]")
+	fmt.Println("  summarize -in report.json [-out summaries.json] [-endpoint URL] [-model NAME]")
+	fmt.Println("    Optional AI narrative per incident from a local model (loopback only),")
+	fmt.Println("    labeled and checked against the alert facts; see docs/AI_SUMMARY.md")
+	fmt.Println()
+	fmt.Println("  serve [-port 8080] [-host 127.0.0.1] [-log <file>] [<file|dir> ...]")
 	fmt.Println("    Web dashboard (localhost only by default)")
 	fmt.Println()
 	fmt.Println("  audit verify [-audit-log drishti_audit.log]")

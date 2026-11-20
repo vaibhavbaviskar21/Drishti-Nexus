@@ -1,0 +1,30 @@
+title: Service Installed That Runs Encoded PowerShell
+id: 3c8d2e1f-6a7b-4e9c-b0d1-5f2a8c7e6d33
+status: experimental
+description: |
+  A new service (System 7045) whose binary path launches PowerShell with an encoded
+  command. Remote service creation like this is how PsExec-style tools and Empire's
+  psexec module execute on another host.
+references:
+  - https://attack.mitre.org/techniques/T1569/002/
+author: Drishti Nexus
+date: 2026/11/01
+tags:
+  - attack.execution
+  - attack.t1569.002
+logsource:
+  product: windows
+  service: system
+detection:
+  selection:
+    EventID: 7045
+    ImagePath|contains: 'powershell'
+  encoded:
+    ImagePath|contains:
+      - ' -enc'
+      - ' -e '
+      - 'FromBase64String'
+  condition: selection and encoded
+falsepositives:
+  - Deployment tools that install services wrapping encoded PowerShell
+level: high
