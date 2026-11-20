@@ -40,6 +40,8 @@ The same host profile cut Time-based Anomaly on real data: **loghub-linux 431 â†
 
 ### 0.2 Detection on attack data
 
+*Added 2026-11-20:* the shipped Sigma rule for SSH password spraying / user enumeration (`count(user) by src_ip > 4` in 10 minutes) raises **303 alerts from 124 source IPs on loghub-ssh**, and 0 on the benign set and on loghub-linux. The numbers below are without it.
+
 | Dataset | Phase 1 | **Phase 2** | Phase 2 additions |
 |---|---|---|---|
 | loghub-ssh (655k) | 1,711 alerts | **1,595** | Adaptive thresholds (2.1) quiet the host-level bucket of IP-less failures (EF 1,680 â†’ 1,590). **Every one of the 554 attacking IPs still gets exactly as many alerts as before.** |
@@ -95,7 +97,7 @@ Method note: an earlier `-repeat` passed the same file N times to one pipeline. 
 ### 0.6 Known gaps after Phase 2
 
 1. **Excessive Failures on the benign set (8)** are a generator artifact (console login failures from random daemons), not a rule defect.
-2. **Sigma subset:** aggregations (`| count()`), `near`, `timeframe` and some modifiers are not supported. Such rules are skipped and listed, never half-applied ([SIGMA.md](docs/SIGMA.md)).
+2. **Sigma subset:** `near`, `<` thresholds, aggregation functions other than `count()` and some modifiers are not supported (`count()` aggregations were added on 2026-11-20). Such rules are skipped and listed, never half-applied ([SIGMA.md](docs/SIGMA.md)).
 3. **BOTS** is still not ingested (Splunk index format). Windows coverage comes from Mordor JSON, Windows Event XML and CSV.
 4. **Year inference** for year-less syslog still relies on file mtime. loghub-linux spans a year boundary, and its alerts show 2016/2017 mixed (`year_inferred` is recorded on every entry).
 5. **Host profiles and privilege history start empty**, so the first days of any analysis behave like the static rules. That is by design: the history has to be earned.

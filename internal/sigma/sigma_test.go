@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func win(fields map[string]interface{}) *models.LogEntry {
@@ -129,13 +130,36 @@ func TestUnsupportedRulesAreRejected(t *testing.T) {
 
 func TestShippedRules(t *testing.T) {
 	rules, skipped, err := Load(filepath.Join("..", "..", "rules", "sigma"))
-	if err != nil || len(skipped) != 0 || len(rules) != 3 {
+	if err != nil || len(skipped) != 0 || len(rules) != 4 {
 		t.Fatalf("rules=%d skipped=%v err=%v", len(rules), skipped, err)
 	}
 	for _, r := range rules {
 		id, tactic := r.ATTACK()
 		if id == "" || tactic == "" || len(r.SHA256) != 64 || r.Severity() == "" {
 			t.Errorf("%s: attack=%s/%s sha=%q sev=%s", r.Title, id, tactic, r.SHA256, r.Severity())
+		}
+	}
+}
+
+func TestAggregationParse(t *testing.T) {
+	r := mustParse(t, ruleHead+"detection:\n  sel: {Image: x}\n  timeframe: 5m\n  condition: sel | count() by SourceIp > 4\n")
+	if a := r.Agg; a == nil || a.By != "SourceIp" || a.Field != "" || a.OrEqual || a.N != 4 || a.Window != 5*time.Minute {
+		t.Errorf("count() by: %+v", r.Agg)
+	}
+	r = mustParse(t, ruleHead+"detection:\n  sel: {Image: x}\n  timeframe: 1d\n  condition: sel | count(TargetUserName) by IpAddress >= 3\n")
+	if a := r.Agg; a == nil || a.Field != "TargetUserName" || !a.OrEqual || a.Window != 24*time.Hour || !a.Exceeds(3) || a.Exceeds(2) {
+		t.Errorf("distinct count: %+v", r.Agg)
+	}
+	for name, cond := range map[string]string{
+		"less than":      "  timeframe: 5m\n  condition: sel | count() < 3\n",
+		"no timeframe":   "  condition: sel | count() > 3\n",
+		"near":           "  timeframe: 5m\n  condition: sel | near other\n",
+		"bad timeframe":  "  timeframe: 5x\n  condition: sel | count() > 3\n",
+		"list with agg":  "  timeframe: 5m\n  condition: [sel | count() > 3, sel]\n",
+		"timeframe only": "  timeframe: 5m\n  condition: sel\n",
+	} {
+		if _, err := Parse([]byte(ruleHead + "detection:\n  sel: {Image: x}\n" + cond)); err == nil {
+			t.Errorf("%s: accepted", name)
 		}
 	}
 }

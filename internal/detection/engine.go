@@ -168,17 +168,22 @@ func (e *Engine) AddSigma(rules []*sigma.Rule) {
 		if _, dup := e.settings[name]; dup {
 			name += " [" + r.ID + "]"
 		}
-		e.settings[name] = RuleSettings{Name: name, Enabled: true, Severity: r.Severity(), Window: 10 * time.Minute, WindowStr: "10m0s"}
-		e.rules = append(e.rules, &sigmaDetector{name: name, rule: r})
+		window := 10 * time.Minute
+		if r.Agg != nil {
+			window = r.Agg.Window // repeats of an aggregation alert merge over its own timeframe
+		}
+		e.settings[name] = RuleSettings{Name: name, Enabled: true, Severity: r.Severity(), Window: window, WindowStr: window.String()}
+		e.rules = append(e.rules, &sigmaDetector{engine: e, name: name, rule: r})
 		id, tactic := r.ATTACK()
-		e.sigmaTag[name] = ATTACKTechnique{ID: id, Tactic: tactic}
+		e.sigmaTag[name] = ATTACKTechnique{ID: id, Name: techniqueName(id), Tactic: tactic}
 	}
 }
 
 // sigmaDetector adapts a Sigma rule to the engine: one alert per host per window.
 type sigmaDetector struct {
-	name string
-	rule *sigma.Rule
+	engine *Engine
+	name   string
+	rule   *sigma.Rule
 }
 
 func (d *sigmaDetector) Name() string { return d.name }
@@ -191,12 +196,74 @@ func (d *sigmaDetector) Analyze(ev *Event) *Finding {
 	if d.rule.Description != "" {
 		details["sigma_description"] = d.rule.Description
 	}
-	return &Finding{
+	f := &Finding{
 		AggKey:      ev.Host,
 		CorrKey:     ev.Key,
 		Description: fmt.Sprintf("Sigma rule %q matched on %s", d.rule.Title, ev.Host),
 		Details:     details,
 	}
+	if a := d.rule.Agg; a != nil {
+		return d.aggregate(ev, a, f)
+	}
+	return f
+}
+
+// aggregate counts matches per group over the rule's timeframe (event time) and
+// reports only when the count passes the threshold; the alert cites the counted lines.
+func (d *sigmaDetector) aggregate(ev *Event, a *sigma.Aggregation, f *Finding) *Finding {
+	group := ""
+	if a.By != "" {
+		group, _ = sigma.Value(ev.Entry, a.By)
+	}
+	val := ""
+	if a.Field != "" {
+		var ok bool
+		if val, ok = sigma.Value(ev.Entry, a.Field); !ok {
+			return nil // count(field) only counts events that have the field
+		}
+	}
+	key := d.name + "\x00" + group
+	ts := ev.Entry.Timestamp
+	marks := append(d.engine.state.SigmaWindows[key], sigmaMark{At: ts, Val: val, ID: ev.Entry.ID})
+	i := 0
+	for i < len(marks) && marks[i].At.Before(ts.Add(-a.Window)) {
+		i++
+	}
+	marks = marks[i:]
+	d.engine.state.SigmaWindows[key] = marks
+
+	count := len(marks)
+	if a.Field != "" {
+		distinct := map[string]bool{}
+		for _, m := range marks {
+			distinct[m.Val] = true
+		}
+		count = len(distinct)
+	}
+	if !a.Exceeds(count) {
+		return nil
+	}
+	op := ">"
+	if a.OrEqual {
+		op = ">="
+	}
+	counted := "events"
+	if a.Field != "" {
+		counted = "distinct " + a.Field + " values"
+	}
+	f.Details["count"], f.Details["threshold"], f.Details["window"] = count, op+fmt.Sprint(a.N), a.Window.String()
+	what := ""
+	if a.By != "" {
+		f.Details["group_by"], f.Details["group"] = a.By, group
+		f.AggKey += "|" + group
+		what = fmt.Sprintf(" for %s=%s", a.By, group)
+	}
+	f.Description = fmt.Sprintf("Sigma rule %q: %d %s%s within %s (threshold %s%d)", d.rule.Title, count, counted, what, a.Window, op, a.N)
+	for _, m := range marks {
+		f.Evidence = append(f.Evidence, m.ID)
+	}
+	f.FirstSeen, f.Count = marks[0].At, count
+	return f
 }
 
 // Adaptive returns the effective adaptive-threshold settings (for the audit trail).
@@ -550,6 +617,12 @@ func (e *Engine) sweep() {
 	for k, inc := range e.state.Incidents {
 		if now.Sub(inc.LastSeen) > e.incidentGap {
 			delete(e.state.Incidents, k)
+		}
+	}
+	for k, marks := range e.state.SigmaWindows {
+		name, _, _ := strings.Cut(k, "\x00")
+		if len(marks) == 0 || now.Sub(marks[len(marks)-1].At) > e.settings[name].Window {
+			delete(e.state.SigmaWindows, k)
 		}
 	}
 	for k, b := range e.state.Baselines {

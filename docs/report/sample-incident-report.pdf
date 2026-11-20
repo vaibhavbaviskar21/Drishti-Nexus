@@ -19,10 +19,10 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 7 0 R >>
 endobj
 7 0 obj
-<< /Length 7710 >>
+<< /Length 7746 >>
 stream
 BT 0.11 0.12 0.14 rg /F2 20.0 Tf 42.00 773.89 Td (Drishti Nexus - Incident Report) Tj ET
-BT 0.36 0.39 0.44 rg /F1 9.0 Tf 42.00 754.89 Td (Session c9a17930b15f4f43 · generated 2026-11-20 15:06:58Z · tool 1.1.0-dev) Tj ET
+BT 0.36 0.39 0.44 rg /F1 9.0 Tf 42.00 754.89 Td (Session 330979812cc0eeaa · generated 2026-11-20 15:46:29Z · tool 1.1.0-dev) Tj ET
 BT 0.36 0.39 0.44 rg /F1 9.0 Tf 42.00 742.74 Td (All findings are produced by deterministic, explainable detection rules. Every alert cites the evidence lines it is based on) Tj ET
 BT 0.36 0.39 0.44 rg /F1 9.0 Tf 42.00 730.59 Td (\(<file>:<line>\).) Tj ET
 BT 0.11 0.12 0.14 rg /F2 13.0 Tf 42.00 700.44 Td (1. Summary) Tj ET
@@ -34,7 +34,7 @@ BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 663.89 Td (4348 / 4348) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 648.84 Td (Evidence files) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 648.84 Td (1) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 633.79 Td (Analysis time) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 633.79 Td (696 ms) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 633.79 Td (1347 ms) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 618.74 Td (Injection Pattern Detected) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 618.74 Td (2 alerts) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 603.69 Td (Sigma: Service Installed That) Tj ET
@@ -51,7 +51,7 @@ BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 532.44 Td (Exploit Public-Facing Applicat
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 517.39 Td (Compliance refs) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 517.39 Td (PCI DSS 4.0.1 6.2.4, 6.4.2; ISO/IEC 27001:2022 A.8.8, A.8.26; HIPAA 164.308\(a\)\(1\)\(ii\)\(B\)) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 502.34 Td (ATT&CK T1569.002) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 502.34 Td (\(Execution\): 1 alerts) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 502.34 Td (System Services: Service Execution \(Execution\): 1 alerts) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 487.29 Td (Compliance refs) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 487.29 Td (PCI DSS 4.0.1 2.2.4, 10.2.1.2; ISO/IEC 27001:2022 A.8.2, A.8.18; HIPAA 164.312\(a\)\(1\)) Tj ET
 BT 0.36 0.39 0.44 rg /F1 8.0 Tf 42.00 474.74 Td (Compliance references point auditors to the controls these alerts are evidence for; they are not a compliance assessment. Every scan also) Tj ET
@@ -98,7 +98,7 @@ BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 86.72 Td (DetailSequence=1 DetailTotal=1 S
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 77.62 Td (HostVersion=5.1.18362.752 HostId=1c1cb5c9-d305-49c1-9d7f-e864a6237819) Tj ET
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 68.52 Td (HostApplication=C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -noP -sta -w 1 -enc) Tj ET
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 59.42 Td (SQBmACgAJABQAFMAVgBlAHIAcw … [+5282 chars]) Tj ET
-BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session c9a17930b15f4f43 · page 1 of 8) Tj ET
+BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session 330979812cc0eeaa · page 1 of 8) Tj ET
 endstream
 endobj
 8 0 obj
@@ -195,7 +195,7 @@ BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 109.86 Td (HostApplication=C:\\windows\\Sy
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 100.76 Td (SQBmACgAJABQAFMAVgBlAHIAcw … [+5282 chars]) Tj ET
 0.93 0.94 0.95 rg 42.00 83.56 511.28 13.10 re f
 BT 0.11 0.12 0.14 rg /F2 7.0 Tf 45.00 87.66 Td (empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:127 2020-09-20 16:16:20Z WORKSTATION5.theshire.local) Tj ET
-BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session c9a17930b15f4f43 · page 2 of 8) Tj ET
+BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session 330979812cc0eeaa · page 2 of 8) Tj ET
 endstream
 endobj
 10 0 obj
@@ -291,7 +291,7 @@ BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 110.66 Td (Name: pgustavo Account Domain: 
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 101.56 Td (Name: %COMSPEC% /C start /b C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell -noP -sta -w 1 -enc) Tj ET
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 92.46 Td (SQBmACgAJABQAFMAVgBFAHIAUwBpAE8AbgBUAGEAYgBsAEUALgBQAFMAVgBFAFIAcw … [+5088 chars]) Tj ET
 BT 0.11 0.12 0.14 rg /F2 7.0 Tf 45.00 79.36 Td (empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1240 2020-09-20 16:16:58Z WORKSTATION6.theshire.local) Tj ET
-BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session c9a17930b15f4f43 · page 3 of 8) Tj ET
+BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session 330979812cc0eeaa · page 3 of 8) Tj ET
 endstream
 endobj
 12 0 obj
@@ -389,14 +389,14 @@ BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 128.56 Td (THESHIRE Logon ID: 0x3E7 Object
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 119.46 Td (\\REGISTRY\\MACHINE\\SYSTEM\\ControlSet001\\Control\\Lsa Handle ID: 0x7c Resource Attributes: - Process Information:) Tj ET
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 110.36 Td (Process ID: 0x2344 Process Name: C:\\Windows\\System32\\cmd.exe Access Request Information: T … [+174 chars]) Tj ET
 BT 0.11 0.12 0.14 rg /F2 7.0 Tf 45.00 97.26 Td (empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1235 2020-09-20 16:16:58Z WORKSTATION6.theshire.local) Tj ET
-BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session c9a17930b15f4f43 · page 4 of 8) Tj ET
+BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session 330979812cc0eeaa · page 4 of 8) Tj ET
 endstream
 endobj
 14 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 15 0 R >>
 endobj
 15 0 obj
-<< /Length 10875 >>
+<< /Length 10910 >>
 stream
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 45.00 784.89 Td () Tj ET
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 784.89 Td (An attempt was made to access an object. Subject: Security ID: S-1-5-18 Account Name: WORKSTATION6$ Account Domain:) Tj ET
@@ -425,7 +425,7 @@ BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 624.39 Td (0x3E7 Process Information: Proc
 0.76 0.25 0.05 rg 46.00 605.29 3.00 11.00 re f
 BT 0.11 0.12 0.14 rg /F2 9.5 Tf 54.00 606.79 Td (2020-09-20 16:16:58Z [HIGH] Sigma: Service Installed That Runs Encoded PowerShell \(ALERT-000005\)) Tj ET
 BT 0.11 0.12 0.14 rg /F1 9.0 Tf 54.00 594.46 Td (Sigma rule "Service Installed That Runs Encoded PowerShell" matched on WORKSTATION6.theshire.local) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.5 Tf 54.00 582.81 Td (ATT&CK T1569.002 · Execution) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.5 Tf 54.00 582.81 Td (ATT&CK T1569.002 System Services: Service Execution · Execution) Tj ET
 BT 0.36 0.39 0.44 rg /F1 8.0 Tf 54.00 571.84 Td (sigma_description=A new service \(System 7045\) whose binary path launches PowerShell with an encoded command. Remote service) Tj ET
 BT 0.36 0.39 0.44 rg /F1 8.0 Tf 54.00 561.04 Td (creation like this is how PsExec-style tools and Empire's psexec module execute on another host.) Tj ET
 BT 0.36 0.39 0.44 rg /F1 8.0 Tf 54.00 550.24 Td (sigma_file=rules\\sigma\\win_service_install_encoded_powershell.yml sigma_id=3c8d2e1f-6a7b-4e9c-b0d1-5f2a8c7e6d33 sigma_level=high) Tj ET
@@ -488,7 +488,7 @@ BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 83.31 Td (SQBmACgAJABQAFMAVgBFAHIAUwBpAE8A
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 74.21 Td ([+5077 chars]) Tj ET
 0.93 0.94 0.95 rg 42.00 57.01 511.28 13.10 re f
 BT 0.11 0.12 0.14 rg /F2 7.0 Tf 45.00 61.11 Td (empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:1751 2020-09-20 16:17:01Z WORKSTATION6) Tj ET
-BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session c9a17930b15f4f43 · page 5 of 8) Tj ET
+BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session 330979812cc0eeaa · page 5 of 8) Tj ET
 endstream
 endobj
 16 0 obj
@@ -587,14 +587,14 @@ BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 105.86 Td (WOW64; TridENT/7.0; rv:11.0\) L
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 96.76 Td (= 0..255;$J = 0;0..255 | FOrEAch-ObJECt {$J = \($J + $STr[$_] + $RCK[$_ % $RCK.Length]\) % 256;$StR[$_], $StR[$J] =) Tj ET
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 87.66 Td ($StR[$J], $STr[$_];};$I = $J = 0;}pROCeSs {FOrEaCh … [+16241 chars]) Tj ET
 BT 0.11 0.12 0.14 rg /F2 7.0 Tf 45.00 74.56 Td (empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json:2230 2020-09-20 16:17:02Z WORKSTATION6) Tj ET
-BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session c9a17930b15f4f43 · page 6 of 8) Tj ET
+BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session 330979812cc0eeaa · page 6 of 8) Tj ET
 endstream
 endobj
 18 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 19 0 R >>
 endobj
 19 0 obj
-<< /Length 8499 >>
+<< /Length 8801 >>
 stream
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 45.00 784.89 Td () Tj ET
 BT 0.11 0.12 0.14 rg /F3 7.0 Tf 57.00 784.89 Td (Pipeline execution details for command line: fUNctIOn Start-NEGotiaTE {pARAm\($s,$SK,$UA='MOzilLA/5.0 \(WiNDOws NT 6.1;) Tj ET
@@ -650,35 +650,38 @@ BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 356.29 Td (Definition file) Tj ET
 BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 356.29 Td (rules\\sigma\\lnx_format_string_exploit.yml sha256) Tj ET
 BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 345.89 Td (604ff56c80ff6e5436c030ee6f7947b2fce69799ee190e550a9ee85d0e73cd7d) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 331.49 Td (Definition file) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 331.49 Td (rules\\sigma\\win_lsass_access_credential_dump.yml sha256) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 321.09 Td (166b8bc47b6e2d8b049895f4dad958daee10ed53ea6a258dc7bd8f3eecb96f9c) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 331.49 Td (rules\\sigma\\lnx_ssh_password_spraying.yml sha256) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 321.09 Td (065a7dc377abe43e008ec9ef3ca67678ed3ce98de2846f3e8ecf4dde61d9bc50) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 306.69 Td (Definition file) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 306.69 Td (rules\\sigma\\win_service_install_encoded_powershell.yml sha256) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 296.29 Td (7fb5bfaef7d321a68abd05064edb3ce381f85541c64a0ee2310351f8e4dea9a1) Tj ET
-BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 281.89 Td (Output) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 281.89 Td (C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 271.49 Td (348-f0434d526abd/scratchpad/drishti-scan-sample.json sha256) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 261.09 Td (664d62d9d9029229e693a5c9a7593e20dcc9ad31b5d37904341ae0787d445adc) Tj ET
-BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 246.69 Td (Output) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 246.69 Td (C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 236.29 Td (348-f0434d526abd/scratchpad/drishti-scan-sample-alerts.csv sha256) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 225.89 Td (88ea41bef39ab3acafee13f9a32fd94de5a2bd09021175bc3ebbfcdaa6b48b73) Tj ET
-BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 211.49 Td (Output) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 211.49 Td (docs/report/sample-incident-report.html sha256) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 201.09 Td (8342f516f6c708bd31075228ec1d4b9be2e19414808a9ae7f01c29bfe63b09ea) Tj ET
-BT 0.36 0.39 0.44 rg /F1 8.0 Tf 42.00 188.69 Td (This report file is itself hashed in the session_end record of the audit log.) Tj ET
-BT 0.11 0.12 0.14 rg /F2 13.0 Tf 42.00 158.89 Td (5. Audit session) Tj ET
-0.11 0.12 0.14 rg 42.00 153.89 511.28 1.00 re f
-BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 137.89 Td (Session ID) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 137.89 Td (c9a17930b15f4f43) Tj ET
-BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session c9a17930b15f4f43 · page 7 of 8) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 306.69 Td (rules\\sigma\\win_lsass_access_credential_dump.yml sha256) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 296.29 Td (166b8bc47b6e2d8b049895f4dad958daee10ed53ea6a258dc7bd8f3eecb96f9c) Tj ET
+BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 281.89 Td (Definition file) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 281.89 Td (rules\\sigma\\win_service_install_encoded_powershell.yml sha256) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 271.49 Td (7fb5bfaef7d321a68abd05064edb3ce381f85541c64a0ee2310351f8e4dea9a1) Tj ET
+BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 257.09 Td (Output) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 257.09 Td (C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 246.69 Td (348-f0434d526abd/scratchpad/drishti-scan-sample.json sha256) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 236.29 Td (14b7ae4339e699bac67094b5e659d6b1291bac1766f9c2fab47fccd27e61c51d) Tj ET
+BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 221.89 Td (Output) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 221.89 Td (C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 211.49 Td (348-f0434d526abd/scratchpad/drishti-scan-sample-alerts.csv sha256) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 201.09 Td (bf4f90384649fb044cf5c65f257b4e30bb892a0d1a7109875f516451638173ee) Tj ET
+BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 186.69 Td (Output) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 186.69 Td (docs/report/sample-incident-report.html sha256) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 176.29 Td (d21c616150534ac848112485cc85f8308061a7df184d3db7a2ee9da068c912f1) Tj ET
+BT 0.36 0.39 0.44 rg /F1 8.0 Tf 42.00 163.89 Td (This report file is itself hashed in the session_end record of the audit log.) Tj ET
+BT 0.11 0.12 0.14 rg /F2 13.0 Tf 42.00 134.09 Td (5. Audit session) Tj ET
+0.11 0.12 0.14 rg 42.00 129.09 511.28 1.00 re f
+BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 113.09 Td (Session ID) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 113.09 Td (330979812cc0eeaa) Tj ET
+BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session 330979812cc0eeaa · page 7 of 8) Tj ET
 endstream
 endobj
 20 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 21 0 R >>
 endobj
 21 0 obj
-<< /Length 6711 >>
+<< /Length 7134 >>
 stream
 BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 783.89 Td (Command) Tj ET
 BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 783.89 Td (scan -sigma rules/sigma -audit-log) Tj ET
@@ -695,11 +698,11 @@ BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 685.79 Td (BAWISKAR\\VRB on Bawiskar) Tj 
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 670.74 Td (Tool) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 670.74 Td (Drishti Nexus 1.1.0-dev \(go1.25.5, windows/amd64\)) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 655.69 Td (Started) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 655.69 Td (2026-11-20 15:06:56Z) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 655.69 Td (2026-11-20 15:46:26Z) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 640.64 Td (Report generated) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 640.64 Td (2026-11-20 15:06:58Z \(the session_end record follows in the audit log\)) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 640.64 Td (2026-11-20 15:46:29Z \(the session_end record follows in the audit log\)) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.0 Tf 45.00 626.09 Td (session_start record hash) Tj ET
-BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 626.09 Td (151c7f19c56e5987ad630bf7292fa1fe1e680729bd2a66fc184986bf644e91bf) Tj ET
+BT 0.11 0.12 0.14 rg /F3 8.0 Tf 185.00 626.09 Td (092e9a62fe297bce132e748b66a51a7dd0921f7d30b901153888a46a09350ea2) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 611.19 Td (Normal hours) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.5 Tf 185.00 611.19 Td (09:00-17:00 UTC) Tj ET
 BT 0.11 0.12 0.14 rg /F2 8.5 Tf 45.00 596.14 Td (Incident gap) Tj ET
@@ -757,23 +760,29 @@ BT 0.11 0.12 0.14 rg /F1 8.0 Tf 245.00 417.24 Td (true) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 305.00 417.24 Td (critical) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 375.00 417.24 Td (-) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 445.00 417.24 Td (10m0s) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 392.44 Td (Sigma: LSASS Memory Read With) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 382.04 Td (Credential-Dumping Access Rights) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 392.44 Td (Sigma: SSH Password Spraying or User Enumeration) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 382.04 Td (From One Source) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 245.00 392.44 Td (true) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 305.00 392.44 Td (high) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 375.00 392.44 Td (-) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 445.00 392.44 Td (10m0s) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 367.64 Td (Sigma: Service Installed That Runs Encoded) Tj ET
-BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 357.24 Td (PowerShell) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 367.64 Td (Sigma: LSASS Memory Read With) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 357.24 Td (Credential-Dumping Access Rights) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 245.00 367.64 Td (true) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 305.00 367.64 Td (high) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 375.00 367.64 Td (-) Tj ET
 BT 0.11 0.12 0.14 rg /F1 8.0 Tf 445.00 367.64 Td (10m0s) Tj ET
-BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session c9a17930b15f4f43 · page 8 of 8) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 342.84 Td (Sigma: Service Installed That Runs Encoded) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 45.00 332.44 Td (PowerShell) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 245.00 342.84 Td (true) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 305.00 342.84 Td (high) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 375.00 342.84 Td (-) Tj ET
+BT 0.11 0.12 0.14 rg /F1 8.0 Tf 445.00 342.84 Td (10m0s) Tj ET
+BT 0.36 0.39 0.44 rg /F1 7.5 Tf 42.00 30.00 Td (Drishti Nexus incident report · session 330979812cc0eeaa · page 8 of 8) Tj ET
 endstream
 endobj
 22 0 obj
-<< /Title (Drishti Nexus incident report - session c9a17930b15f4f43) /Producer (Drishti Nexus) >>
+<< /Title (Drishti Nexus incident report - session 330979812cc0eeaa) /Producer (Drishti Nexus) >>
 endobj
 xref
 0 23
@@ -785,23 +794,23 @@ xref
 0000000368 00000 n 
 0000000463 00000 n 
 0000000615 00000 n 
-0000008376 00000 n 
-0000008528 00000 n 
-0000019764 00000 n 
-0000019918 00000 n 
-0000030631 00000 n 
-0000030785 00000 n 
-0000042188 00000 n 
-0000042342 00000 n 
-0000053270 00000 n 
-0000053424 00000 n 
-0000065025 00000 n 
-0000065179 00000 n 
-0000073730 00000 n 
-0000073884 00000 n 
-0000080647 00000 n 
+0000008412 00000 n 
+0000008564 00000 n 
+0000019800 00000 n 
+0000019954 00000 n 
+0000030667 00000 n 
+0000030821 00000 n 
+0000042224 00000 n 
+0000042378 00000 n 
+0000053341 00000 n 
+0000053495 00000 n 
+0000065096 00000 n 
+0000065250 00000 n 
+0000074103 00000 n 
+0000074257 00000 n 
+0000081443 00000 n 
 trailer
 << /Size 23 /Root 1 0 R /Info 22 0 R >>
 startxref
-80761
+81557
 %%EOF

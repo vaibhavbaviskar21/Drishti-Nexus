@@ -11,6 +11,7 @@ const (
 	sigmaLSASS   = "Sigma: LSASS Memory Read With Credential-Dumping Access Rights"
 	sigmaService = "Sigma: Service Installed That Runs Encoded PowerShell"
 	sigmaFormat  = "Sigma: Format String Exploitation Attempt in a Service Log"
+	sigmaSpray   = "Sigma: SSH Password Spraying or User Enumeration From One Source"
 )
 
 func shippedSigma(t *testing.T) []*sigma.Rule {
@@ -53,7 +54,7 @@ func TestIntegration_SigmaFixture(t *testing.T) {
 		}
 	}
 	defs := res.Session.Config.Definitions
-	if len(defs) != 3 || len(defs[0].SHA256) != 64 {
+	if len(defs) != 4 || len(defs[0].SHA256) != 64 {
 		t.Errorf("rule files not recorded in the audit session: %+v", defs)
 	}
 }
@@ -68,8 +69,9 @@ func TestIntegration_SigmaDatasets(t *testing.T) {
 		{"testdata/datasets/mordor/empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json", map[string]span{sigmaService: {1, 1}, sigmaLSASS: {0, 0}}},
 		{"testdata/datasets/mordor/empire_mimikatz_logonpasswords_2020-08-07103224.json", map[string]span{sigmaLSASS: {1, 1}, sigmaService: {0, 0}}},
 		{"testdata/datasets/loghub-linux/Linux.log", map[string]span{sigmaFormat: {7, 7}}}, // the rpc.statd exploit (a Phase 1 gap): 7 separate attempts, 20 lines, no false positives
-		{"testdata/datasets/loghub-ssh/SSH.log", map[string]span{sigmaFormat: {0, 0}}},
-		{"testdata/benign/auth_benign.log", map[string]span{sigmaFormat: {0, 0}, sigmaLSASS: {0, 0}, sigmaService: {0, 0}}},
+		// 303 alerts from 124 IPs each trying > 4 account names in 10 minutes (spot-checked: up to 28 names in 7 minutes)
+		{"testdata/datasets/loghub-ssh/SSH.log", map[string]span{sigmaFormat: {0, 0}, sigmaSpray: {280, 330}}},
+		{"testdata/benign/auth_benign.log", map[string]span{sigmaFormat: {0, 0}, sigmaLSASS: {0, 0}, sigmaService: {0, 0}, sigmaSpray: {0, 0}}},
 	} {
 		t.Run(filepath.Base(tt.path), func(t *testing.T) {
 			res := runWithSigma(t, datasetOrSkip(t, tt.path))

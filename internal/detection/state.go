@@ -21,10 +21,18 @@ type State struct {
 	AttemptGroups map[string]*attemptGroup   `json:"attempt_groups"`
 	Open          map[string]*openAlert      `json:"open_alerts"`
 	Incidents     map[string]*incidentState  `json:"incidents"`
-	Compromised   map[string]*compromise     `json:"compromised"` // user → latest brute-force success
-	Baselines     map[string]*sourceBaseline `json:"baselines"`   // correlation key → failure-rate baseline
-	HostHours     map[string]*hostHours      `json:"host_hours"`  // host → hours of day it is active
-	PrivUse       map[string]int             `json:"priv_use"`    // "host" and "host|user" → privileged events seen
+	Compromised   map[string]*compromise     `json:"compromised"`   // user → latest brute-force success
+	Baselines     map[string]*sourceBaseline `json:"baselines"`     // correlation key → failure-rate baseline
+	HostHours     map[string]*hostHours      `json:"host_hours"`    // host → hours of day it is active
+	PrivUse       map[string]int             `json:"priv_use"`      // "host" and "host|user" → privileged events seen
+	SigmaWindows  map[string][]sigmaMark     `json:"sigma_windows"` // "rule\x00group" → matches inside the timeframe
+}
+
+// sigmaMark is one match counted by a Sigma aggregation.
+type sigmaMark struct {
+	At  time.Time `json:"at"`
+	Val string    `json:"val,omitempty"` // value of the counted field (distinct count)
+	ID  string    `json:"id"`            // evidence entry ID
 }
 
 const stateVersion = 1
@@ -69,6 +77,7 @@ func newState() *State {
 		Baselines:     make(map[string]*sourceBaseline),
 		HostHours:     make(map[string]*hostHours),
 		PrivUse:       make(map[string]int),
+		SigmaWindows:  make(map[string][]sigmaMark),
 	}
 }
 

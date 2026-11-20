@@ -46,4 +46,4 @@ A technique is tagged only when the rule's logic is a reasonable proxy for it, n
 ## Not mapped
 
 - **rpc.statd format-string exploitation** (seen in loghub-linux). No built-in rule covers it; the shipped Sigma rule does (T1190).
-- **Sigma rules** (`-sigma`, [SIGMA.md](SIGMA.md)) carry their own `attack.*` tags, read from each rule's `tags:` field rather than this table. The shipped rules map to T1190 (format-string exploitation, which covers the rpc.statd exploit above), T1003.001 (LSASS credential dumping) and T1569.002 (service execution).
+- **Sigma rules** (`-sigma`, [SIGMA.md](SIGMA.md)) carry their own `attack.*` tags, read from each rule's `tags:` field rather than this table. The shipped rules map to T1190 (format-string exploitation, which covers the rpc.statd exploit above), T1003.001 (LSASS credential dumping), T1569.002 (service execution) and T1110.003 (password spraying). Their technique names come from a small table in `internal/detection/attack.go`, since Sigma tags carry only the ID.

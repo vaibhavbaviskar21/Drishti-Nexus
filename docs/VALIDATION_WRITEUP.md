@@ -40,7 +40,7 @@ The "known behaviours" are what each dataset's publisher documents it contains. 
 ## Honest limitations
 
 - **Cross-host correlation covers one pattern:** brute force on A, then a login on B. Lateral movement with already-valid credentials (as in the PsExec dataset) is detected per host, not linked.
-- **Sigma support is a subset.** No aggregations (`| count()`), `near` or `timeframe`. Unsupported rules are skipped and listed, never half-applied.
+- **Sigma support is a subset.** `count()` aggregations work; `near`, `<` thresholds and other aggregation functions do not. Unsupported rules are skipped and listed, never half-applied.
 - **Splunk BOTS isn't ingested yet** (it ships as Splunk indexes, not raw logs).
 - **Baselines start empty.** The first days of any analysis use static thresholds and hours.
 - Full list: [LIMITATIONS.md](LIMITATIONS.md).

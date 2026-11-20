@@ -10,7 +10,7 @@ The folder is searched recursively for `*.yml` / `*.yaml`. Each usable rule beco
 
 - **Severity:** from `level` (informational → low).
 - **ATT&CK:** from the `attack.tNNNN[.NNN]` and `attack.<tactic>` tags.
-- **Aggregation:** like other content rules, one alert per host per 10 minutes, with repeats aggregated.
+- **Aggregation:** like other content rules, one alert per host per 10 minutes, with repeats aggregated. Rules with a `| count()` condition alert once their count passes the threshold within their `timeframe`, and repeats merge over that timeframe.
 - **Incidents:** matches join incidents like any other alert.
 - **Audit trail:** every rule file's path and SHA-256 is recorded (`config.definitions`), and the rules appear in the session's rule list.
 
@@ -27,7 +27,9 @@ The built-in rules stay the fast path; Sigma is the extensible layer (plan 2.4).
 | `null` values (field absent or empty) | ✓ |
 | Keyword lists (searched in the event message) | ✓ |
 | Conditions: `and`, `or`, `not`, parentheses, `1 of` / `any of` / `all of` with `*` patterns, `them`, a list of conditions | ✓ |
-| Aggregations (`\| count() by`, `near`), `timeframe` | ✗ rule skipped |
+| `\| count() [by field] > N` / `>= N` with `timeframe` (s, m, h, d) | ✓ counted per group in event time; the alert cites the counted lines and records count, threshold, group and window |
+| `\| count(field) [by group] > N` (distinct values of field) | ✓ e.g. distinct usernames per source IP |
+| `<` / `<=` thresholds, `near`, other aggregation functions, an aggregation without `timeframe` or inside a list of conditions | ✗ rule skipped |
 | Other modifiers (`base64offset`, `windash`, `utf16le`, …) | ✗ rule skipped |
 | Multi-document rule collections | ✗ rule skipped |
 
@@ -64,4 +66,6 @@ Any other category, service or product makes the rule unsupported. Mapping a new
 | [LSASS Memory Read With Credential-Dumping Access Rights](../rules/sigma/win_lsass_access_credential_dump.yml) | T1003.001, Credential Access | Mordor Mimikatz: **1 alert**, the PowerShell process opening LSASS with `0x1010`. The 3 benign svchost accesses don't match. |
 | [Service Installed That Runs Encoded PowerShell](../rules/sigma/win_service_install_encoded_powershell.yml) | T1569.002, Execution | Mordor PsExec: **1 alert**, Empire's `Updater` service. |
 
-All three stay silent on the benign set and on the 655k-line SSH corpus (`TestIntegration_SigmaDatasets`). Community rules from [SigmaHQ](https://github.com/SigmaHQ/sigma) can be dropped in next to them. Rules outside the supported subset are listed as skipped.
+| [SSH Password Spraying or User Enumeration From One Source](../rules/sigma/lnx_ssh_password_spraying.yml) | T1110.003, Credential Access | loghub-ssh: **303 alerts from 124 source IPs**, each trying > 4 account names within 10 minutes. Spot-checked: 0101, 0, 1234 from one IP within seconds; up to 28 names in 7 minutes. 0 alerts on the benign set and on loghub-linux. |
+
+The first three stay silent on the benign set and the 655k-line SSH corpus, and the spraying rule stays silent on the benign set (`TestIntegration_SigmaDatasets`). Community rules from [SigmaHQ](https://github.com/SigmaHQ/sigma) can be dropped in next to them. Rules outside the supported subset are listed as skipped.

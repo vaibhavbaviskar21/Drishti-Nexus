@@ -61,10 +61,11 @@ func TestFollow_LiveUpdates(t *testing.T) {
 		getJSON(t, ts.URL+"/api/session", &sess)
 		return sess != nil
 	})
-	ws, _, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(ts.URL, "http")+"/api/ws", nil)
+	ws, resp, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(ts.URL, "http")+"/api/ws", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer resp.Body.Close()
 	defer ws.Close()
 
 	// Append a brute force: 3 failures then a success from one source.
