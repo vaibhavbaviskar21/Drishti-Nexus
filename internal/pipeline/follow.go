@@ -77,6 +77,11 @@ func Follow(path string, opts Options, fo FollowOptions) (*Result, error) {
 	if fo.OnResume != nil {
 		fo.OnResume(base, reg.LinesSeen())
 	}
+	if opts.OnStart != nil {
+		if err := opts.OnStart(res); err != nil {
+			return res, err
+		}
+	}
 
 	lr := NewLineReader(f)
 	var partial string

@@ -9,6 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 
 	_ "time/tzdata" // embed the IANA zone database: -tz works on air-gapped hosts without one
@@ -61,6 +62,7 @@ func serve(args []string) error {
 	port := fs.Int("port", 8080, "port to listen on")
 	host := fs.String("host", "127.0.0.1", "interface to bind (use 0.0.0.0 to expose on the network)")
 	logFile := fs.String("log", "", "log file to load")
+	follow := fs.Bool("follow", false, "keep reading lines appended to the (single) log file and update the dashboard live")
 	files, err := cli.ParseInterleaved(fs, args)
 	if err != nil {
 		return err
@@ -76,6 +78,14 @@ func serve(args []string) error {
 	}
 	if *logFile != "" {
 		opts.LogFiles = append([]string{*logFile}, files...)
+	}
+	if *follow {
+		stop := make(chan struct{})
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, os.Interrupt)
+		defer signal.Stop(sig)
+		go func() { <-sig; close(stop) }()
+		opts.Follow, opts.Stop = true, stop
 	}
 	return web.NewServer(common.Config).Start(opts)
 }
