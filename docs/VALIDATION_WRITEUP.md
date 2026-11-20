@@ -9,7 +9,7 @@ Drishti Nexus is a single offline binary that parses security logs, detects atta
 - **Known attack behaviours detected: 6 of 7 (86%)** across the public datasets (table below).
 - **False positives: 0.92 per 1,000 benign log lines** (46 on a 50,000-line benign week), down from 569.9 in the original build.
 - **Parse coverage: 100% structured** on every benchmark dataset. CEF, LEEF, CSV, Windows XML and YAML-defined formats are parsed as well.
-- **Throughput: THROUGHPUT_SUMMARY** (single core, laptop CPU; see BASELINE §0.4).
+- **Throughput: ~35,000 syslog lines/s sustained (≈3 billion lines/day) and ~2,600 Windows JSON events/s**, single-threaded on a 2-core i3 laptop with flat memory (10 MB peak heap after 6.5 M lines; see BASELINE §0.4).
 
 ## Ground truth and results
 
