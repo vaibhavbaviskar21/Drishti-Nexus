@@ -3,7 +3,7 @@
 ## Launch
 
 ```
-drishti serve [-port 8080] [-host 127.0.0.1] [-log <file>] [<file|dir> ...]
+drishti serve [-port 8080] [-host 127.0.0.1] [-log <file>] [-follow] [<file|dir> ...]
 ```
 
 Files and directories (positional or `-log`) are run through the same pipeline as
@@ -11,6 +11,14 @@ Files and directories (positional or `-log`) are run through the same pipeline a
 logs (e.g. `drishti serve testdata/fixtures/multihost`) correlates them into shared
 incidents. The server binds to `127.0.0.1` unless `-host` says otherwise. Open
 `http://127.0.0.1:8080`.
+
+**Live mode:** `drishti serve -follow /var/log/auth.log` analyses one growing file
+and keeps reading lines as they are appended (the same reader as `tail`). Open
+dashboards are told over the WebSocket to refresh at most once a second, so the
+tiles, incidents and log stream update as attacks happen. Ctrl+C stops following,
+finishes the audit session (final hashes, `session_end`) and then stops the server.
+`-follow` takes exactly one file; for several hosts, run one dashboard per file or
+analyse the folder without `-follow`.
 
 ## Views
 

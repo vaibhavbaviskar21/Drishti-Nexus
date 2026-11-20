@@ -44,8 +44,8 @@ type Options struct {
 	// OnEntry is called for every parsed entry with the alerts it created.
 	OnEntry func(entry *models.LogEntry, alerts []*models.Alert)
 
-	// OnStart (Run only) is called after evidence is hashed, before any line is
-	// read: streaming outputs open here. An error aborts the run.
+	// OnStart is called after evidence is hashed (and, for Follow, after a resume),
+	// before any line is read: streaming outputs open here. An error aborts the run.
 	OnStart func(res *Result) error
 
 	// Audit trail. Empty AuditLogPath disables the on-disk audit log (tests,

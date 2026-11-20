@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Drishti Nexus incident report for session c9a17930b15f4f43: incidents, cited evidence lines, ATT&amp;CK techniques, chain of custody and the audit session.">
-<title>Drishti Nexus incident report - session c9a17930b15f4f43</title>
+<meta name="description" content="Drishti Nexus incident report for session 330979812cc0eeaa: incidents, cited evidence lines, ATT&amp;CK techniques, chain of custody and the audit session.">
+<title>Drishti Nexus incident report - session 330979812cc0eeaa</title>
 <style>
 :root {
   color-scheme: light;
@@ -179,8 +179,8 @@ td.mono, td code { font-size: var(--text-xs); line-height: 1.5; }
 <p class="lede">All findings below are produced by deterministic, explainable detection rules. Every alert cites the evidence lines it is based on (<code>&lt;file&gt;:&lt;line&gt;</code>).</p>
 </div>
 <dl class="meta">
-<dt>Session</dt><dd><code>c9a17930b15f4f43</code></dd>
-<dt>Generated</dt><dd>2026-11-20 15:06:58Z</dd>
+<dt>Session</dt><dd><code>330979812cc0eeaa</code></dd>
+<dt>Generated</dt><dd>2026-11-20 15:46:29Z</dd>
 <dt>Tool</dt><dd>1.1.0-dev</dd>
 </dl>
 </div>
@@ -194,7 +194,7 @@ td.mono, td code { font-size: var(--text-xs); line-height: 1.5; }
 <li><b>4348</b><span>log entries</span></li>
 <li><b>4348</b><span>physical lines</span></li>
 <li><b>1</b><span>evidence files</span></li>
-<li><b>696 ms</b><span>analysis time</span></li>
+<li><b>1347 ms</b><span>analysis time</span></li>
 </ul>
 <div class="cols cols-wide">
 <div>
@@ -210,7 +210,7 @@ td.mono, td code { font-size: var(--text-xs); line-height: 1.5; }
 <div class="tw"><table><thead><tr><th>Technique</th><th>Name</th><th>Tactic</th><th class="n">Alerts</th></tr></thead><tbody>
 <tr><td><code>T1059</code></td><td>Command and Scripting Interpreter</td><td>Execution</td><td class="n">4</td></tr>
 <tr><td><code>T1190</code></td><td>Exploit Public-Facing Application</td><td>Initial Access</td><td class="n">2</td></tr>
-<tr><td><code>T1569.002</code></td><td></td><td>Execution</td><td class="n">1</td></tr>
+<tr><td><code>T1569.002</code></td><td>System Services: Service Execution</td><td>Execution</td><td class="n">1</td></tr>
 </tbody></table></div>
 </div>
 </div>
@@ -377,7 +377,7 @@ td.mono, td code { font-size: var(--text-xs); line-height: 1.5; }
 <div class="alert-body">
 <div class="alert-head"><h4>Sigma: Service Installed That Runs Encoded PowerShell</h4><code class="muted">ALERT-000005</code></div>
 <p>Sigma rule &#34;Service Installed That Runs Encoded PowerShell&#34; matched on WORKSTATION6.theshire.local</p>
-<p class="attack"><span class="tag">ATT&amp;CK T1569.002</span><span class="tactic">Execution</span></p>
+<p class="attack"><span class="tag">ATT&amp;CK T1569.002 System Services: Service Execution</span><span class="tactic">Execution</span></p>
 <p class="details"><span>sigma_description=<code>A new service (System 7045) whose binary path launches PowerShell with an encoded command. Remote service creation like this is how PsExec-style tools and Empire&#39;s psexec module execute on another host.</code></span><span>sigma_file=<code>rules\sigma\win_service_install_encoded_powershell.yml</code></span><span>sigma_id=<code>3c8d2e1f-6a7b-4e9c-b0d1-5f2a8c7e6d33</code></span><span>sigma_level=<code>high</code></span><span>source=<code>WORKSTATION6.theshire.local</code></span></p>
 
 </div>
@@ -461,10 +461,11 @@ td.mono, td code { font-size: var(--text-xs); line-height: 1.5; }
 <div class="tw"><table class="kv"><tbody>
 <tr><th>Detection config</th><td class="mono">configs\config.yaml<br>sha256 343124330fa73820ca57ab3f5aa98449cc67423f73ed028c6a0d273c7c563925</td></tr>
 <tr><th>Definition file</th><td class="mono">rules\sigma\lnx_format_string_exploit.yml<br>sha256 604ff56c80ff6e5436c030ee6f7947b2fce69799ee190e550a9ee85d0e73cd7d</td></tr>
+<tr><th>Definition file</th><td class="mono">rules\sigma\lnx_ssh_password_spraying.yml<br>sha256 065a7dc377abe43e008ec9ef3ca67678ed3ce98de2846f3e8ecf4dde61d9bc50</td></tr>
 <tr><th>Definition file</th><td class="mono">rules\sigma\win_lsass_access_credential_dump.yml<br>sha256 166b8bc47b6e2d8b049895f4dad958daee10ed53ea6a258dc7bd8f3eecb96f9c</td></tr>
 <tr><th>Definition file</th><td class="mono">rules\sigma\win_service_install_encoded_powershell.yml<br>sha256 7fb5bfaef7d321a68abd05064edb3ce381f85541c64a0ee2310351f8e4dea9a1</td></tr>
-<tr><th>Output</th><td class="mono">C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9348-f0434d526abd/scratchpad/drishti-scan-sample.json<br>sha256 664d62d9d9029229e693a5c9a7593e20dcc9ad31b5d37904341ae0787d445adc</td></tr>
-<tr><th>Output</th><td class="mono">C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9348-f0434d526abd/scratchpad/drishti-scan-sample-alerts.csv<br>sha256 88ea41bef39ab3acafee13f9a32fd94de5a2bd09021175bc3ebbfcdaa6b48b73</td></tr>
+<tr><th>Output</th><td class="mono">C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9348-f0434d526abd/scratchpad/drishti-scan-sample.json<br>sha256 14b7ae4339e699bac67094b5e659d6b1291bac1766f9c2fab47fccd27e61c51d</td></tr>
+<tr><th>Output</th><td class="mono">C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9348-f0434d526abd/scratchpad/drishti-scan-sample-alerts.csv<br>sha256 bf4f90384649fb044cf5c65f257b4e30bb892a0d1a7109875f516451638173ee</td></tr>
 </tbody></table></div>
 <p class="muted foot">This report file is itself hashed in the session_end record of the audit log.</p>
 </section>
@@ -472,13 +473,13 @@ td.mono, td code { font-size: var(--text-xs); line-height: 1.5; }
 <section class="sec" aria-labelledby="s-audit">
 <h2 id="s-audit">5. Audit session</h2>
 <div class="tw"><table class="kv"><tbody>
-<tr><th>Session ID</th><td class="mono">c9a17930b15f4f43</td></tr>
+<tr><th>Session ID</th><td class="mono">330979812cc0eeaa</td></tr>
 <tr><th>Command</th><td class="mono">scan -sigma rules/sigma -audit-log C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9348-f0434d526abd/scratchpad/audit.log -output C:/Users/VRB/AppData/Local/Temp/claude/ab21742d16e806e4/bb0aa189-8a4d-4f70-9348-f0434d526abd/scratchpad/drishti-scan-sample.json -report docs/report/sample-incident-report.html -pdf docs/report/sample-incident-report.pdf testdata/datasets/mordor/empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json</td></tr>
 <tr><th>Analyst (OS user)</th><td>BAWISKAR\VRB on Bawiskar</td></tr>
 <tr><th>Tool</th><td>Drishti Nexus 1.1.0-dev (go1.25.5, windows/amd64)</td></tr>
-<tr><th>Started</th><td>2026-11-20 15:06:56Z</td></tr>
-<tr><th>Report generated</th><td>2026-11-20 15:06:58Z (the session_end record follows in the audit log)</td></tr>
-<tr><th>session_start record hash</th><td class="mono">151c7f19c56e5987ad630bf7292fa1fe1e680729bd2a66fc184986bf644e91bf</td></tr>
+<tr><th>Started</th><td>2026-11-20 15:46:26Z</td></tr>
+<tr><th>Report generated</th><td>2026-11-20 15:46:29Z (the session_end record follows in the audit log)</td></tr>
+<tr><th>session_start record hash</th><td class="mono">092e9a62fe297bce132e748b66a51a7dd0921f7d30b901153888a46a09350ea2</td></tr>
 <tr><th>Normal hours</th><td>09:00-17:00 UTC</td></tr>
 <tr><th>Incident gap</th><td>30m0s</td></tr>
 <tr><th>Adaptive thresholds</th><td>max(static, mean&#43;3σ), α=0.1, after 5 windows of 10m0s</td></tr>
@@ -494,6 +495,7 @@ td.mono, td code { font-size: var(--text-xs); line-height: 1.5; }
 <tr><td>Time-based Anomaly</td><td>true</td><td>low</td><td class="n">3</td><td>1h0m0s</td></tr>
 <tr><td>Lateral Movement Candidate</td><td>true</td><td>critical</td><td class="n">-</td><td>30m0s</td></tr>
 <tr><td>Sigma: Format String Exploitation Attempt in a Service Log</td><td>true</td><td>critical</td><td class="n">-</td><td>10m0s</td></tr>
+<tr><td>Sigma: SSH Password Spraying or User Enumeration From One Source</td><td>true</td><td>high</td><td class="n">-</td><td>10m0s</td></tr>
 <tr><td>Sigma: LSASS Memory Read With Credential-Dumping Access Rights</td><td>true</td><td>high</td><td class="n">-</td><td>10m0s</td></tr>
 <tr><td>Sigma: Service Installed That Runs Encoded PowerShell</td><td>true</td><td>high</td><td class="n">-</td><td>10m0s</td></tr>
 </tbody></table></div>

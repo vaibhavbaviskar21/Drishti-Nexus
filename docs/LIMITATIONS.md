@@ -313,7 +313,7 @@ This document explicitly states what Drishti Nexus **does not do** and **is not 
 - Add log formats as **YAML parser definitions** (`-parsers <dir>`, [CUSTOM_PARSERS.md](CUSTOM_PARSERS.md))
 
 **What you CANNOT do (without code changes):**
-- Use Sigma aggregations (`| count()`), `near`, `timeframe` or unsupported modifiers (such rules are skipped and listed)
+- Use Sigma `near`, `<` thresholds, aggregation functions other than `count()`, or unsupported modifiers (such rules are skipped and listed). `| count([field]) [by x] > N` with a `timeframe` is supported.
 - Write new correlation logic (cross-host patterns are Go code)
 - Parse formats a single regular expression cannot describe
 

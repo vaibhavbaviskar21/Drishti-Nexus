@@ -24,3 +24,25 @@ var ruleATTACK = map[string]ATTACKTechnique{
 func ATTACKForRule(rule string) ATTACKTechnique {
 	return ruleATTACK[rule]
 }
+
+// techniqueNames names the techniques tagged by the shipped Sigma rules; Sigma tags
+// carry only the ID.
+// shortcut: other IDs show without a name; embed the ATT&CK STIX names if community rule packs need them.
+var techniqueNames = map[string]string{
+	"T1003.001": "OS Credential Dumping: LSASS Memory",
+	"T1110.003": "Brute Force: Password Spraying",
+	"T1569.002": "System Services: Service Execution",
+}
+
+// techniqueName returns the ATT&CK name of a technique ID, or "" if unknown.
+func techniqueName(id string) string {
+	if n, ok := techniqueNames[id]; ok {
+		return n
+	}
+	for _, t := range ruleATTACK {
+		if t.ID == id {
+			return t.Name
+		}
+	}
+	return ""
+}

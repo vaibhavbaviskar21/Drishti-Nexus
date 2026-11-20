@@ -1,7 +1,9 @@
 package detection
 
 import (
+	"drishti-nexus/internal/sigma"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -73,6 +75,20 @@ func TestATTACK_DocumentListsEveryRule(t *testing.T) {
 		row := "| " + rule + " | " + tech.ID + " | " + tech.Name + " | " + tech.Tactic + " |"
 		if !strings.Contains(string(doc), row) {
 			t.Errorf("docs/ATTACK_MAPPING.md missing row: %s", row)
+		}
+	}
+}
+
+func TestATTACK_ShippedSigmaRulesHaveNames(t *testing.T) {
+	rules, _, err := sigma.Load(filepath.Join("..", "..", "rules", "sigma"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e, _ := newTestEngine(nil)
+	e.AddSigma(rules)
+	for name, tech := range e.sigmaTag {
+		if tech.ID == "" || tech.Name == "" {
+			t.Errorf("%s: technique %q has no name (add it to techniqueNames)", name, tech.ID)
 		}
 	}
 }

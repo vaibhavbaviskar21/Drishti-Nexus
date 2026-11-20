@@ -8,15 +8,30 @@ import (
 	"path"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type matcher func(*models.LogEntry) bool
 
-// compileDetection compiles the named searches and the condition.
-func compileDetection(det map[string]interface{}) (matcher, error) {
+// Aggregation is the supported Sigma aggregation, "| count([field]) [by group] > N"
+// (or >=) over the rule's timeframe. With a field it counts distinct values of it.
+type Aggregation struct {
+	Field   string
+	By      string
+	OrEqual bool
+	N       int
+	Window  time.Duration
+}
+
+var aggRe = regexp.MustCompile(`^count\(\s*([\w.]*)\s*\)\s*(?:by\s+([\w.]+)\s*)?(>=|>)\s*(\d+)$`)
+
+// compileDetection compiles the named searches, the condition and its aggregation.
+func compileDetection(det map[string]interface{}) (matcher, *Aggregation, error) {
 	searches := map[string]matcher{}
 	var conds []string
+	timeframe := ""
 	for name, body := range det {
 		switch name {
 		case "condition":
@@ -27,35 +42,78 @@ func compileDetection(det map[string]interface{}) (matcher, error) {
 				for _, x := range c {
 					s, ok := x.(string)
 					if !ok {
-						return nil, errors.New("condition list must contain strings")
+						return nil, nil, errors.New("condition list must contain strings")
 					}
 					conds = append(conds, s)
 				}
 			default:
-				return nil, errors.New("condition must be a string or a list")
+				return nil, nil, errors.New("condition must be a string or a list")
 			}
 		case "timeframe":
-			return nil, errors.New("unsupported: timeframe (aggregation)")
+			timeframe = scalar(body)
 		default:
 			m, err := compileSearch(body)
 			if err != nil {
-				return nil, fmt.Errorf("search %q: %w", name, err)
+				return nil, nil, fmt.Errorf("search %q: %w", name, err)
 			}
 			searches[name] = m
 		}
 	}
 	if len(conds) == 0 {
-		return nil, errors.New("detection has no condition")
+		return nil, nil, errors.New("detection has no condition")
+	}
+	var agg *Aggregation
+	if expr, aggText, ok := strings.Cut(conds[0], "|"); ok {
+		if len(conds) > 1 {
+			return nil, nil, errors.New("unsupported: aggregation in a condition list")
+		}
+		m := aggRe.FindStringSubmatch(strings.TrimSpace(aggText))
+		if m == nil {
+			return nil, nil, fmt.Errorf("unsupported: aggregation %q (only count() with > or >=)", strings.TrimSpace(aggText))
+		}
+		window, err := parseTimeframe(timeframe)
+		if err != nil {
+			return nil, nil, err
+		}
+		n, _ := strconv.Atoi(m[4])
+		agg = &Aggregation{Field: m[1], By: m[2], OrEqual: m[3] == ">=", N: n, Window: window}
+		conds[0] = expr
+	} else if timeframe != "" {
+		return nil, nil, errors.New("unsupported: timeframe without an aggregation")
 	}
 	var compiled []matcher
 	for _, c := range conds {
 		m, err := parseCondition(c, searches)
 		if err != nil {
-			return nil, fmt.Errorf("condition %q: %w", c, err)
+			return nil, nil, fmt.Errorf("condition %q: %w", c, err)
 		}
 		compiled = append(compiled, m)
 	}
-	return anyOf(compiled), nil
+	return anyOf(compiled), agg, nil
+}
+
+// parseTimeframe reads a Sigma timeframe: a number and s, m, h or d.
+func parseTimeframe(s string) (time.Duration, error) {
+	if s == "" {
+		return 0, errors.New("unsupported: aggregation without a timeframe")
+	}
+	d, err := time.ParseDuration(s)
+	if n, ok := strings.CutSuffix(s, "d"); ok {
+		days, cerr := strconv.Atoi(n)
+		d, err = time.Duration(days)*24*time.Hour, cerr
+	}
+	if err != nil || d <= 0 {
+		return 0, fmt.Errorf("invalid timeframe %q", s)
+	}
+	return d, nil
+}
+
+// Exceeds reports whether count satisfies the aggregation's comparison.
+func (a *Aggregation) Exceeds(count int) bool {
+	if a.OrEqual {
+		return count >= a.N
+	}
+	return count > a.N
 }
 
 func anyOf(ms []matcher) matcher {

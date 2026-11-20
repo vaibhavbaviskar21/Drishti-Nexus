@@ -42,9 +42,16 @@ type Rule struct {
 	File        string
 	SHA256      string
 
+	// Agg is the rule's count aggregation, nil for a plain rule. Match only tests
+	// the condition; counting over the timeframe is the caller's (stateful) job.
+	Agg *Aggregation
+
 	source func(*models.LogEntry) bool
 	cond   func(*models.LogEntry) bool
 }
+
+// Value returns a Sigma field of an entry, as rules see it (group-by and counted fields).
+func Value(e *models.LogEntry, name string) (string, bool) { return value(e, name) }
 
 // Match reports whether the entry is in the rule's log source and satisfies its condition.
 func (r *Rule) Match(e *models.LogEntry) bool { return r.source(e) && r.cond(e) }
@@ -159,12 +166,12 @@ func Parse(data []byte) (*Rule, error) {
 	if err != nil {
 		return nil, err
 	}
-	cond, err := compileDetection(rf.Detection)
+	cond, agg, err := compileDetection(rf.Detection)
 	if err != nil {
 		return nil, err
 	}
 	return &Rule{Title: rf.Title, ID: rf.ID, Level: strings.ToLower(rf.Level), Description: strings.TrimSpace(rf.Description),
-		Tags: rf.Tags, source: source, cond: cond}, nil
+		Tags: rf.Tags, Agg: agg, source: source, cond: cond}, nil
 }
 
 // ---- log sources ----

@@ -8,6 +8,7 @@ import (
 	"drishti-nexus/internal/storage"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -15,6 +16,7 @@ import (
 	"net/url"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -34,6 +36,11 @@ type Options struct {
 	Addr     string // listen address; default 127.0.0.1:8080 (localhost only)
 	LogFiles []string
 	Pipeline pipeline.Options // config, timezone, audit trail for loaded files
+
+	// Follow keeps reading lines appended to the single file in LogFiles and
+	// pushes updates to open dashboards, until Stop is closed.
+	Follow bool
+	Stop   <-chan struct{}
 }
 
 type Server struct {
@@ -41,9 +48,11 @@ type Server struct {
 	detection *detection.Engine
 	config    *models.Config
 
-	// Set after evidence is loaded; nil when the dashboard starts empty.
-	session *audit.Session
-	stats   *pipeline.Stats
+	// Set after evidence is loaded; nil when the dashboard starts empty. The session
+	// is kept as a JSON snapshot: while following, the pipeline still owns the object.
+	mu          sync.RWMutex
+	sessionJSON []byte
+	stats       *pipeline.Stats
 
 	// WebSocket clients
 	clients   map[*websocket.Conn]bool
@@ -124,12 +133,72 @@ func (s *Server) Load(files []string, popts pipeline.Options) {
 	if ferr := res.Finish(&popts, "ok"); ferr != nil {
 		log.Printf("Warning: %v", ferr)
 	}
-	s.session, s.stats = res.Session, res.Stats
+	s.setSession(res.Session)
+	s.mu.Lock()
+	s.stats = res.Stats
+	s.mu.Unlock()
 	fmt.Printf("Loaded %d entries, %d alerts\n\n", res.Stats.Entries, res.Stats.Alerts)
 }
 
+func (s *Server) setSession(sess *audit.Session) {
+	data, err := json.Marshal(sess)
+	if err != nil {
+		log.Printf("Warning: encoding audit session: %v", err)
+		return
+	}
+	s.mu.Lock()
+	s.sessionJSON = data
+	s.mu.Unlock()
+}
+
+// Follow analyses path, then keeps reading lines appended to it, telling open
+// dashboards to refresh at most once a second, until stop is closed. The audit
+// session is finished (session_end, final hashes) before it returns.
+func (s *Server) Follow(path string, popts pipeline.Options, stop <-chan struct{}) error {
+	popts.Store, popts.KeepLogs = s.storage, true
+	popts.OnStart = func(res *pipeline.Result) error {
+		s.setSession(res.Session)
+		return nil
+	}
+	var dirty atomic.Bool
+	popts.OnEntry = func(*models.LogEntry, []*models.Alert) { dirty.Store(true) }
+
+	done := make(chan struct{})
+	go func() {
+		t := time.NewTicker(time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-t.C:
+				if dirty.Swap(false) {
+					s.BroadcastUpdate(map[string]string{"type": "update"})
+				}
+			}
+		}
+	}()
+	res, err := pipeline.Follow(path, popts, pipeline.FollowOptions{Follow: true, Stop: stop})
+	close(done)
+	if res == nil {
+		return err
+	}
+	status := "ok"
+	if err != nil {
+		status = "error: " + err.Error()
+	}
+	if ferr := res.Finish(&popts, status); err == nil {
+		err = ferr
+	}
+	s.setSession(res.Session)
+	return err
+}
+
 func (s *Server) Start(opts Options) error {
-	if len(opts.LogFiles) > 0 {
+	if opts.Follow && len(opts.LogFiles) != 1 {
+		return fmt.Errorf("-follow takes exactly one log file, got %d", len(opts.LogFiles))
+	}
+	if len(opts.LogFiles) > 0 && !opts.Follow {
 		s.Load(opts.LogFiles, opts.Pipeline)
 	}
 
@@ -161,7 +230,23 @@ func (s *Server) Start(opts Options) error {
 		WriteTimeout:      60 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}
-	return srv.ListenAndServe()
+	if !opts.Follow {
+		return srv.ListenAndServe()
+	}
+	// Bind before analysing, so a busy port fails before an audit session opens.
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	go func() {
+		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("dashboard server: %v", err)
+		}
+	}()
+	fmt.Printf("Following %s (Ctrl+C to stop and close the audit session)\n\n", opts.LogFiles[0])
+	err = s.Follow(opts.LogFiles[0], opts.Pipeline, opts.Stop)
+	_ = srv.Close()
+	return err
 }
 
 func writeJSON(w http.ResponseWriter, status int, v interface{}) {
@@ -227,10 +312,12 @@ func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lines := logCount
+	s.mu.RLock()
 	if s.stats != nil {
 		// Pipeline totals cover every line read, including entries evicted from memory.
 		lines, quality = s.stats.Lines, s.stats.ParseQuality
 	}
+	s.mu.RUnlock()
 	entries := 0
 	for _, n := range quality {
 		entries += n
@@ -408,7 +495,14 @@ func sortedSet(m map[string]bool) []string {
 
 // handleSession exposes the chain-of-custody record; JSON null when nothing was loaded.
 func (s *Server) handleSession(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, s.session)
+	s.mu.RLock()
+	data := s.sessionJSON
+	s.mu.RUnlock()
+	if data == nil {
+		data = []byte("null")
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(append(data, '\n'))
 }
 
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
