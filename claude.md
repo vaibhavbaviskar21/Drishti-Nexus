@@ -76,8 +76,9 @@ in that phase.
 - 2026-11-20 Defanged the Sigma fixture (Defender had quarantined it); filled the throughput numbers in the write-up; this log.
 - 2026-11-20 Branch `dev-followups`: `serve -follow` live dashboard (one growing file, WebSocket refresh, audit closed on Ctrl+C); Sigma `count()` aggregations with timeframe (state in engine snapshot); shipped SSH password-spraying rule (303 alerts / 124 IPs on loghub-ssh, 0 benign); ATT&CK names for Sigma-tagged techniques.
 - 2026-11-20 Opened PR #3 (`phase2-to-6` → `main`); CI fully green including the first Docker image build; redesigned dashboard checked in Chrome (all tabs, drawer, custody table, no console errors).
+- 2026-11-20 Merged PR #3 and PR #4 into `main` (PR #2 closed as merged through #3); race detector green on the live-mode locking in CI.
 
-**Status:** all planned engineering for Phases 0–6 is done. PR #3 (`phase2-to-6` → `main`) is open with CI green. PR #2 (2.6 subset) is still open, and its commit is included in PR #3, so close #2 or merge it first.
+**Status:** Phases 0–6 plus follow-ups are merged into `main` (PRs #1–#4, all CI green). No open PRs.
 
 **Open items**
 - Phase 4 (owner): post the write-up (`docs/VALIDATION_WRITEUP.md`), recruit 3–5 practitioners, fill `FEEDBACK_LOG.md`.
