@@ -118,6 +118,67 @@ function renderOverview() {
             h('span', { class: 'muted' }, inc.alert_count + ' alert' + (inc.alert_count === 1 ? '' : 's')),
             h('span', { class: 'chips' }, inc.hosts.map((x) => h('span', { class: 'chip' }, x))),
             h('span', { class: 'muted push' }, fmtTime(inc.last_seen)))))) : empty('No incidents. Load evidence with: drishti serve -log <file|dir>'));
+    renderChain();
+}
+
+// ---------- the latest incident, drawn as a chain across host lanes ----------
+// An alert sits in its source host's lane; one that names a destination host
+// (lateral movement) runs a leader across to that host's lane.
+function alertLanes(a) {
+    const d = a.details || {};
+    const src = (typeof d.source_host === 'string' && d.source_host) || hostOf(a);
+    const dst = typeof d.destination_host === 'string' && d.destination_host !== src ? d.destination_host : '';
+    return { src, dst };
+}
+function clock(t) { return t && !t.startsWith('0001-') ? t.slice(11, 19) : ''; }
+function renderChain() {
+    const el = $('overviewChain'), inc = state.incidents[0];
+    if (!inc) {
+        $('chainMeta').textContent = '';
+        return fill(el, empty('No incidents. Load evidence with: drishti serve -log <file|dir>'));
+    }
+    const alerts = inc.alerts.slice().sort((a, b) => (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0));
+    const lanes = [];
+    const lane = (x) => { if (x && !lanes.includes(x)) lanes.push(x); };
+    alerts.forEach((a) => { const l = alertLanes(a); lane(l.src); lane(l.dst); });
+    (inc.hosts || []).forEach(lane);
+    if (!lanes.length) lanes.push('');
+    $('chainMeta').textContent = fmtTime(inc.first_seen) + ' to ' + fmtTime(inc.last_seen);
+
+    const grid = h('div', { class: 'lanes' });
+    grid.style.setProperty('--lanes', String(lanes.length));
+    grid.appendChild(h('span', { class: 'lane-corner' },
+        h('button', { type: 'button', class: 'link-btn strong', onclick: () => openIncident(inc.id) }, inc.id)));
+    lanes.forEach((x, i) => {
+        const head = h('span', { class: 'lane-head', 'aria-hidden': 'true' }, x || 'unknown host');
+        head.style.gridColumn = String(i + 2);
+        grid.appendChild(head);
+        const rule = h('span', { class: 'lane-rule', 'aria-hidden': 'true' });
+        rule.style.gridColumn = String(i + 2);
+        rule.style.gridRow = '1 / ' + (alerts.length + 2);
+        grid.appendChild(rule);
+    });
+    alerts.forEach((a, r) => {
+        const l = alertLanes(a), from = Math.max(0, lanes.indexOf(l.src)), to = l.dst ? lanes.indexOf(l.dst) : from;
+        const lo = Math.min(from, to), hi = Math.max(from, to);
+        const time = h('time', { class: 'lane-time', datetime: a.timestamp }, clock(a.timestamp));
+        time.style.gridRow = String(r + 2);
+        const step = h('div', { class: 'step sevtext-' + a.severity + (hi > lo ? ' step-move' + (to < from ? ' step-back' : '') : '') },
+            h('div', { class: 'step-body' },
+                h('div', { class: 'step-head' }, sevBadge(a.severity),
+                    h('button', { type: 'button', class: 'link-btn strong', onclick: (e) => openAlert(a.id, e.currentTarget) }, a.rule_name)),
+                h('div', { class: 'step-meta' },
+                    h('span', { class: 'step-host' }, l.dst ? (to < from ? l.dst + ' to ' + l.src : l.src + ' to ' + l.dst) : l.src),
+                    a.mitre_technique_id ? h('span', { class: 'chip chip-tech' }, a.mitre_technique_id) : null,
+                    h('span', { class: 'muted small' }, a.id),
+                    a.count > 1 ? h('span', { class: 'muted small' }, '×' + a.count) : null)),
+            hi > lo ? h('span', { class: 'leader', 'aria-hidden': 'true' }) : null,
+            hi > lo ? h('span', { class: 'leader-end' }, (to < from ? 'from ' : 'to ') + l.dst) : null);
+        step.style.gridColumn = (lo + 2) + ' / ' + (hi + 3);
+        step.style.gridRow = String(r + 2);
+        grid.append(time, step);
+    });
+    fill(el, grid);
 }
 
 // ---------- incidents ----------
@@ -135,6 +196,7 @@ function renderIncidents() {
                 h('span', { class: 'chips' }, inc.techniques.map((x) => h('span', { class: 'chip chip-tech' }, x))),
                 h('span', { class: 'muted push' }, inc.alert_count + ' alert' + (inc.alert_count === 1 ? '' : 's'))),
             h('ol', { class: 'timeline' }, inc.alerts.map((a) => h('li', { class: 'tl-item' },
+                h('time', { class: 'tl-time', datetime: a.timestamp }, clock(a.timestamp)),
                 h('span', { class: 'tl-dot bg-' + a.severity, 'aria-hidden': 'true' }),
                 h('div', { class: 'tl-body' },
                     h('div', { class: 'tl-head' },
@@ -312,7 +374,7 @@ function renderCustody() {
         h('article', { class: 'card' }, h('h2', null, `Evidence files (${(s.evidence || []).length})`),
             h('p', { class: 'muted small' }, 'Each file is SHA-256 hashed before analysis, opened read-only, and re-hashed when the session finishes.'),
             table(['Label', 'Path', 'Size', 'SHA-256', 'Integrity'], (s.evidence || []).map((e) => [
-                e.label, e.abs_path || e.path, fmtNum(e.size_bytes) + ' B', h('code', { class: 'hash' }, e.sha256), hashOk(e)]))),
+                e.label, e.abs_path || e.path, fmtNum(e.size_bytes) + ' B', h('code', { class: 'hash' }, e.sha256), hashOk(e)]))),
         h('article', { class: 'card' }, h('h2', null, 'Effective configuration'),
             h('dl', { class: 'kv two-col' },
                 kv('Config file', c.config_path || 'built-in defaults'), kv('Config SHA-256', c.config_sha256 ? h('code', { class: 'hash' }, c.config_sha256) : ''),

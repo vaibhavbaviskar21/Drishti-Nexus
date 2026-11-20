@@ -44,3 +44,6 @@ Thumbs.db
 
 # Claude Code agent worktrees (local only)
 .claude/worktrees/
+
+# Hallmark design-skill scratch
+.hallmark/

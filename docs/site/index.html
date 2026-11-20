@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti Nexus: offline security log triage in one Go binary</title>
+<meta name="description" content="Drishti Nexus reads security logs read-only on an air-gapped machine, hashes the evidence and explains every alert with its MITRE ATT&amp;CK technique.">
+<link rel="stylesheet" href="site.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="banner">
+  <div class="container banner__inner">
+    <p>Builds with <code>CGO_ENABLED=0</code> for Windows, Linux and macOS.</p>
+    <a href="../LIMITATIONS.md">What it does not do</a>
+  </div>
+</div>
+
+<header class="bar" data-bar>
+  <nav class="container bar__inner" aria-label="Primary">
+    <a class="wordmark" href="#main" aria-label="Drishti Nexus, top of page">Drishti Nexus</a>
+    <ul class="bar__links">
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#attack">ATT&amp;CK</a></li>
+      <li><a href="#measured">Measured</a></li>
+      <li><a href="#ai">AI</a></li>
+    </ul>
+    <a class="key key--small" href="#run">Build it</a>
+  </nav>
+</header>
+
+<main id="main">
+
+<section class="hero" aria-labelledby="hero-head">
+  <canvas class="hero__field" aria-hidden="true" data-field></canvas>
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <h1 id="hero-head">Find the intrusion with the network unplugged</h1>
+      <p class="lead">One Go binary reads your logs read-only and explains every alert.</p>
+      <div class="hero__actions">
+        <a class="key key--primary" href="#run">Build the binary</a>
+        <a class="key" href="https://github.com/vaibhavbaviskar21/Drishti-Nexus">Source on GitHub</a>
+      </div>
+    </div>
+    <figure class="shot shot--hero" data-slot="hero" data-kind="product" data-alt="The Drishti Nexus dashboard overview after loading the multi-host demo: 17 lines, 3 alerts, incident INC-00001 marked critical across db01 and web01">
+      <img src="assets/dashboard-overview.png" width="2880" height="1800" alt="Drishti Nexus dashboard overview: 17 lines read, 100% clean parse, 3 alerts, and incident INC-00001 laid out by host, three web01 alerts ending in a lateral movement to db01" fetchpriority="high">
+    </figure>
+  </div>
+</section>
+
+<section class="stack" id="demo" aria-labelledby="demo-head">
+  <div class="container stack__grid">
+    <div class="stack__pin">
+      <h2 id="demo-head">Two hosts, one incident</h2>
+      <p class="lead">The bundled demo: a password guessed on web01, then used on db01.</p>
+      <a class="key" href="#run">Run this demo</a>
+    </div>
+    <div class="stack__scroll">
+
+      <figure class="fig">
+        <pre class="term" tabindex="0" aria-label="Terminal output: evidence hashed before analysis"><code><span class="term__cmd">$ drishti analyze testdata/fixtures/multihost</span>
+Evidence: testdata\fixtures\multihost\db01\auth.log
+  SHA-256: 314a29428138e73d843f7dbb07103df28aeaabf3c6c648d7cffc43e0e429fff6  (658 bytes, opened read-only)
+Evidence: testdata\fixtures\multihost\web01\auth.log
+  SHA-256: d72ac2f946bc7fa8751f3444a085bf6c6933b06ca319fc1ea599a5fbc969ac59  (1177 bytes, opened read-only)
+Audit session: a9556e01ff5fac2c</code></pre>
+        <figcaption>Every file is hashed before parsing and opened <code>O_RDONLY</code>.</figcaption>
+      </figure>
+
+      <figure class="fig">
+        <div class="ruler" role="img" aria-label="Timeline diagram of incident INC-00001: six failed passwords for deploy on web01 from 10:14:01 to 10:14:11, an accepted password at 10:14:14, then a login on db01 at 10:21:40, 7 minutes 26 seconds later">
+          <div class="ruler__head">
+            <span class="ruler__inc">INC-00001</span>
+            <span class="ruler__date">10 March 2025, UTC</span>
+          </div>
+          <div class="ruler__lane">
+            <span class="ruler__host">web01</span>
+            <div class="ruler__track">
+              <span class="tick tick--fail" style="--t: 31"></span><span class="tick tick--fail" style="--t: 33"></span><span class="tick tick--fail" style="--t: 35"></span><span class="tick tick--fail" style="--t: 37"></span><span class="tick tick--fail" style="--t: 39"></span><span class="tick tick--fail" style="--t: 41"></span>
+              <span class="tick tick--ok" style="--t: 44"></span>
+              <span class="ruler__note ruler__note--fail" style="--t: 31">6 failed, then accepted</span>
+            </div>
+          </div>
+          <div class="ruler__lane">
+            <span class="ruler__host">db01</span>
+            <div class="ruler__track">
+              <span class="dim" style="--from: 44; --to: 490"><span>7m 26s</span></span>
+              <span class="tick tick--lateral" style="--t: 490"></span>
+              <span class="ruler__note ruler__note--end" style="--t: 490">login</span>
+            </div>
+          </div>
+          <div class="ruler__axis" aria-hidden="true">
+            <span style="--t: 30">10:14</span><span style="--t: 150">10:16</span><span style="--t: 270">10:18</span><span style="--t: 390">10:20</span><span style="--t: 510">10:22</span>
+          </div>
+        </div>
+        <dl class="alerts">
+          <div><dt>T1110</dt><dd>Excessive failures, medium</dd></div>
+          <div><dt>T1110.001</dt><dd>Brute force, high</dd></div>
+          <div><dt>T1021</dt><dd>Lateral movement, critical</dd></div>
+        </dl>
+        <figcaption>Three alerts, linked into one incident by user and source address.</figcaption>
+      </figure>
+
+      <figure class="fig">
+        <pre class="term" tabindex="0" aria-label="Terminal output: the lateral movement alert and the evidence check"><code>[2025-03-10 10:14:14Z] Lateral Movement Candidate  (ALERT-000003, INC-00001, x1) [T1021: Lateral Movement]
+  Severity: CRITICAL
+  Evidence: testdata/fixtures/multihost/web01/auth.log:9, testdata/fixtures/multihost/db01/auth.log:3
+
+✓ Evidence unchanged after analysis: testdata\fixtures\multihost\db01\auth.log
+✓ Evidence unchanged after analysis: testdata\fixtures\multihost\web01\auth.log
+
+<span class="term__cmd">$ drishti audit verify</span>
+✓ drishti_audit.log: 2 records, 1 sessions — hash chain intact</code></pre>
+        <figcaption>Each alert cites its lines; the audit log is hash-chained and checkable.</figcaption>
+      </figure>
+
+    </div>
+  </div>
+</section>
+
+<section class="attack" id="attack" aria-labelledby="attack-head">
+  <div class="container attack__grid">
+    <div class="attack__head">
+      <h2 id="attack-head">Every rule names its technique</h2>
+      <p class="lead">One ATT&amp;CK tag per rule, set only where the logic supports it.</p>
+    </div>
+    <dl class="index">
+      <div><dt>T1110.001</dt><dd>Authentication brute force</dd></div>
+      <div><dt>T1110</dt><dd>Excessive authentication failures</dd></div>
+      <div><dt>T1548</dt><dd>Privilege escalation indicator</dd></div>
+      <div><dt>T1059</dt><dd>Suspicious command execution</dd></div>
+      <div><dt>T1190</dt><dd>Injection pattern detected</dd></div>
+      <div><dt>T1078</dt><dd>Time-based anomaly, as context</dd></div>
+      <div><dt>T1021</dt><dd>Lateral movement candidate</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="measured" id="measured" aria-labelledby="measured-head">
+  <div class="container">
+    <div class="measured__head">
+      <h2 id="measured-head">Measured on public logs, each phase</h2>
+      <p class="lead">LogHub, OTRF Mordor and a 50,000-line benign set. Sources in <a href="../../BASELINE.md">BASELINE.md</a>.</p>
+    </div>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Phase 0 against Phase 2 results">
+      <table>
+        <thead><tr><th scope="col">Measure</th><th scope="col">Phase 0</th><th scope="col">Phase 2</th></tr></thead>
+        <tbody>
+          <tr class="is-lead"><th scope="row">Alerts on 50,000 benign lines</th><td class="num">28,494</td><td class="num">46</td></tr>
+          <tr><th scope="row">Legitimate sudo and su lines flagged</th><td class="num">17,610 alerts</td><td class="num">0</td></tr>
+          <tr><th scope="row">loghub-ssh lines read by a format parser</th><td class="num">0%</td><td class="num">100%</td></tr>
+          <tr><th scope="row">rpc.statd exploit attempts in loghub-linux</th><td>Not detected</td><td class="num">7 of 7, no false positives</td></tr>
+          <tr><th scope="row">Mimikatz LSASS read in mordor-mimikatz</th><td class="num">0 alerts</td><td>Detected, T1003.001</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="ai" id="ai" aria-labelledby="ai-head">
+  <div class="container ai__inner">
+    <h2 id="ai-head" class="statement">AI summaries are off unless you ask, run locally, and are checked against the alert facts.</h2>
+    <p class="ai__note">Loopback endpoints only. Unsupported claims are listed and the summary marked unverified. <a href="../AI_SUMMARY.md">How the check works</a></p>
+  </div>
+</section>
+
+<section class="run" id="run" aria-labelledby="run-head">
+  <div class="container run__grid">
+    <div class="run__text">
+      <h2 id="run-head">Build it and run the demo</h2>
+      <dl class="needs">
+        <div><dt>Go</dt><dd>1.23 or later</dd></div>
+        <div><dt>Runs on</dt><dd>Windows, Linux, macOS</dd></div>
+        <div><dt>At run time</dt><dd>No network, no install</dd></div>
+      </dl>
+    </div>
+    <div class="run__code">
+      <div class="term term--panel">
+        <div class="term__bar"><span>From a clone</span><button class="copy" type="button" data-copy="run-cmds">Copy</button></div>
+<pre id="run-cmds" tabindex="0"><code>git clone https://github.com/vaibhavbaviskar21/Drishti-Nexus.git
+cd Drishti-Nexus
+go build -o bin/drishti ./cmd/drishti
+./bin/drishti analyze testdata/fixtures/multihost
+./bin/drishti serve testdata/fixtures/multihost
+./bin/drishti audit verify</code></pre>
+      </div>
+      <p class="run__hint" aria-live="polite" data-copy-status>On Windows, <code>.\scripts\build.ps1</code> writes <code>bin\drishti.exe</code>.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="container foot__inner">
+    <p class="foot__mark">Drishti Nexus</p>
+    <p class="foot__colophon">Log triage for isolated networks, not a SIEM, an IDS or an EDR. Read the <a href="../CHAIN_OF_CUSTODY.md">custody design</a>, <a href="../ATTACK_MAPPING.md">ATT&amp;CK mapping</a>, <a href="../demo/MULTIHOST_DEMO.md">demo notes</a> and <a href="../LIMITATIONS.md">limitations</a>.</p>
+  </div>
+</footer>
+
+<script>
+window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });
+</script>
+<script src="site.js"></script>
+</body>
+</html>

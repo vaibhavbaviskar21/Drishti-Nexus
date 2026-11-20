@@ -5,6 +5,7 @@ package report
 
 import (
 	"drishti-nexus/internal/audit"
+	"drishti-nexus/internal/detection"
 	"drishti-nexus/internal/models"
 	"drishti-nexus/internal/pipeline"
 	"fmt"
@@ -54,6 +55,7 @@ type Count struct {
 type Technique struct {
 	ID, Name, Tactic string
 	Alerts           int
+	Controls         []detection.Control // compliance references (docs/COMPLIANCE_MAPPING.md)
 }
 
 // Incident is a group of alerts sharing an IncidentID, in time order.
@@ -151,7 +153,8 @@ func group(alerts []*models.Alert, logs map[string]*models.LogEntry) ([]Incident
 			inc.Techniques = addUnique(inc.Techniques, a.MITRETechniqueID)
 			t := techs[a.MITRETechniqueID]
 			if t == nil {
-				t = &Technique{ID: a.MITRETechniqueID, Name: a.MITRETechniqueName, Tactic: a.MITRETactic}
+				t = &Technique{ID: a.MITRETechniqueID, Name: a.MITRETechniqueName, Tactic: a.MITRETactic,
+					Controls: detection.ControlsForTechnique(a.MITRETechniqueID)}
 				techs[a.MITRETechniqueID] = t
 			}
 			t.Alerts++

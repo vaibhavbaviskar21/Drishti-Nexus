@@ -50,3 +50,35 @@ Start by reading Drishti_Nexus_Implementation_Plan.md in full, then begin
 with Phase 0: set up the benchmark harness and help me identify/download the
 public datasets (BOTS, EVTX-ATTACK-SAMPLES, a benign log sample) referenced
 in that phase.
+
+---
+
+## Project log (kept current by Claude; the rules above are the owner's)
+
+**What it is:** a single offline Go binary that parses security logs (syslog, auth, Apache, JSON, CEF, LEEF, CSV, Windows Event XML, YAML-defined formats), detects attacks with deterministic rules plus Sigma, keeps a SHA-256 chain of custody for every result, and shows it in a local web dashboard and HTML/PDF reports. Optional local-LLM summaries are labeled and checked against the facts.
+
+**Layout:** `cmd/drishti` (CLI), `cmd/benchmark`, `cmd/genbenign` · `internal/parser` (formats) · `internal/detection` (rules, adaptive thresholds, ATT&CK, compliance) · `internal/sigma` · `internal/pipeline` (time-merged multi-file runs) · `internal/audit` (custody) · `internal/ecs` (ECS export) · `internal/report` (HTML/PDF) · `internal/ai` (opt-in summaries) · `internal/web` (dashboard) · `rules/sigma`, `parsers/` (shipped definitions) · `docs/` · `testdata/`.
+
+**Commands:** `go test ./...` · `golangci-lint run ./...` · `gosec -quiet -conf .gosec.json ./...` · `bash scripts/fetch-datasets.sh && make genbenign` (datasets) · `go run ./cmd/benchmark -suite -sigma rules/sigma` · `drishti scan -sigma rules/sigma -parsers parsers -report r.html -pdf r.pdf -ecs e.ndjson logs/` · `drishti serve logs/`.
+
+**Gotchas:**
+- Windows Defender quarantines real attack telemetry. `testdata/fixtures/mordor_sigma_events.json` is defanged for that reason; keep payloads out of committed fixtures.
+- `core.autocrlf=true` on this machine. `.gitattributes` pins LF, and verbatim LogHub fixtures are `-text` (CRLF kept).
+- Every file open must go through `audit.OpenEvidence` (read) or `storage.CreateOutput` (write); `internal/audit/readonly_test.go` enforces it.
+- Integration tests pin alert counts per dataset. A change that moves a number must update `BASELINE.md`.
+
+**History**
+- 2025-12-31 Initial prototype (`f5f55a9`).
+- 2026-10-04 Phases 0–1: benchmark harness, datasets, parser hardening, chain of custody, SQLite, CI (merged in PR #1 on 2026-10-31).
+- 2026-10-31 2.3 ATT&CK mapping; 2.2 multi-host correlation with Lateral Movement rule and demo (PR #1).
+- 2026-11-01 2.6 ECS export, CEF/LEEF/CSV/XML parsers (PR #2), YAML parsers, Dockerfile; 2.1 adaptive thresholds; 2.5 FP tuning (0.92 FP/1k); 2.4 Sigma engine + 3 rules; Phase 3 HTML/PDF reports; Phase 5 opt-in AI summaries with grounding check; Phase 6 UI refresh; Phase 4 feedback log and write-up draft.
+- 2026-11-06/07 Sustained-throughput benchmark (`-repeat`), compliance references (PCI DSS/ISO 27001/HIPAA) in reports, project site `docs/site/`, UI design tokens.
+- 2026-11-20 Defanged the Sigma fixture (Defender had quarantined it); filled the throughput numbers in the write-up; this log.
+
+**Status:** all planned engineering for Phases 0–6 is done on branch `phase2-to-6`. Tests, golangci-lint and gosec pass locally. PR #2 (2.6 subset) is open; its content is included in `phase2-to-6`.
+
+**Open items**
+- Phase 4 (owner): post the write-up (`docs/VALIDATION_WRITEUP.md`), recruit 3–5 practitioners, fill `FEEDBACK_LOG.md`.
+- Phase 5: run a real local model (llama-server/Ollama) and measure unverified-summary rate. No runtime is installed here.
+- Not built, by plan: NLQ (5.2), agentic investigation (5.3), licensing, distributed mode, demo video (needs Phase 4 results).
+- Known gaps: Sigma aggregations; BOTS ingestion; `serve` does not follow growing files; JS has no automated tests.

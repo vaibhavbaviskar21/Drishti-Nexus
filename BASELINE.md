@@ -67,7 +67,21 @@ Alert counts on every benchmark dataset were unchanged by the new parsers. In a 
 
 ### 0.4 Throughput
 
-THROUGHPUT_TABLE
+Sustained run: `cmd/benchmark -repeat N` runs the whole dataset N times back to back in one process (full pipeline: read, parse, 7 native rules + 3 Sigma rules, in-memory store), sampling the live heap every 250 ms. Raw results: `benchmarks/results/phase2-throughput-ssh.json`, `phase2-throughput-json.json`.
+
+| Input | Passes | Lines processed | Wall time | Throughput | Per day at that rate | Peak live heap |
+|---|---|---|---|---|---|---|
+| LogHub SSH (syslog, 655,147 lines, 73 MB) | 10 | 6,551,470 | 187.5 s | **34,932 lines/s** (3.9 MB/s) | ~3.0 billion lines | **10 MB** |
+| Mordor Mimikatz (Windows JSON events, 6,026 lines, 43 MB) | 20 | 120,520 | 45.6 s | **2,644 events/s** (19 MB/s) | ~228 million events | **5 MB** |
+
+**Machine:** Intel Core i3-1005G1 laptop (2 cores / 4 threads, 1.2 GHz base), Windows 11, Go 1.25.5, measured 2026-11-07. **These are lower bounds:** the machine was at 64–100% CPU from unrelated work during the run (the benchmark ran at high priority). The pipeline is single-threaded, so this is roughly one core's worth.
+
+What it shows:
+- **Memory stays flat.** Peak live heap does not grow with input size (10 MB after 6.5 M lines), because detection state is pruned to the rule windows. Long-running `tail` sessions do not leak.
+- **Cost is linear.** Allocation per pass is constant (2.9 GB per SSH pass, 29 GB for 10), so throughput holds over the run.
+- **"Billions of events per day"** is reachable for syslog-style auth logs on one commodity core; Windows JSON events are ~13× more expensive per event (larger records, Sigma field matching), so a JSON-heavy feed needs per-host parallel runs.
+
+Method note: an earlier `-repeat` passed the same file N times to one pipeline. The pipeline merges files by timestamp, so the N copies interleaved and every detection window held N identical events; cost grew quadratically (10 passes allocated 547 GB). That measured an impossible input, not the engine, and was replaced by back-to-back passes before these numbers were taken. A real single source producing thousands of failures inside one window would hit the same per-event window scan; see `docs/LIMITATIONS.md`.
 
 ### 0.5 Quality gates
 

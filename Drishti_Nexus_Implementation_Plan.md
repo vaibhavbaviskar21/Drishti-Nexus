@@ -101,7 +101,7 @@ Do this before 2.4: the Sigma field-mapping layer and the NTRO common taxonomy a
 - [x] Add CEF, LEEF, CSV and XML parsers, each tested against real samples (NTRO b). *(XML = Windows Event XML; see docs/ECS_MAPPING.md for scope.)*
 - [x] Declarative YAML parser definitions loaded from disk, so a new source needs no Go code (NTRO e, i).
 - [x] ECS NDJSON export for SIEM/data-lake ingestion (NTRO g, h).
-- [ ] Measure and publish sustained throughput in `BASELINE.md` instead of building distributed mode (NTRO "billions of events/day").
+- [x] Measure and publish sustained throughput in `BASELINE.md` instead of building distributed mode (NTRO "billions of events/day"). *(BASELINE.md §0.4: ~35k syslog lines/s, flat 10 MB heap over 6.5 M lines)*
 - [x] Dockerfile wrapping the single binary (NTRO k). Pulled forward from Phase 6 by explicit approval; the air-gapped binary stays the flagship.
 
 Execution order for Phase 2 (agreed 2026-10-31): 2.3 → 2.2 → 2.6 → 2.1 → 2.5 → 2.4.
@@ -122,15 +122,15 @@ Execution order for Phase 2 (agreed 2026-10-31): 2.3 → 2.2 → 2.6 → 2.1 →
 Make results usable outside the tool itself.
 
 ### 3.1 Incident Reports
-- [ ] Generate a clean HTML report per scan: summary stats, grouped incidents (from Phase 2.2), ATT&CK tags, chain-of-custody hashes, audit trail.
-- [ ] Add a PDF export path (render HTML to PDF, or generate directly) — analysts attach these to case files.
+- [x] Generate a clean HTML report per scan: summary stats, grouped incidents (from Phase 2.2), ATT&CK tags, chain-of-custody hashes, audit trail.
+- [x] Add a PDF export path (render HTML to PDF, or generate directly) — analysts attach these to case files. *(pure-Go PDF writer, no new dependency)*
 
 ### 3.2 Export Formats (build only if there's real demand)
-- [ ] CEF/LEEF export for SIEM ingestion — treat as a "nice to have," not a Phase 3 requirement, unless a specific user/client asks.
-- [ ] Keep JSON/CSV export (already exists) as the default machine-readable format.
+- [ ] CEF/LEEF export for SIEM ingestion — treat as a "nice to have," not a Phase 3 requirement, unless a specific user/client asks. *(not built: no client asked; ECS NDJSON export covers SIEM ingestion)*
+- [x] Keep JSON/CSV export (already exists) as the default machine-readable format.
 
 ### 3.3 Compliance Mapping (optional, only if targeting regulated environments)
-- [ ] Map relevant rules to HIPAA/PCI-DSS/ISO 27001 control references in report templates — low effort, mostly documentation, useful for specific buyer segments. Don't over-invest here unless you have a target customer asking for it.
+- [x] Map relevant rules to HIPAA/PCI-DSS/ISO 27001 control references in report templates — low effort, mostly documentation, useful for specific buyer segments. Don't over-invest here unless you have a target customer asking for it. *(per ATT&CK technique, in the HTML/PDF reports; docs/COMPLIANCE_MAPPING.md)*
 
 ### Deliverable
 Sample HTML/PDF incident report generated from a Phase 0 dataset, good enough to hand to a real analyst for feedback.
@@ -144,8 +144,8 @@ This phase should start *before* Phase 2 finishes, not after.
 ### Tasks
 - [ ] Post the tool (with a public dataset attached, e.g., a BOTS subset) in DFIR-focused communities: r/DFIR, r/netsec, SANS/DFIR Discord, Velociraptor/Wazuh community forums.
 - [ ] Directly recruit 3–5 practitioners (IR consultants, SOC analysts, students in DFIR programs) to run it against a real or simulated incident and give structured feedback: what did it catch that they'd catch by hand, what did it miss, what was noisy.
-- [ ] Track feedback in a `FEEDBACK_LOG.md` and feed concrete issues back into Phase 1/2 backlogs.
-- [ ] Publish your false-positive numbers and known limitations openly (a `LIMITATIONS.md` you already have the instinct for) — credibility with this audience comes from honesty about what it doesn't do, not from feature lists.
+- [x] Track feedback in a `FEEDBACK_LOG.md` and feed concrete issues back into Phase 1/2 backlogs. *(log and session protocol set up; no practitioner sessions yet)*
+- [x] Publish your false-positive numbers and known limitations openly (a `LIMITATIONS.md` you already have the instinct for) — credibility with this audience comes from honesty about what it doesn't do, not from feature lists. *(LIMITATIONS.md and docs/VALIDATION_WRITEUP.md)*
 
 ### Deliverable
 A short public writeup: "We ran Drishti Nexus against BOTS v3 and got X% detection coverage on the known ground-truth incidents, Y false positives per 1,000 benign lines, here's what practitioners told us." This is more valuable marketing than the "wow demo" concept and it's true.
@@ -157,9 +157,9 @@ A short public writeup: "We ran Drishti Nexus against BOTS v3 and got X% detecti
 Skip the full agentic ReAct framework and ONNX/ML pipeline as a first step. Start minimal.
 
 ### 5.1 Narrative Summarization (not autonomy)
-- [ ] Bind a small quantized local model (llama.cpp, e.g., a 7–8B instruct model) purely to summarize an already-detected incident (the correlated alert group + surrounding logs from Phase 2.2) into plain English for a report.
-- [ ] No tool-calling, no autonomous log querying yet — the model only summarizes data your deterministic engine already found and structured. This keeps it explainable and avoids hallucinated "findings."
-- [ ] Make this fully optional and clearly marked as an AI-generated summary, separate from the deterministic alert data.
+- [x] Bind a small quantized local model (llama.cpp, e.g., a 7–8B instruct model) purely to summarize an already-detected incident (the correlated alert group + surrounding logs from Phase 2.2) into plain English for a report. *(any local OpenAI-compatible server: llama.cpp `llama-server` or Ollama; loopback only; not yet evaluated with a real model)*
+- [x] No tool-calling, no autonomous log querying yet — the model only summarizes data your deterministic engine already found and structured. This keeps it explainable and avoids hallucinated "findings."
+- [x] Make this fully optional and clearly marked as an AI-generated summary, separate from the deterministic alert data.
 
 ### 5.2 Natural Language Query (only if 5.1 gets real usage)
 - [ ] A constrained NLQ layer that translates questions into your existing query/filter API (not free-form log access) — e.g., "show auth failures outside business hours for host X" maps to existing filters, not an open-ended agent loop.
@@ -174,9 +174,9 @@ An opt-in AI summary feature, evaluated the same way as everything else: does it
 
 ## Phase 6 — Commercial Polish (last, and only if the above holds up)
 
-- [ ] UI refresh (dark mode, cleaner dashboard) — cosmetic, do last.
+- [x] UI refresh (dark mode, cleaner dashboard) — cosmetic, do last. *(docs/UI.md)*
 - [ ] Offline license key system (Ed25519-signed `.lic` files) — only once there's something worth licensing.
-- [ ] Docker/distributed mode — only if a specific client's environment requires it; keep the single-binary air-gapped mode as the flagship, not an also-ran.
+- [ ] Docker/distributed mode — only if a specific client's environment requires it; keep the single-binary air-gapped mode as the flagship, not an also-ran. *(Dockerfile done in 2.6; distributed mode not built, it is on the "What NOT to Build Yet" list)*
 - [ ] Demo video built around real Phase 4 results, not a canned scenario.
 
 ---

@@ -3,6 +3,7 @@ package report
 import (
 	"bytes"
 	"drishti-nexus/internal/audit"
+	"drishti-nexus/internal/detection"
 	"drishti-nexus/internal/models"
 	"drishti-nexus/internal/pipeline"
 	"fmt"
@@ -65,7 +66,7 @@ func TestGroupOrdersIncidentsAndAlerts(t *testing.T) {
 	if !ev[0].Found || ev[0].Text != "line one" || ev[1].Found {
 		t.Errorf("evidence resolution: %+v", ev)
 	}
-	if len(d.Techniques) != 2 || d.Techniques[1].ID != "T1110" || d.Techniques[1].Alerts != 2 {
+	if len(d.Techniques) != 2 || d.Techniques[1].ID != "T1110" || d.Techniques[1].Alerts != 2 || len(d.Techniques[1].Controls) == 0 {
 		t.Errorf("techniques %+v", d.Techniques)
 	}
 }
@@ -173,5 +174,19 @@ func TestIntegration_MultiHostReport(t *testing.T) {
 		if !strings.Contains(pdf.String(), w) {
 			t.Errorf("PDF report missing %q", w)
 		}
+	}
+	// Compliance references for the lateral-movement technique (T1021); single
+	// tokens, because the PDF wraps long rows at spaces.
+	for _, w := range []string{"8.4.2", "A.8.22"} {
+		if !strings.Contains(pdf.String(), w) || !strings.Contains(html.String(), w) {
+			t.Errorf("PDF or HTML report missing compliance ref %q", w)
+		}
+	}
+}
+
+func TestControlListGroupsByFramework(t *testing.T) {
+	got := controlList([]detection.Control{{Framework: "A", ID: "1"}, {Framework: "A", ID: "2"}, {Framework: "B", ID: "3"}})
+	if got != "A 1, 2; B 3" {
+		t.Errorf("controlList = %q", got)
 	}
 }

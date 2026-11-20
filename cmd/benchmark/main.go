@@ -62,6 +62,8 @@ type DatasetResult struct {
 	DurationMs    int64          `json:"duration_ms"`
 	LinesPerSec   int64          `json:"lines_per_sec"`
 	AllocMB       float64        `json:"alloc_mb"`
+	Repeat        int            `json:"repeat,omitempty"`       // back-to-back passes (sustained run): lines, duration, alloc are totals; alerts are per pass
+	PeakHeapMB    float64        `json:"peak_heap_mb,omitempty"` // max live heap sampled every 250 ms
 }
 
 type Report struct {
@@ -84,6 +86,7 @@ func main() {
 	tz := flag.String("tz", "UTC", "timezone assumed for timestamps without an offset")
 	cpuProfile := flag.String("cpuprofile", "", "write a CPU profile to this file")
 	sigmaDir := flag.String("sigma", "", "also run the Sigma rules in this folder")
+	repeat := flag.Int("repeat", 1, "run each dataset this many times back to back (sustained-throughput run)")
 	flag.Parse()
 
 	if *cpuProfile != "" {
@@ -144,7 +147,23 @@ func main() {
 	}
 
 	for _, ds := range datasets {
-		r := run(ds, pipeline.Options{Config: cfg, ConfigPath: used, Location: loc, Command: "benchmark", ToolVersion: version.Version, Sigma: rules})
+		opts := pipeline.Options{Config: cfg, ConfigPath: used, Location: loc, Command: "benchmark", ToolVersion: version.Version, Sigma: rules}
+		r := run(ds, opts)
+		// Sustained run: whole passes back to back in one process. Passing the file N
+		// times to one pipeline would merge the copies by timestamp, so every window
+		// would be N times denser than any real log.
+		for i := 1; i < *repeat && r.Skipped == ""; i++ {
+			p := run(ds, opts)
+			r.Lines += p.Lines
+			r.Entries += p.Entries
+			r.DurationMs += p.DurationMs
+			r.AllocMB += p.AllocMB
+			r.PeakHeapMB = max(r.PeakHeapMB, p.PeakHeapMB)
+		}
+		if *repeat > 1 && r.DurationMs > 0 {
+			r.Repeat = *repeat
+			r.LinesPerSec = int64(r.Lines) * 1000 / r.DurationMs // alert counts stay per pass
+		}
 		report.Datasets = append(report.Datasets, r)
 		print(r)
 	}
@@ -178,12 +197,32 @@ func run(ds Dataset, opts pipeline.Options) *DatasetResult {
 	runtime.GC()
 	var before, after runtime.MemStats
 	runtime.ReadMemStats(&before)
+	var peak uint64
+	stop, done := make(chan struct{}), make(chan struct{})
+	go func() { // sample live heap so a sustained run shows whether memory stays flat
+		defer close(done)
+		t := time.NewTicker(250 * time.Millisecond)
+		defer t.Stop()
+		for {
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			peak = max(peak, m.HeapAlloc)
+			select {
+			case <-stop:
+				return
+			case <-t.C:
+			}
+		}
+	}()
 	res, err := pipeline.Run(ds.Files, opts)
+	close(stop)
+	<-done
 	if err != nil {
 		r.Skipped = "error: " + err.Error()
 		return r
 	}
 	runtime.ReadMemStats(&after)
+	r.PeakHeapMB = float64(peak) / (1 << 20)
 
 	st := res.Stats
 	r.Lines, r.Entries = st.Lines, st.Entries
@@ -211,8 +250,8 @@ func print(r *DatasetResult) {
 		fmt.Printf("  SKIPPED: %s\n\n", r.Skipped)
 		return
 	}
-	fmt.Printf("  lines %d | entries %d | structured %.2f%% (clean %.2f%%) | %d ms | %d lines/s | %.0f MB alloc\n",
-		r.Lines, r.Entries, r.StructuredPct, r.CleanPct, r.DurationMs, r.LinesPerSec, r.AllocMB)
+	fmt.Printf("  lines %d | entries %d | structured %.2f%% (clean %.2f%%) | %d ms | %d lines/s | %.0f MB alloc | %.0f MB peak heap\n",
+		r.Lines, r.Entries, r.StructuredPct, r.CleanPct, r.DurationMs, r.LinesPerSec, r.AllocMB, r.PeakHeapMB)
 	fmt.Printf("  quality %v | parsers %v | repairs %v\n", r.ParseQuality, r.ByParser, r.Repairs)
 	label := "alerts"
 	if r.Benign {

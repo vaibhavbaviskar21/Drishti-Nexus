@@ -1,6 +1,7 @@
 package report
 
 import (
+	"drishti-nexus/internal/detection"
 	"fmt"
 	"io"
 	"strings"
@@ -47,6 +48,12 @@ func WritePDF(w io.Writer, d Data) error {
 	}
 	for _, t := range d.Techniques {
 		kv("ATT&CK "+t.ID, fmt.Sprintf("%s (%s): %d alerts", t.Name, t.Tactic, t.Alerts))
+		if len(t.Controls) > 0 {
+			kv("  Compliance refs", controlList(t.Controls))
+		}
+	}
+	if len(d.Techniques) > 0 {
+		p.para(marginX, regular, 8, muted, "Compliance references point auditors to the controls these alerts are evidence for; they are not a compliance assessment. Every scan also supports "+controlList(detection.MonitoringControls)+".")
 	}
 
 	h("2. Parse quality")
@@ -191,4 +198,18 @@ func WritePDF(w io.Writer, d Data) error {
 		p.text(marginX, 30, regular, 7.5, muted, winAnsi(fmt.Sprintf("Drishti Nexus incident report · session %s · page %d of %d", s.SessionID, i+1, len(p.pages))))
 	}
 	return p.write(w, "Drishti Nexus incident report - session "+s.SessionID)
+}
+
+// controlList renders controls grouped by framework, in mapping order:
+// "PCI DSS 4.0.1 8.3.4, 10.2.1.4; ISO/IEC 27001:2022 A.8.5; HIPAA 164.312(d)".
+func controlList(cs []detection.Control) string {
+	var parts []string
+	for i, c := range cs {
+		if i > 0 && cs[i-1].Framework == c.Framework {
+			parts[len(parts)-1] += ", " + c.ID
+			continue
+		}
+		parts = append(parts, c.Framework+" "+c.ID)
+	}
+	return strings.Join(parts, "; ")
 }

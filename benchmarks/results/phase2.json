@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-01T12:05:20.0762046Z",
+  "generated_at": "2026-11-01T14:01:48.7132199Z",
   "drishti_version": "1.1.0-dev",
   "go_version": "go1.25.5",
   "platform": "windows/amd64",
@@ -33,9 +33,9 @@
         "Time-based Anomaly": 4
       },
       "alerts_per_1k_lines": 2.4345681198265425,
-      "duration_ms": 22499,
-      "lines_per_sec": 29118,
-      "alloc_mb": 2878.4023361206055
+      "duration_ms": 14510,
+      "lines_per_sec": 45151,
+      "alloc_mb": 2926.61368560791
     },
     {
       "name": "loghub-linux",
@@ -66,9 +66,9 @@
         "Time-based Anomaly": 219
       },
       "alerts_per_1k_lines": 22.29436382837251,
-      "duration_ms": 555,
-      "lines_per_sec": 46066,
-      "alloc_mb": 48.3658447265625
+      "duration_ms": 602,
+      "lines_per_sec": 42470,
+      "alloc_mb": 50.021331787109375
     },
     {
       "name": "mordor-mimikatz",
@@ -96,9 +96,9 @@
         "Suspicious Command Execution": 1
       },
       "alerts_per_1k_lines": 0.49784268171257884,
-      "duration_ms": 2239,
-      "lines_per_sec": 2691,
-      "alloc_mb": 388.71150970458984
+      "duration_ms": 1560,
+      "lines_per_sec": 3862,
+      "alloc_mb": 389.5330276489258
     },
     {
       "name": "mordor-psexec",
@@ -126,9 +126,9 @@
         "Suspicious Command Execution": 4
       },
       "alerts_per_1k_lines": 1.609935602575897,
-      "duration_ms": 683,
-      "lines_per_sec": 6366,
-      "alloc_mb": 116.93439483642578
+      "duration_ms": 508,
+      "lines_per_sec": 8559,
+      "alloc_mb": 116.45301818847656
     },
     {
       "name": "synthetic-benign",
@@ -155,9 +155,9 @@
         "Time-based Anomaly": 38
       },
       "alerts_per_1k_lines": 0.92,
-      "duration_ms": 1182,
-      "lines_per_sec": 42301,
-      "alloc_mb": 81.61439514160156
+      "duration_ms": 629,
+      "lines_per_sec": 79491,
+      "alloc_mb": 84.323486328125
     },
     {
       "name": "fixture-openssh-2k",
@@ -184,9 +184,9 @@
         "Time-based Anomaly": 1
       },
       "alerts_per_1k_lines": 8,
-      "duration_ms": 68,
-      "lines_per_sec": 29411,
-      "alloc_mb": 8.216484069824219
+      "duration_ms": 32,
+      "lines_per_sec": 62500,
+      "alloc_mb": 8.312278747558594
     }
   ]
 }

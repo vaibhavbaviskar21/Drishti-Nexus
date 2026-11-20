@@ -158,6 +158,7 @@ This document explicitly states what Drishti Nexus **does not do** and **is not 
 **Drishti Nexus DOES:**
 - Use threshold-based detection (e.g. ≥ 5 failed logins in 10 minutes)
 - Learn simple, explainable baselines: per-source failure rates (EWMA mean + 3σ, with the configured threshold as the floor) and per-host hours of activity. Every alert they influence records the baseline behind it.
+- Optionally (off by default) summarize an already-detected incident in plain English with a **local** LLM (`drishti summarize`, loopback endpoints only). The output is labeled "AI-generated narrative — not evidence", never changes alerts, and is checked claim by claim against the incident's facts. It has not yet been evaluated against a real model ([AI_SUMMARY.md](AI_SUMMARY.md)).
 
 **Scope:** Deterministic, explainable detection only. No black-box ML.
 
@@ -260,8 +261,9 @@ This document explicitly states what Drishti Nexus **does not do** and **is not 
 ### Processing Limitations
 
 **Performance** (measured, see [BASELINE.md](../BASELINE.md)):
-- Full pipeline on syslog: ~70,000–100,000 lines/second, single core (655k-line SSH log in ~9.5 s)
-- JSON (Windows events, ~5 KB each): ~4,000–11,000 events/second
+- Sustained full pipeline with Sigma rules (BASELINE.md §0.4, a loaded 4-thread laptop, so lower bounds): ~35,000 syslog lines/second over 6.5 M lines; ~2,600 Windows JSON events/second. Single-threaded: one core.
+- Memory stays flat over long runs (10 MB peak live heap after 6.5 M lines).
+- Authentication rules rescan the failures inside their window for each new failure from the same source. A single source producing thousands of failures inside one window (a very fast brute force) therefore slows down quadratically in that window's size; normal attack rates are unaffected.
 - Web dashboard: Real-time for <100k logs, may lag with larger datasets
 
 **Not suitable for:**

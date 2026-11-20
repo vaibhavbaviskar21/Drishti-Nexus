@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-11-06T19:35:27.0118106Z",
+  "drishti_version": "1.1.0-dev",
+  "go_version": "go1.25.5",
+  "platform": "windows/amd64",
+  "config_path": "configs\\config.yaml",
+  "sigma_rules": 3,
+  "assumed_timezone": "UTC",
+  "datasets": [
+    {
+      "name": "empire_mimikatz_logonpasswords_2020-08-07103224.json",
+      "files": [
+        "testdata\\datasets\\mordor\\empire_mimikatz_logonpasswords_2020-08-07103224.json"
+      ],
+      "benign": false,
+      "lines": 120520,
+      "entries": 120520,
+      "parse_quality": {
+        "Clean": 6026
+      },
+      "structured_pct": 100,
+      "clean_pct": 100,
+      "by_parser": {
+        "json": 6026
+      },
+      "repairs": {},
+      "alerts": 3,
+      "incidents": 1,
+      "alerts_by_rule": {
+        "Injection Pattern Detected": 1,
+        "Sigma: LSASS Memory Read With Credential-Dumping Access Rights": 1,
+        "Suspicious Command Execution": 1
+      },
+      "alerts_per_1k_lines": 0.49784268171257884,
+      "duration_ms": 45573,
+      "lines_per_sec": 2644,
+      "alloc_mb": 7789.007522583008,
+      "repeat": 20,
+      "peak_heap_mb": 5.096488952636719
+    }
+  ]
+}
