@@ -62,6 +62,7 @@ in that phase.
 **Commands:** `go test ./...` · `golangci-lint run ./...` · `gosec -quiet -conf .gosec.json ./...` · `bash scripts/fetch-datasets.sh && make genbenign` (datasets) · `go run ./cmd/benchmark -suite -sigma rules/sigma` · `drishti scan -sigma rules/sigma -parsers parsers -report r.html -pdf r.pdf -ecs e.ndjson logs/` · `drishti serve logs/`.
 
 **Gotchas:**
+- No Claude attribution in commits or PRs (owner's request).
 - Windows Defender quarantines real attack telemetry (and JSON scan outputs that quote it; read the CSV instead). `testdata/fixtures/mordor_sigma_events.json` is defanged for that reason; keep payloads out of committed fixtures.
 - `core.autocrlf=true` on this machine. `.gitattributes` pins LF, and verbatim LogHub fixtures are `-text` (CRLF kept).
 - Every file open must go through `audit.OpenEvidence` (read) or `storage.CreateOutput` (write); `internal/audit/readonly_test.go` enforces it.
@@ -79,8 +80,9 @@ in that phase.
 - 2026-11-20 Merged PR #3 and PR #4 into `main` (PR #2 closed as merged through #3); race detector green on the live-mode locking in CI.
 - 2026-11-27 Rule 8 "Remote Service Execution" (T1021.002): network logon → service install, source host resolved from its own Sysmon connections (late-linked when logged after), joins the source's incident. Closes the last validation miss (6/7 → 7/7). Defender also blocks JSON scan outputs that quote payloads (noted in LIMITATIONS).
 - 2026-11-27 Added `PROJECT_EXPLAINER.md` (interview explainer: pitch, problem, architecture, measured results, dated features, roadmap, Q&A); keep it updated with every change alongside this log.
+- 2026-11-27 Merged PR #5 (rule 8 + explainer). Owner asked to drop Claude attribution: no Co-Authored-By trailers or "Generated with Claude Code" lines from now on; removed from PR #2–#5 descriptions and PR #5's commits; the 17 older commits on main keep theirs (owner chose not to rewrite history).
 
-**Status:** Phases 0–6 plus follow-ups are merged into `main` (PRs #1–#4, all CI green). No open PRs.
+**Status:** Phases 0–6 plus follow-ups are merged into `main` (PRs #1–#5, all CI green). Detection score 7/7 on the documented dataset behaviours.
 
 **Open items**
 - Phase 4 (owner): post the write-up (`docs/VALIDATION_WRITEUP.md`), recruit 3–5 practitioners, fill `FEEDBACK_LOG.md`.
