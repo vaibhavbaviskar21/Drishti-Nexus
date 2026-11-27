@@ -6,7 +6,7 @@ Drishti Nexus is a single offline binary that parses security logs, detects atta
 
 ## Headline numbers
 
-- **Known attack behaviours detected: 6 of 7 (86%)** across the public datasets (table below).
+- **Known attack behaviours detected: 7 of 7** across the public datasets (table below). The last one, valid-credential lateral movement, was closed on 2026-11-27; before that the score was 6 of 7.
 - **False positives: 0.92 per 1,000 benign log lines** (46 on a 50,000-line benign week), down from 569.9 in the original build.
 - **Parse coverage: 100% structured** on every benchmark dataset. CEF, LEEF, CSV, Windows XML and YAML-defined formats are parsed as well.
 - **Throughput: ~35,000 syslog lines/s sustained (≈3 billion lines/day) and ~2,600 Windows JSON events/s**, single-threaded on a 2-core i3 laptop with flat memory (10 MB peak heap after 6.5 M lines; see BASELINE §0.4).
@@ -21,7 +21,7 @@ The "known behaviours" are what each dataset's publisher documents it contains. 
 | same | Empire PowerShell stager execution | ✅ | Suspicious Command Execution (T1059) |
 | Mordor `empire_psexec_dcerpc_tcp_svcctl` (OTRF) | Remote service creation (PsExec technique) | ✅ Empire's `Updater` service | Sigma: service running encoded PowerShell (T1569.002) |
 | same | PowerShell/cmd execution on the target | ✅ | Suspicious Command Execution |
-| same | **Lateral movement WORKSTATION5 → WORKSTATION6 as one linked incident** | ❌ | The cross-host rule needs a brute force first; this movement used valid credentials |
+| same | **Lateral movement WORKSTATION5 → WORKSTATION6 as one linked incident** | ✅ (since 2026-11-27) | Remote Service Execution (T1021.002): network logon by `pgustavo` from WS5, then the `Updater` service installed 2 ms later on WS6. Joined to WS5's incident |
 | LogHub Linux | rpc.statd format-string exploit (CVE-2000-0666) | ✅ all 7 attempts, 0 false positives | Sigma: format-string exploitation (T1190) |
 | LogHub OpenSSH | Internet SSH brute force, including one successful guess | ✅ 554 attacking IPs alerted; the success (`curi` from 123.255.103.142) flagged as Brute Force | Excessive Failures / Brute Force (T1110) |
 
@@ -39,7 +39,7 @@ The "known behaviours" are what each dataset's publisher documents it contains. 
 
 ## Honest limitations
 
-- **Cross-host correlation covers one pattern:** brute force on A, then a login on B. Lateral movement with already-valid credentials (as in the PsExec dataset) is detected per host, not linked.
+- **Cross-host correlation covers two patterns:** brute force on A then a login on B, and a network logon followed by a service install (PsExec style). Pass-the-hash, RDP chains and WMI/WinRM execution are not modelled.
 - **Sigma support is a subset.** `count()` aggregations work; `near`, `<` thresholds and other aggregation functions do not. Unsupported rules are skipped and listed, never half-applied.
 - **Splunk BOTS isn't ingested yet** (it ships as Splunk indexes, not raw logs).
 - **Baselines start empty.** The first days of any analysis use static thresholds and hours.

@@ -49,6 +49,12 @@ rules:
     description: "Account brute-forced on one host, then logged in on a different host within the window"
     time_window: "30m"
 
+  - name: "Remote Service Execution"
+    enabled: true
+    severity: "high"
+    description: "Service installed (7045/4697) shortly after a network logon from another host: PsExec-style lateral movement with valid credentials"
+    time_window: "5m"
+
 # Normal business hours (24-hour clock) in the given IANA timezone.
 normal_hours:
   start: 9   # 09:00

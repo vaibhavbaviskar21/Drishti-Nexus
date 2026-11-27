@@ -18,6 +18,7 @@ var ruleATTACK = map[string]ATTACKTechnique{
 	RuleInjection:         {"T1190", "Exploit Public-Facing Application", "Initial Access"},
 	RuleTimeAnomaly:       {"T1078", "Valid Accounts", "Initial Access"},
 	RuleLateralMovement:   {"T1021", "Remote Services", "Lateral Movement"},
+	RuleRemoteService:     {"T1021.002", "Remote Services: SMB/Windows Admin Shares", "Lateral Movement"},
 }
 
 // ATTACKForRule returns the technique a rule is tagged with (zero value if none).

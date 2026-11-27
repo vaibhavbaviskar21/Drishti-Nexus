@@ -135,11 +135,12 @@ This document explicitly states what Drishti Nexus **does not do** and **is not 
 **Drishti Nexus DOES:**
 - Merge many files or a whole directory by event time, so activity across hosts and rotated files is analysed together
 - Group alerts into incidents (same actor/host, within `incident_gap`) and link related alerts (Excessive Failures → Brute Force)
-- Correlate one cross-host pattern: brute force on host A, then a login with the same account on host B (**Lateral Movement Candidate**, [demo](demo/MULTIHOST_DEMO.md))
+- Correlate two cross-host patterns: brute force on host A, then a login with the same account on host B (**Lateral Movement Candidate**, [demo](demo/MULTIHOST_DEMO.md)); and a network logon followed by a service install, PsExec style, with the source host resolved and linked (**Remote Service Execution**)
 - Tag every alert with a MITRE ATT&CK technique ([ATTACK_MAPPING.md](ATTACK_MAPPING.md))
 
 **Drishti Nexus does NOT:**
-- Model other multi-stage chains (pass-the-hash, RDP hops, persistence → exfiltration)
+- Model other multi-stage chains (pass-the-hash, RDP hops, WMI/WinRM execution, persistence → exfiltration)
+- Stop antivirus from quarantining outputs: a scan of real attack telemetry can produce a JSON report that quotes the payload, and Windows Defender may block it. The CSV and HTML outputs truncate payloads and were readable in testing
 - Link an incident to the attacker's later activity when no rule fires on it (e.g. `sudo pg_dumpall` right after a lateral login)
 - Correlate on anything but host, source IP and account
 - Perform root cause analysis

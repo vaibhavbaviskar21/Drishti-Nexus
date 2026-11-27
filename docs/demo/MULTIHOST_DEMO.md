@@ -44,6 +44,6 @@ Links recorded on the alerts (`related_alerts`): 000001 ↔ 000002 ↔ 000003, a
 ## What it does not catch (honest gaps)
 
 - **Post-compromise activity is not linked.** At 10:22:03 on db01, `deploy` runs `sudo pg_dumpall`, a full database dump. Successful sudo is deliberately not alerted (Phase 1 false-positive fix), and nothing yet ties "first sudo by a just-compromised account" to the incident. This is a candidate for Phase 2.5 ("user who doesn't normally use sudo").
-- **Only one cross-host pattern.** Brute force on A → login on B. Pass-the-hash, Windows 4624 logon-type correlation and RDP chains are not modelled.
+- **Two cross-host patterns.** Brute force on A → login on B (this demo), and network logon → service install, PsExec style (Remote Service Execution, verified on the Mordor PsExec data). Pass-the-hash and RDP chains are not modelled.
 - **No brute force, no link.** An attacker who already has the password, such as a phished account, triggers nothing cross-host.
 - **The host comes from the log line.** Formats without a host name (Apache access logs, some JSON) can't take part.

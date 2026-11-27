@@ -131,7 +131,7 @@ func TestIntegration_ChainOfCustody(t *testing.T) {
 	if len(ev.SHA256Before) != 64 || ev.SHA256After != ev.SHA256Before || ev.Unchanged == nil || !*ev.Unchanged {
 		t.Errorf("evidence hashes: %+v", ev)
 	}
-	if len(s.Config.Rules) != 7 || s.Config.Rules[0].Threshold != 3 || s.Config.ConfigSHA256 == "" {
+	if len(s.Config.Rules) != 8 || s.Config.Rules[0].Threshold != 3 || s.Config.ConfigSHA256 == "" {
 		t.Errorf("rule config not recorded: %+v", s.Config)
 	}
 	if s.OSUser == "" || s.ToolVersion != "test" || s.FinishedAt == nil || s.Results == nil || s.Results.Entries != 21 {
@@ -196,6 +196,7 @@ func TestIntegration_Datasets(t *testing.T) {
 			rules: map[string]span{
 				"Suspicious Command Execution":      {2, 6},
 				"Excessive Authentication Failures": {0, 0},
+				"Remote Service Execution":          {1, 1}, // WS5 → WS6 PsExec hop with valid credentials
 			},
 		},
 		{

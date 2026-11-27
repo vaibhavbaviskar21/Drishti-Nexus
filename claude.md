@@ -57,12 +57,12 @@ in that phase.
 
 **What it is:** a single offline Go binary that parses security logs (syslog, auth, Apache, JSON, CEF, LEEF, CSV, Windows Event XML, YAML-defined formats), detects attacks with deterministic rules plus Sigma, keeps a SHA-256 chain of custody for every result, and shows it in a local web dashboard and HTML/PDF reports. Optional local-LLM summaries are labeled and checked against the facts.
 
-**Layout:** `cmd/drishti` (CLI), `cmd/benchmark`, `cmd/genbenign` · `internal/parser` (formats) · `internal/detection` (rules, adaptive thresholds, ATT&CK, compliance) · `internal/sigma` · `internal/pipeline` (time-merged multi-file runs) · `internal/audit` (custody) · `internal/ecs` (ECS export) · `internal/report` (HTML/PDF) · `internal/ai` (opt-in summaries) · `internal/web` (dashboard) · `rules/sigma`, `parsers/` (shipped definitions) · `docs/` · `testdata/`.
+**Layout:** `PROJECT_EXPLAINER.md` (interview explainer) · `cmd/drishti` (CLI), `cmd/benchmark`, `cmd/genbenign` · `internal/parser` (formats) · `internal/detection` (rules, adaptive thresholds, ATT&CK, compliance) · `internal/sigma` · `internal/pipeline` (time-merged multi-file runs) · `internal/audit` (custody) · `internal/ecs` (ECS export) · `internal/report` (HTML/PDF) · `internal/ai` (opt-in summaries) · `internal/web` (dashboard) · `rules/sigma`, `parsers/` (shipped definitions) · `docs/` · `testdata/`.
 
 **Commands:** `go test ./...` · `golangci-lint run ./...` · `gosec -quiet -conf .gosec.json ./...` · `bash scripts/fetch-datasets.sh && make genbenign` (datasets) · `go run ./cmd/benchmark -suite -sigma rules/sigma` · `drishti scan -sigma rules/sigma -parsers parsers -report r.html -pdf r.pdf -ecs e.ndjson logs/` · `drishti serve logs/`.
 
 **Gotchas:**
-- Windows Defender quarantines real attack telemetry. `testdata/fixtures/mordor_sigma_events.json` is defanged for that reason; keep payloads out of committed fixtures.
+- Windows Defender quarantines real attack telemetry (and JSON scan outputs that quote it; read the CSV instead). `testdata/fixtures/mordor_sigma_events.json` is defanged for that reason; keep payloads out of committed fixtures.
 - `core.autocrlf=true` on this machine. `.gitattributes` pins LF, and verbatim LogHub fixtures are `-text` (CRLF kept).
 - Every file open must go through `audit.OpenEvidence` (read) or `storage.CreateOutput` (write); `internal/audit/readonly_test.go` enforces it.
 - Integration tests pin alert counts per dataset. A change that moves a number must update `BASELINE.md`.
@@ -76,8 +76,11 @@ in that phase.
 - 2026-11-20 Defanged the Sigma fixture (Defender had quarantined it); filled the throughput numbers in the write-up; this log.
 - 2026-11-20 Branch `dev-followups`: `serve -follow` live dashboard (one growing file, WebSocket refresh, audit closed on Ctrl+C); Sigma `count()` aggregations with timeframe (state in engine snapshot); shipped SSH password-spraying rule (303 alerts / 124 IPs on loghub-ssh, 0 benign); ATT&CK names for Sigma-tagged techniques.
 - 2026-11-20 Opened PR #3 (`phase2-to-6` → `main`); CI fully green including the first Docker image build; redesigned dashboard checked in Chrome (all tabs, drawer, custody table, no console errors).
+- 2026-11-20 Merged PR #3 and PR #4 into `main` (PR #2 closed as merged through #3); race detector green on the live-mode locking in CI.
+- 2026-11-27 Rule 8 "Remote Service Execution" (T1021.002): network logon → service install, source host resolved from its own Sysmon connections (late-linked when logged after), joins the source's incident. Closes the last validation miss (6/7 → 7/7). Defender also blocks JSON scan outputs that quote payloads (noted in LIMITATIONS).
+- 2026-11-27 Added `PROJECT_EXPLAINER.md` (interview explainer: pitch, problem, architecture, measured results, dated features, roadmap, Q&A); keep it updated with every change alongside this log.
 
-**Status:** all planned engineering for Phases 0–6 is done. PR #3 (`phase2-to-6` → `main`) is open with CI green. PR #2 (2.6 subset) is still open, and its commit is included in PR #3, so close #2 or merge it first.
+**Status:** Phases 0–6 plus follow-ups are merged into `main` (PRs #1–#4, all CI green). No open PRs.
 
 **Open items**
 - Phase 4 (owner): post the write-up (`docs/VALIDATION_WRITEUP.md`), recruit 3–5 practitioners, fill `FEEDBACK_LOG.md`.

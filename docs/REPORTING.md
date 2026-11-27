@@ -23,7 +23,7 @@ drishti scan -sigma rules/sigma -output drishti-scan-sample.json \
   testdata/datasets/mordor/empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json
 ```
 
-It shows 3 incidents: Empire PowerShell launched on WORKSTATION5, then the PsExec-style service (`Updater`, encoded PowerShell, Sigma T1569.002) installed on WORKSTATION6. The `Injection Pattern Detected` (T1190) alerts in the sample are the built-in injection rule firing on PowerShell script-block text. They are kept, not hidden, because the report shows what the engine actually produced.
+It shows 3 incidents: Empire PowerShell launched on WORKSTATION5, then the PsExec-style service (`Updater`, encoded PowerShell, Sigma T1569.002) installed on WORKSTATION6. The **Remote Service Execution** alert (network logon by `pgustavo` from WORKSTATION5, then the service install 2 ms later) sits in WORKSTATION5's incident, so the hop between the two machines reads as one timeline. The `Injection Pattern Detected` (T1190) alerts in the sample are the built-in injection rule firing on PowerShell script-block text. They are kept, not hidden, because the report shows what the engine actually produced.
 
 The cross-host lateral-movement demo (`docs/demo/MULTIHOST_DEMO.md`) gives a smaller report with one incident of 3 alerts:
 

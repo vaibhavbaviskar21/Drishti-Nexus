@@ -82,3 +82,31 @@ func TestIntegration_CEFLEEFFixture(t *testing.T) {
 		t.Errorf("alerts = %v, want exactly one brute force", st.AlertsByRule)
 	}
 }
+
+// Mordor PsExec: Empire on WORKSTATION5 installs a service on WORKSTATION6 with
+// valid credentials (no brute force). The hop must land in WORKSTATION5's incident,
+// even though WORKSTATION5's address is only revealed after the service install.
+func TestIntegration_PsExecHopLinkedAcrossHosts(t *testing.T) {
+	res := runFiles(t, datasetOrSkip(t, "testdata/datasets/mordor/empire_psexec_dcerpc_tcp_svcctl_2020-09-20121608.json"))
+	var hop *models.Alert
+	for _, a := range res.Alerts() {
+		if a.RuleName == "Remote Service Execution" {
+			hop = a
+		}
+	}
+	if hop == nil {
+		t.Fatal("no Remote Service Execution alert")
+	}
+	if hop.Details["source_host"] != "WORKSTATION5.theshire.local" || hop.Details["service"] != "Updater" || hop.Details["user"] != "pgustavo" {
+		t.Errorf("hop details: %v", hop.Details)
+	}
+	linked := false
+	for _, a := range res.Alerts() {
+		if a.IncidentID == hop.IncidentID && a.CorrelationKey == "host=WORKSTATION5.theshire.local" {
+			linked = true
+		}
+	}
+	if !linked {
+		t.Errorf("hop %s (incident %s) is not in WORKSTATION5's incident", hop.ID, hop.IncidentID)
+	}
+}

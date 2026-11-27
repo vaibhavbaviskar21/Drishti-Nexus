@@ -47,7 +47,7 @@ The same host profile cut Time-based Anomaly on real data: **loghub-linux 431 �
 | loghub-ssh (655k) | 1,711 alerts | **1,595** | Adaptive thresholds (2.1) quiet the host-level bucket of IP-less failures (EF 1,680 → 1,590). **Every one of the 554 attacking IPs still gets exactly as many alerts as before.** |
 | loghub-linux | 775 | **570** | **Sigma: 7 alerts = all 7 rpc.statd format-string exploit attempts (20 lines), 0 false positives.** This was a Phase 1 detection gap. |
 | mordor-mimikatz | 2 | **3** | **Sigma: LSASS read with credential-dumping rights (T1003.001)**: the one Mimikatz access, not the 3 benign svchost accesses |
-| mordor-psexec | 6 | **7** | **Sigma: service installed running encoded PowerShell (T1569.002)**: Empire's `Updater` service |
+| mordor-psexec | 6 | **7** (8 since 2026-11-27) | **Sigma: service installed running encoded PowerShell (T1569.002)**: Empire's `Updater` service. *2026-11-27:* **Remote Service Execution** links the WS5 → WS6 hop into WS5's incident |
 | multihost fixture | — | **3 alerts, 1 incident** | **Lateral Movement Candidate (2.2)**: brute force on web01 → login on db01 7m26s later, linked into one incident ([demo](docs/demo/MULTIHOST_DEMO.md)) |
 
 Incident counts went up on loghub-ssh (1,094 → 1,370) although alerts went down. Fewer low-severity Time-based Anomaly alerts no longer keep attackers' Excessive Failures incidents open across quiet gaps, so later bursts after a > 30-minute gap start new incidents.

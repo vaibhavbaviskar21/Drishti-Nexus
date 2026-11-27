@@ -22,6 +22,7 @@ The table lives in [`internal/detection/attack.go`](../internal/detection/attack
 | Injection Pattern Detected | T1190 | Exploit Public-Facing Application | Initial Access |
 | Time-based Anomaly | T1078 | Valid Accounts | Initial Access |
 | Lateral Movement Candidate | T1021 | Remote Services | Lateral Movement |
+| Remote Service Execution | T1021.002 | Remote Services: SMB/Windows Admin Shares | Lateral Movement |
 
 ## Method
 
@@ -42,6 +43,8 @@ A technique is tagged only when the rule's logic is a reasonable proxy for it, n
 **Time-based Anomaly → T1078 (contextual).** Authentication or error activity outside configured business hours is not evidence of a technique by itself. T1078 is the closest fit: legitimate credentials used at an unusual time. Treat this tag as **context for other alerts in the same incident**, not as a finding on its own.
 
 **Lateral Movement Candidate → T1021.** It fires when an account that was brute-forced successfully on host A then logs in on host B within the rule's window. Logging into another host's remote service with gained credentials is T1021. The parent technique is used because the rule doesn't know whether the service was SSH (T1021.004), RDP (T1021.001) or SMB (T1021.002).
+
+**Remote Service Execution → T1021.002.** A service installed on a host (7045/4697) within 5 minutes of a network logon (4624, type 3) from another machine is how PsExec and similar tools run code remotely: they authenticate over SMB, write a service binary through the admin share and start it. The sub-technique is specific here because the event pair is the SMB/admin-share pattern. The service itself is also execution (T1569.002); the shipped Sigma rule tags that side separately.
 
 ## Not mapped
 
