@@ -36,7 +36,8 @@ Drishti Nexus is a security log analysis tool that runs as **one offline program
 **Measured results** (public datasets: LogHub SSH/Linux, OTRF Mordor Windows attacks, plus a 50,000-line benign week):
 
 - **False positives fell 99.8%:** 569.9 → **0.92 per 1,000 benign lines**. Privilege-escalation alerts on legitimate `sudo` went from 100% of uses to **0%**.
-- **Detection: 6 of 7 documented attack behaviours (86%)**, including Mimikatz credential dumping from LSASS, a PsExec-style remote service install, and an rpc.statd exploit (**all 7 attempts, 0 false positives**). **The miss:** PsExec lateral movement with already-valid credentials is detected on each host but not linked into one cross-host incident.
+- **Detection: 7 of 7 documented attack behaviours** (it was 6 of 7 until 2026-11-27), including Mimikatz credential dumping from LSASS, an rpc.statd exploit (**all 7 attempts, 0 false positives**), and PsExec lateral movement with valid credentials.
+- **The last miss closed:** that PsExec hop from WORKSTATION5 to WORKSTATION6 used real credentials, so the brute-force-based lateral rule couldn't see it. A new rule pairs the network logon with the service install 2 ms later and joins it to WORKSTATION5's incident. The logs reveal WORKSTATION5's address only 95 ms *after* the install, so the alert is completed and linked once that's known.
 - **Parsing:** syslog went from **0% structured** in the prototype (everything fell to raw text) to **100%** on every dataset. The same 2,000 SSH events given as raw syslog and as CSV produce **identical alerts**.
 - **Speed and memory:**
   - Prototype: did not finish the 655k-line SSH log in 15 minutes (quadratic window scans).
@@ -74,13 +75,13 @@ Drishti Nexus is a security log analysis tool that runs as **one offline program
 - 2026-11-01: HTML/PDF incident reports; opt-in local AI summaries with a hallucination checker; redesigned dashboard.
 - 2026-11-07: Sustained-throughput benchmark; compliance references (PCI DSS, ISO 27001, HIPAA) in reports; project website.
 - 2026-11-20: Live dashboard that follows a growing log; Sigma `count()` rules; SSH password-spraying rule; ATT&CK names for Sigma techniques.
+- 2026-11-27: "Remote Service Execution" rule: PsExec-style lateral movement with valid credentials, linked across hosts (detection score 6/7 → 7/7).
 
 ## What's next
 
 1. **Real-world validation (Phase 4):** put the tool and write-up in front of 3–5 practitioners and DFIR communities, and log what it caught, missed and over-alerted.
 2. **Run the AI summary against a real local model** and measure how often summaries come back unverified.
 3. **Close known gaps:**
-   - linking lateral movement done with valid credentials (Windows logon correlation);
    - Splunk BOTS ingestion;
    - following several live files at once;
    - Sigma `near` and `<` conditions;
@@ -96,7 +97,7 @@ Drishti Nexus is a security log analysis tool that runs as **one offline program
 **How do you know your detection is good?**
 - I measure it against public datasets whose publishers document what attacks they contain, plus a benign set where every alert is by definition a false positive.
 - The numbers are pinned in CI.
-- I report the miss (6 of 7), not just the hits.
+- I report misses, not just hits. The score was 6 of 7 until I built the rule for the missing case; I kept the history visible.
 
 **How did you cut false positives from 570 to under 1 per 1,000 lines?**
 - Most came from bugs, not tuning: keyword rules firing on any mention of "root" or "sudo", windows computed from wall-clock time instead of event time, and one login attempt counted 3 times because sshd writes 3 lines.
@@ -112,6 +113,8 @@ Drishti Nexus is a security log analysis tool that runs as **one offline program
 - The model only sees facts the deterministic engine already found, with no tool access.
 - A separate deterministic checker extracts every concrete claim (IPs, hosts, users, counts, times, IDs) and verifies it against those facts. Anything unsupported marks the summary UNVERIFIED.
 - Limits I state openly: it can't judge paraphrased reasoning, and it hasn't been measured on a real model yet.
+
+**How did you detect lateral movement without a brute force to key on?** On the target host, a network logon (Windows 4624, type 3) followed within minutes by a service install (7045/4697) is the PsExec pattern. To link it to the attacker's host, I learn which IP belongs to which host from the connections each host itself initiates. In the real data that mapping arrives 95 ms *after* the install, so the alert gets completed and linked retroactively. A unit test reproduces that ordering.
 
 **What was the hardest bug?** The prototype's "100% parse success" was false: plain syslog matched no parser, so every line silently fell back to raw text with a fake timestamp. Finding it meant distrusting my own metric, defining "structured" properly and re-measuring. Phase 0's numbers were corrected publicly in `BASELINE.md`.
 

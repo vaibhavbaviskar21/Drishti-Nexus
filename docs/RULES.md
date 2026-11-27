@@ -111,6 +111,15 @@ Fires when an account that was the subject of an **Authentication Brute Force** 
 
 It needs at least two hosts, so pass several files or a directory: `drishti scan logs/`. Files are merged in event-time order, so the file order on the command line does not matter. Entries without a host (`unknown`) never take part. Excessive Failures alone does not arm the rule: without a success there is no evidence the password was obtained.
 
+## 8. Remote Service Execution
+**Severity** high · **config** `time_window: 5m` · **ATT&CK** T1021.002
+
+Fires when a service is installed on a Windows host (System 7045 or Security 4697) within the window after a **network logon** (4624, logon type 3) on that host from a remote address. This is how PsExec and similar tools move laterally with valid credentials: there is no brute force for the Lateral Movement Candidate rule to key on. The alert cites the logon and the service install, and records the account, the source address and the service name.
+
+The source address is resolved to a host from the Sysmon network connections that host initiated (event 3, `Initiated=true`). When that resolves, the alert joins the source host's incident, so the hop appears in one cross-host timeline. Logs often record the source's connections slightly *after* the install (95 ms later in the Mordor PsExec data), so the alert is completed and linked as soon as the mapping appears. Loopback and `-` sources never count.
+
+> Known false positives: deployment tools that install services remotely (SCCM, PDQ, admins using PsExec). Whitelisting by service name is not built in yet.
+
 ---
 
 ## Configuration example
@@ -130,6 +139,6 @@ incident_gap: "30m"
 
 ## Limitations
 - Rules see log content only: no packet capture or flow data.
-- Cross-host correlation covers one pattern (brute force on A → login on B). The host comes from the log line itself; files whose format carries no host name cannot take part.
+- Cross-host correlation covers two patterns: brute force on A → login on B, and network logon → service install (PsExec style). The host comes from the log line itself; files whose format carries no host name cannot take part.
 - No behavioural baselines yet (Phase 2.1). No Sigma support yet (Phase 2.4). ATT&CK mapping: [ATTACK_MAPPING.md](ATTACK_MAPPING.md).
 - Detection state survives restarts only with the SQLite backend (`tail -db`).

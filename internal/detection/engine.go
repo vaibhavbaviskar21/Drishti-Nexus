@@ -20,6 +20,7 @@ const (
 	RuleInjection         = "Injection Pattern Detected"
 	RuleTimeAnomaly       = "Time-based Anomaly"
 	RuleLateralMovement   = "Lateral Movement Candidate"
+	RuleRemoteService     = "Remote Service Execution"
 )
 
 // maxRelatedLogs caps evidence references stored on one aggregated alert.
@@ -43,6 +44,7 @@ var defaultSettings = []RuleSettings{
 	{Name: RuleInjection, Enabled: true, Severity: "critical", Window: 10 * time.Minute},
 	{Name: RuleTimeAnomaly, Enabled: true, Severity: "low", Threshold: 3, Window: time.Hour}, // threshold: days of host history
 	{Name: RuleLateralMovement, Enabled: true, Severity: "critical", Window: 30 * time.Minute},
+	{Name: RuleRemoteService, Enabled: true, Severity: "high", Window: 5 * time.Minute}, // window: network logon → service install
 }
 
 // Finding is what a rule reports for one entry; the engine turns findings into
@@ -312,6 +314,7 @@ func (e *Engine) initializeRules() {
 		&InjectionPatternDetector{},
 		&TimeAnomalyDetector{engine: e},
 		&LateralMovementDetector{engine: e},
+		&RemoteServiceDetector{engine: e},
 	}
 }
 
@@ -628,6 +631,11 @@ func (e *Engine) sweep() {
 	for k, b := range e.state.Baselines {
 		if now.Sub(b.WindowStart) > e.adaptive.Window*maxEmptyWindows {
 			delete(e.state.Baselines, k) // fully decayed: indistinguishable from a new source
+		}
+	}
+	for host, logons := range e.state.NetLogons {
+		if len(logons) == 0 || now.Sub(logons[len(logons)-1].At) > e.settings[RuleRemoteService].Window {
+			delete(e.state.NetLogons, host)
 		}
 	}
 	for user, c := range e.state.Compromised {

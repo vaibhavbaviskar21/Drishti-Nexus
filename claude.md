@@ -62,7 +62,7 @@ in that phase.
 **Commands:** `go test ./...` · `golangci-lint run ./...` · `gosec -quiet -conf .gosec.json ./...` · `bash scripts/fetch-datasets.sh && make genbenign` (datasets) · `go run ./cmd/benchmark -suite -sigma rules/sigma` · `drishti scan -sigma rules/sigma -parsers parsers -report r.html -pdf r.pdf -ecs e.ndjson logs/` · `drishti serve logs/`.
 
 **Gotchas:**
-- Windows Defender quarantines real attack telemetry. `testdata/fixtures/mordor_sigma_events.json` is defanged for that reason; keep payloads out of committed fixtures.
+- Windows Defender quarantines real attack telemetry (and JSON scan outputs that quote it; read the CSV instead). `testdata/fixtures/mordor_sigma_events.json` is defanged for that reason; keep payloads out of committed fixtures.
 - `core.autocrlf=true` on this machine. `.gitattributes` pins LF, and verbatim LogHub fixtures are `-text` (CRLF kept).
 - Every file open must go through `audit.OpenEvidence` (read) or `storage.CreateOutput` (write); `internal/audit/readonly_test.go` enforces it.
 - Integration tests pin alert counts per dataset. A change that moves a number must update `BASELINE.md`.
@@ -77,6 +77,7 @@ in that phase.
 - 2026-11-20 Branch `dev-followups`: `serve -follow` live dashboard (one growing file, WebSocket refresh, audit closed on Ctrl+C); Sigma `count()` aggregations with timeframe (state in engine snapshot); shipped SSH password-spraying rule (303 alerts / 124 IPs on loghub-ssh, 0 benign); ATT&CK names for Sigma-tagged techniques.
 - 2026-11-20 Opened PR #3 (`phase2-to-6` → `main`); CI fully green including the first Docker image build; redesigned dashboard checked in Chrome (all tabs, drawer, custody table, no console errors).
 - 2026-11-20 Merged PR #3 and PR #4 into `main` (PR #2 closed as merged through #3); race detector green on the live-mode locking in CI.
+- 2026-11-27 Rule 8 "Remote Service Execution" (T1021.002): network logon → service install, source host resolved from its own Sysmon connections (late-linked when logged after), joins the source's incident. Closes the last validation miss (6/7 → 7/7). Defender also blocks JSON scan outputs that quote payloads (noted in LIMITATIONS).
 - 2026-11-27 Added `PROJECT_EXPLAINER.md` (interview explainer: pitch, problem, architecture, measured results, dated features, roadmap, Q&A); keep it updated with every change alongside this log.
 
 **Status:** Phases 0–6 plus follow-ups are merged into `main` (PRs #1–#4, all CI green). No open PRs.

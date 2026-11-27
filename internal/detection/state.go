@@ -25,6 +25,8 @@ type State struct {
 	Baselines     map[string]*sourceBaseline `json:"baselines"`     // correlation key → failure-rate baseline
 	HostHours     map[string]*hostHours      `json:"host_hours"`    // host → hours of day it is active
 	PrivUse       map[string]int             `json:"priv_use"`      // "host" and "host|user" → privileged events seen
+	NetLogons     map[string][]netLogon      `json:"net_logons"`    // host → recent network logons (4624 type 3)
+	HostIPs       map[string]string          `json:"host_ips"`      // IP → host, from Sysmon connections the host initiated
 	SigmaWindows  map[string][]sigmaMark     `json:"sigma_windows"` // "rule\x00group" → matches inside the timeframe
 }
 
@@ -78,6 +80,8 @@ func newState() *State {
 		HostHours:     make(map[string]*hostHours),
 		PrivUse:       make(map[string]int),
 		SigmaWindows:  make(map[string][]sigmaMark),
+		NetLogons:     make(map[string][]netLogon),
+		HostIPs:       make(map[string]string),
 	}
 }
 
