@@ -57,7 +57,7 @@ in that phase.
 
 **What it is:** a single offline Go binary that parses security logs (syslog, auth, Apache, JSON, CEF, LEEF, CSV, Windows Event XML, YAML-defined formats), detects attacks with deterministic rules plus Sigma, keeps a SHA-256 chain of custody for every result, and shows it in a local web dashboard and HTML/PDF reports. Optional local-LLM summaries are labeled and checked against the facts.
 
-**Layout:** `cmd/drishti` (CLI), `cmd/benchmark`, `cmd/genbenign` · `internal/parser` (formats) · `internal/detection` (rules, adaptive thresholds, ATT&CK, compliance) · `internal/sigma` · `internal/pipeline` (time-merged multi-file runs) · `internal/audit` (custody) · `internal/ecs` (ECS export) · `internal/report` (HTML/PDF) · `internal/ai` (opt-in summaries) · `internal/web` (dashboard) · `rules/sigma`, `parsers/` (shipped definitions) · `docs/` · `testdata/`.
+**Layout:** `PROJECT_EXPLAINER.md` (interview explainer) · `cmd/drishti` (CLI), `cmd/benchmark`, `cmd/genbenign` · `internal/parser` (formats) · `internal/detection` (rules, adaptive thresholds, ATT&CK, compliance) · `internal/sigma` · `internal/pipeline` (time-merged multi-file runs) · `internal/audit` (custody) · `internal/ecs` (ECS export) · `internal/report` (HTML/PDF) · `internal/ai` (opt-in summaries) · `internal/web` (dashboard) · `rules/sigma`, `parsers/` (shipped definitions) · `docs/` · `testdata/`.
 
 **Commands:** `go test ./...` · `golangci-lint run ./...` · `gosec -quiet -conf .gosec.json ./...` · `bash scripts/fetch-datasets.sh && make genbenign` (datasets) · `go run ./cmd/benchmark -suite -sigma rules/sigma` · `drishti scan -sigma rules/sigma -parsers parsers -report r.html -pdf r.pdf -ecs e.ndjson logs/` · `drishti serve logs/`.
 
@@ -77,6 +77,7 @@ in that phase.
 - 2026-11-20 Branch `dev-followups`: `serve -follow` live dashboard (one growing file, WebSocket refresh, audit closed on Ctrl+C); Sigma `count()` aggregations with timeframe (state in engine snapshot); shipped SSH password-spraying rule (303 alerts / 124 IPs on loghub-ssh, 0 benign); ATT&CK names for Sigma-tagged techniques.
 - 2026-11-20 Opened PR #3 (`phase2-to-6` → `main`); CI fully green including the first Docker image build; redesigned dashboard checked in Chrome (all tabs, drawer, custody table, no console errors).
 - 2026-11-20 Merged PR #3 and PR #4 into `main` (PR #2 closed as merged through #3); race detector green on the live-mode locking in CI.
+- 2026-11-27 Added `PROJECT_EXPLAINER.md` (interview explainer: pitch, problem, architecture, measured results, dated features, roadmap, Q&A); keep it updated with every change alongside this log.
 
 **Status:** Phases 0–6 plus follow-ups are merged into `main` (PRs #1–#4, all CI green). No open PRs.
 
